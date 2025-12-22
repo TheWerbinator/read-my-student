@@ -1,8 +1,27 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Secure recommendation letter platform (early dev).  
+This repo currently includes:
+- Working Auth API (register / login / logout / me)
+- Minimal Auth UI for testing
+- Prisma + Supabase configured for team development
+
 ## Getting Started
 
-First, run the development server:
+## Requirements:
+- Node.js (v24+ recommended)
+- npm
+
+## Setup
+1) Clone repo
+2) Install dependencies
+3) Copy the example env file into a local .env
+4) Run database migrations
+
+# This will create all required tables in the shared Supabase dev databse
+- npm run db:migrate 
+
+5) Run the development server:
 
 ```bash
 npm run dev
@@ -16,21 +35,26 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+Frontend: React, TailwindCSS, TypeScript, Next.js
+Backend: Node.js, postgreSQL, Prisma, Supabase
+Hosting: Vercel (Website), Supabase (Backend)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Useful Scripts:
+npm run dev         # start dev server
+npm run db:migrate  # apply migrations (dev)
+npm run db:deploy   # apply migrations (production-style)
+npm run db:studio   # open Prisma Studio
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Common Errors:
+### TLS error: `self-signed certificate in certificate chain`
+If Prisma fails to connect with a TLS error, your network/antivirus/VPN may be intercepting TLS.
+For local development only, you can change in `.env.local`:
 
-## Deploy on Vercel
+- `sslmode=require` → `sslmode=no-verify`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# !!IMPORTANT!! #
+Do **not** use `sslmode=no-verify` in production.
