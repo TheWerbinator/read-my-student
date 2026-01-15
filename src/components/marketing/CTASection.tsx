@@ -3,7 +3,7 @@ import { LinkButton } from "../ui/LinkButton";
 
 export default function CTASection() {
   return (
-    <section className="relative overflow-hidden bg-[#0b1553]">
+    <section className="relative overflow-hidden bg-[#0b4726]">
       {/* soft vignette */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)]" />
       <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[40px_40px]" />

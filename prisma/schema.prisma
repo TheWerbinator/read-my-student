@@ -31,9 +31,14 @@ model Student {
   userId           String   @unique
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fullName         String
+  firstName        String?
+  lastName         String?
+
+  countryCode      String  // "US"
   university       String
-  program          String
+  universityOpenAlexId String? // "https://openalex.org/I...."
+
+  program          String?
   graduationDate   DateTime?
 
   createdAt        DateTime @default(now())
@@ -41,15 +46,20 @@ model Student {
 }
 
 model Faculty {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fullName     String
-  title        String?
-  department   String?
-  institution  String
+  firstName        String?
+  lastName         String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  countryCode      String // "US"
+  institution      String
+  institutionOpenAlexId String? // "https://openalex.org/I...."
+
+  title            String?
+  department       String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { LinkButton } from "../ui/LinkButton";
+import { HeroStepper } from "./Stepper";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#0b5315]">
+    <section className="relative overflow-hidden bg-[#0b4726]">
       {/* Soft gradient + texture */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)]" />
       <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[32px_32px]" />
@@ -57,108 +58,11 @@ export default function Hero() {
           </LinkButton>
         </div>
 
-        <TrustMarquee />
+        <div className="hidden [@media(min-width:371px)]:block mt-12">
+          <HeroStepper />
+        </div>
+        
       </div>
     </section>
-  );
-}
-
-function Chip({ label }: { label: string }) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 whitespace-nowrap">
-      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/15">
-        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-      </span>
-      {label}
-    </div>
-  );
-}
-
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
-
-function TrustMarquee() {
-  const items = useMemo(
-    () => [
-      "Data Encrypted",
-      "Access Controlled",
-      "Consent Built-in",
-      "FERPA-aware Design",
-      "Audit Trails",
-      "Role-Based Access",
-      "Secure Sharing Links",
-      "Faculty-Friendly Workflow",
-      "Student-Owned Requests",
-      "Private by Default",
-      "Verification Codes",
-      "Encryption at Rest",
-    ],
-    []
-  );
-
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const [ready, setReady] = useState(false);
-
-  // Measure after layout so widths are correct
-  useLayoutEffect(() => {
-    function measure() {
-      const el = trackRef.current;
-      if (!el) return;
-
-      // The track contains two identical groups.
-      // We want to move exactly the width of the first group = half total scrollWidth.
-      const total = el.scrollWidth;
-      const half = total / 2;
-
-      el.style.setProperty("--marquee-distance", `${half}px`);
-
-      // Duration proportional to distance -> consistent speed across screen sizes
-      // tweak 60 to change speed (pixels/sec)
-      const pxPerSecond = 60;
-      const duration = Math.max(12, Math.round(half / pxPerSecond));
-      el.style.setProperty("--marquee-duration", `${duration}s`);
-
-      setReady(true);
-    }
-
-    measure();
-
-    // Re-measure on resize
-    const ro = new ResizeObserver(() => measure());
-    if (trackRef.current) ro.observe(trackRef.current);
-
-    window.addEventListener("resize", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-
-  return (
-    <div className="mt-12 overflow-hidden">
-      <div className="relative">
-        {/* fade edges */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-linear-to-r from-[#0b5315] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-linear-to-l from-[#0b5315] to-transparent z-10" />
-
-        <div
-          ref={trackRef}
-          className={`marquee-track pointer-events-none select-none ${ready ? "opacity-100" : "opacity-0"}`}
-        >
-          {/* group A */}
-          <div className="flex items-center gap-3 pr-3">
-            {items.map((label, i) => (
-              <Chip key={`a-${i}`} label={label} />
-            ))}
-          </div>
-
-          {/* group B (duplicate for seamless loop) */}
-          <div className="flex items-center gap-3 pr-3">
-            {items.map((label, i) => (
-              <Chip key={`b-${i}`} label={label} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

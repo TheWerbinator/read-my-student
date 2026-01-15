@@ -13,24 +13,44 @@ import {
   Users,
   Building2,
   AlertTriangle,
-  ArrowRight,
 } from "lucide-react";
 
-import FacultyImg1 from "@/assets/hero/FacultyImage_01.png";
-import FacultyImg2 from "@/assets/faculty/faculty-02.png";
-import FacultyImg3 from "@/assets/faculty/faculty-03.png";
+import FacultyImg1 from "@/assets/hero/Faculty_Happy.png";
+import FacultyImg2 from "@/assets/hero/FacultyImage_01.png";
+import FacultyImg3 from "@/assets/hero/Faculty_Version_Control.png";
 
 export default function ForFacultyPage() {
   return (
     <main className="bg-[#fbfbf8]">
       {/* HERO (slightly different layout: text + stats row + image) */}
-      <section className="relative overflow-hidden bg-[#0b1553]">
+      <section className="relative overflow-hidden bg-[#0b4726]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]" />
         <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]" />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7">
+        <div className="relative mx-auto max-w-7xl px-6 py-10 sm:py-16 md:py-28 lg:pt-40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            
+            {/* Hero Image */}
+            <div className="relative order-2 lg:order-1">
+              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
+                <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
+                <Image
+                  src={FacultyImg1}
+                  alt="Faculty writing recommendation letters"
+                  className="h-80 md:h-105 w-full object-cover"
+                  priority
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Pill icon={<Sparkles className="h-4 w-4" />} text="AI drafting tools" />
+                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted storage" />
+                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Integrity preserved" />
+              </div>
+            </div>
+
+            {/* Hero Text */}
+            <div className="relative order-1 lg:order-2">
               <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
                 For Faculty
               </div>
@@ -60,7 +80,7 @@ export default function ForFacultyPage() {
                   size="lg"
                   className="rounded-xl justify-center"
                 >
-                  Join as Faculty <ArrowRight className="ml-2 h-4 w-4" />
+                  Join as Faculty
                 </LinkButton>
 
                 <LinkButton
@@ -78,23 +98,7 @@ export default function ForFacultyPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-5">
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
-                <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
-                <Image
-                  src={FacultyImg1}
-                  alt="Faculty writing recommendation letters"
-                  className="h-80 md:h-105 w-full object-cover"
-                  priority
-                />
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Pill icon={<Sparkles className="h-4 w-4" />} text="AI drafting tools" />
-                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted storage" />
-                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Integrity preserved" />
-              </div>
-            </div>
+            
           </div>
         </div>
       </section>
@@ -154,7 +158,7 @@ export default function ForFacultyPage() {
             <div className="relative">
               <div className="relative overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
                 <Image
-                  src={FacultyImg1}
+                  src={FacultyImg2}
                   alt="Modern volume and overlapping deadlines"
                   className="h-80 md:h-105 w-full object-cover"
                 />
@@ -167,11 +171,11 @@ export default function ForFacultyPage() {
                 Modern reality
               </div>
 
-              <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0a154a]">
+              <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]">
                 The old model collapses under modern volume.
               </h2>
 
-              <ul className="mt-6 space-y-3 text-sm md:text-base text-[#56608b]">
+              <ul className="mt-6 space-y-3 text-sm md:text-base text-[#0b5315]">
                 {[
                   "Students apply to 10–30 programs",
                   "Faculty write dozens of letters",
@@ -189,10 +193,10 @@ export default function ForFacultyPage() {
               </ul>
 
               <div className="mt-8 rounded-2xl border border-black/10 bg-white px-6 py-5">
-                <div className="text-xs font-bold text-[#0b1553] uppercase tracking-wide">
+                <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">
                   This is why:
                 </div>
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#56608b]">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-[#0b5315]">
                   <MiniBullet text="Letters are delayed" />
                   <MiniBullet text="Students miss opportunities" />
                   <MiniBullet text="Faculty burn out" />
@@ -259,7 +263,7 @@ export default function ForFacultyPage() {
       </section>
 
       {/* Solutions: side-by-side, faculty-focused (slightly different layout: stacked “Pain vs Solution” rows) */}
-      <section className="bg-[#0b1553]">
+      <section className="bg-[#0b5315]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
           <div className="text-center">
             <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
@@ -307,7 +311,7 @@ export default function ForFacultyPage() {
             />
           </div>
 
-          <div className="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+          <div className="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             <div className="rounded-3xl bg-white/10 border border-white/15 px-8 py-8 transition-colors duration-300 hover:border-amber-300/60 hover:bg-white/15 hover:shadow-[0_18px_45px_rgba(245,197,66,0.18)]">
               <div className="font-serif text-2xl font-semibold text-white">
                 Your time is valuable.
@@ -324,7 +328,7 @@ export default function ForFacultyPage() {
                   size="lg"
                   className="rounded-xl justify-center min-w-52"
                 >
-                  Join as Faculty →
+                  Join as Faculty
                 </LinkButton>
 
                 <Link href="/contact" className="text-sm font-semibold text-white/75 hover:text-white transition-colors self-center">
@@ -337,7 +341,7 @@ export default function ForFacultyPage() {
               <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
                 <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
                 <Image
-                  src={FacultyImg1}
+                  src={FacultyImg3}
                   alt="Faculty tools, workflow, and verification"
                   className="h-80 md:h-105 w-full object-cover"
                 />
@@ -368,13 +372,13 @@ function SectionHeader({
 }) {
   return (
     <div className="text-center">
-      <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#101c5a]">
+      <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]">
         {badge}
       </div>
-      <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0a154a]">
+      <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0b5315]">
         {title}
       </h2>
-      <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#56608b]">
+      <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b5315]">
         {subtitle}
       </p>
     </div>
@@ -435,9 +439,9 @@ function Card({
       ? "bg-white border-black/10"
       : "bg-white/10 border-white/15";
 
-  const titleColor = tone === "light" ? "text-[#0a154a]" : "text-white";
+  const titleColor = tone === "light" ? "text-[#0b5315]" : "text-white";
   const subtitleColor = tone === "light" ? "text-amber-600" : "text-white/70";
-  const textColor = tone === "light" ? "text-[#56608b]" : "text-white/75";
+  const textColor = tone === "light" ? "text-[#0b5315]" : "text-white/75";
 
   return (
     <div className={`${base} ${styles}`}>
@@ -445,7 +449,7 @@ function Card({
         <div
           className={[
             "h-12 w-12 rounded-2xl grid place-items-center border border-black/5",
-            tone === "light" ? "bg-[#eef0f8] text-[#0b1553]" : "bg-white/10 text-amber-300 border-white/15",
+            tone === "light" ? "bg-green-50 text-[#0b5315]" : "bg-white/10 text-amber-300 border-white/15",
           ].join(" ")}
         >
           {icon}
@@ -475,7 +479,7 @@ function Card({
       </ul>
 
       {footer ? (
-        <div className={`mt-7 rounded-2xl border border-black/5 bg-[#fbfbf8] px-5 py-4 text-sm ${tone === "light" ? "text-[#3c466a]" : "text-white/75"}`}>
+        <div className={`mt-7 rounded-2xl border border-black/5 bg-[#fbfbf8] px-5 py-4 text-sm ${tone === "light" ? "text-[#0b5315]" : "text-white/75"}`}>
           {footer}
         </div>
       ) : null}
@@ -498,12 +502,12 @@ function ListCard({
         <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center border border-black/5">
           {icon}
         </div>
-        <div className="font-serif text-xl font-semibold text-[#0a154a]">
+        <div className="font-serif text-xl font-semibold text-[#0b5315]">
           {title}
         </div>
       </div>
 
-      <ul className="mt-6 space-y-3 text-sm text-[#56608b]">
+      <ul className="mt-6 space-y-3 text-sm text-[#0b5315]">
         {items.map((i) => (
           <li key={i} className="flex items-start gap-3">
             <span className="mt-0.5 text-amber-500">
@@ -523,7 +527,7 @@ function MiniBullet({ text }: { text: string }) {
       <span className="text-amber-500">
         <Check className="h-4 w-4" />
       </span>
-      <span className="text-sm text-[#56608b]">{text}</span>
+      <span className="text-sm text-[#0b5315]">{text}</span>
     </div>
   );
 }

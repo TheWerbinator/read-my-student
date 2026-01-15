@@ -23,43 +23,43 @@ export default function TrustSection() {
       title: "Data Encrypted",
       body: "All data is encrypted at rest and in transit. Server-side encryption for all uploaded PDFs and sensitive fields.",
       icon: <Lock className="h-5 w-5" />,
-      iconBg: "bg-[#eef0f8]",
-      iconColor: "text-[#0b1553]",
+      iconBg: "bg-amber-50",
+      iconColor: "text-[#0b4726]",
     },
     {
       title: "Access Controlled",
       body: "Role-based access ensures students, faculty, and admins only see what they're authorized to see.",
       icon: <Shield className="h-5 w-5" />,
       iconBg: "bg-amber-50",
-      iconColor: "text-amber-600",
+      iconColor: "text-[#0b4726]",
     },
     {
       title: "Consent Built-in",
       body: "Every shareable link is tied to a student consent record. Nothing is shared without explicit permission.",
       icon: <Users className="h-5 w-5" />,
-      iconBg: "bg-[#eef0f8]",
-      iconColor: "text-[#0b1553]",
+      iconBg: "bg-amber-50",
+      iconColor: "text-[#0b4726]",
     },
     {
-      title: "Time-Bound Sharing",
-      body: "Share links automatically expire after your chosen duration. Set expiration dates and max view counts.",
+      title: "Share Once, Control the Time",
+      body: "Create permission-based links with full control over when access begins and ends.",
       icon: <Clock3 className="h-5 w-5" />,
       iconBg: "bg-amber-50",
-      iconColor: "text-amber-600",
+      iconColor: "text-[#0b4726]",
     },
     {
       title: "View Tracking & Audit",
       body: "Every link view is logged (IP, timestamp, user agent). See exactly where and when your letters were accessed.",
       icon: <Eye className="h-5 w-5" />,
-      iconBg: "bg-[#eef0f8]",
-      iconColor: "text-[#0b1553]",
+      iconBg: "bg-amber-50",
+      iconColor: "text-[#0b4726]",
     },
     {
       title: "Revoke Anytime",
       body: "Faculty can withdraw an RL anytime. Students can revoke shared links instantly if needed.",
       icon: <FileX2 className="h-5 w-5" />,
       iconBg: "bg-amber-50",
-      iconColor: "text-amber-600",
+      iconColor: "text-[#0b4726]",
     },
   ];
 
@@ -102,11 +102,11 @@ export default function TrustSection() {
                 {c.icon}
               </div>
 
-              <h3 className="mt-6 font-serif text-xl font-semibold text-[#0a154a]">
+              <h3 className="mt-6 font-serif text-xl font-semibold text-[#0b4726]">
                 {c.title}
               </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-[#5f6a93]">
+              <p className="mt-3 text-sm leading-relaxed text-[#0b4726]">
                 {c.body}
               </p>
             </div>
@@ -115,7 +115,7 @@ export default function TrustSection() {
 
         {/* bottom compliance bar */}
         <div className="mt-12">
-          <div className="rounded-2xl bg-[#0b1553] px-6 py-5 shadow-[0_20px_60px_rgba(11,21,83,0.25)]">
+          <div className="rounded-2xl bg-[#0b4726] px-6 py-5 shadow-[0_20px_60px_rgba(11,21,83,0.25)]">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="font-serif text-lg font-semibold text-white/95">
                 Privacy &amp; Compliance:
@@ -124,7 +124,7 @@ export default function TrustSection() {
               <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-semibold text-white/85">
                 <span className="inline-flex items-center gap-2">
                   <Shield className="h-4 w-4 text-amber-400" />
-                  GDPR Ready
+                  Encyrpted Data
                 </span>
 
                 <span className="inline-flex items-center gap-2">

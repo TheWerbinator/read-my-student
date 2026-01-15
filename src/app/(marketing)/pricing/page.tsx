@@ -1,4 +1,5 @@
 import { LinkButton } from "@/components/ui/LinkButton";
+import PricingPreview from "@/components/marketing/PricingPreview";
 import {
   Check,
   ShieldCheck,
@@ -77,11 +78,11 @@ export default function PricingPage() {
   return (
     <main className="bg-[#fbfbf8]">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-[#0b1553]">
+      <section className="relative overflow-hidden bg-[#0b4726]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]" />
         <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]" />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-20 text-center">
+        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-24 text-center">
           <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
             Pricing
           </div>
@@ -103,7 +104,7 @@ export default function PricingPage() {
               size="lg"
               className="rounded-xl min-w-56 justify-center"
             >
-              Start for Free →
+              Start for Free
             </LinkButton>
 
             <LinkButton
@@ -134,32 +135,33 @@ export default function PricingPage() {
       </section>
 
       {/* PRICING CARDS */}
-      <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+      {/* <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {tiers.map((t) => (
             <TierCard key={t.name} tier={t} />
           ))}
         </div>
-      </section>
+      </section> */}
+      <PricingPreview />
 
       {/* COMPARISON */}
       <section className="bg-white/40 border-y border-black/5">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
           <div className="text-center">
-            <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#101c5a]">
+            <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]">
               Quick comparison
             </div>
-            <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0a154a]">
+            <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]">
               What you get at a glance
             </h2>
-            <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#56608b]">
+            <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b5315]">
               We keep the essentials free so students and faculty can adopt the platform
               without friction.
             </p>
           </div>
 
           <div className="mt-12 overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
-            <div className="grid grid-cols-4 bg-[#fbfbf8] border-b border-black/5 text-sm font-semibold text-[#0a154a]">
+            <div className="grid grid-cols-4 bg-[#fbfbf8] border-b border-black/5 text-sm font-semibold text-amber-600">
               <div className="px-6 py-4">Feature</div>
               <div className="px-6 py-4">Student</div>
               <div className="px-6 py-4">Faculty</div>
@@ -181,7 +183,7 @@ export default function PricingPage() {
               size="lg"
               className="rounded-xl min-w-56 justify-center"
             >
-              Start as a Student →
+              Start as a Student
             </LinkButton>
             <LinkButton
               href="/signup?role=faculty"
@@ -198,10 +200,10 @@ export default function PricingPage() {
       {/* FAQ */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         <div className="text-center">
-          <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#101c5a]">
+          <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#0b5315]">
             FAQ
           </div>
-          <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0a154a]">
+          <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]">
             Common questions
           </h2>
         </div>
@@ -315,16 +317,16 @@ function TierCard({ tier }: { tier: Tier }) {
 /** ✅ Moved OUTSIDE CompareRow to avoid "created during render" */
 function CompareCell({ ok }: { ok?: boolean }) {
   return (
-    <div className="px-6 py-4 text-sm text-[#56608b]">
+    <div className="px-6 py-4 text-sm text-[#0b5315]">
       {ok ? (
-        <span className="inline-flex items-center gap-2 font-semibold text-[#0a154a]">
+        <span className="inline-flex items-center gap-2 font-semibold text-[#0b5315]">
           <span className="text-amber-500">
             <Check className="h-4 w-4" />
           </span>
           Included
         </span>
       ) : (
-        <span className="text-[#9aa3c2]">—</span>
+        <span className="text-[#0b5315]">—</span>
       )}
     </div>
   );
@@ -343,7 +345,7 @@ function CompareRow({
 }) {
   return (
     <div className="grid grid-cols-4 border-t border-black/5">
-      <div className="px-6 py-4 text-sm font-semibold text-[#0a154a]">
+      <div className="px-6 py-4 text-sm font-semibold text-[#0b5315]">
         {feature}
       </div>
       <CompareCell ok={a} />
@@ -356,8 +358,8 @@ function CompareRow({
 function FaqCard({ q, a }: { q: string; a: string }) {
   return (
     <div className="rounded-3xl border border-black/10 bg-white px-8 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition-colors duration-300 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.20)]">
-      <div className="font-serif text-xl font-semibold text-[#0a154a]">{q}</div>
-      <p className="mt-3 text-sm leading-relaxed text-[#56608b]">{a}</p>
+      <div className="font-serif text-xl font-semibold text-[#0b5315]">{q}</div>
+      <p className="mt-3 text-sm leading-relaxed text-[#0b5315]">{a}</p>
     </div>
   );
 }

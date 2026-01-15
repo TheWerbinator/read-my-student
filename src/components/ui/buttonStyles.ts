@@ -10,7 +10,7 @@ export const buttonVariants: Record<ButtonVariant, string> = {
   amber:
   "bg-amber-400 text-white hover:bg-orange-600 " +
   "focus:ring-orange-500",
-   gold: `
+  gold: `
     text-[#3a2a00]
     bg-gradient-to-r from-[#f7d774] via-[#f3b72f] to-[#d99a00]
     hover:from-[#ffe08a] hover:via-[#f5c542] hover:to-[#e0a800]

@@ -89,57 +89,51 @@ export default function ScrollingProofTicker({
     return () => window.removeEventListener("resize", onResize);
   }, [doubled]);
 
-  // ✅ Sticky activate when passing center; reset when fully exits left
+  // ✅ Activate when in center zone; deactivate when sufficiently out of it (hysteresis)
+  // This guarantees the checkmark re-animates every time the item passes center.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     let raf = 0;
 
+    // Prevent flicker near the boundary
+    const HYSTERESIS_PX = 400;
+
     const loop = () => {
       const cRect = container.getBoundingClientRect();
       const centerX = cRect.left + cRect.width / 2;
 
-      const toActivate: string[] = [];
-      const toReset: string[] = [];
+      setActivated((prev) => {
+        let changed = false;
+        const next = new Set(prev);
 
-      for (let i = 0; i < doubled.length; i++) {
-        const el = itemRefs.current[i];
-        if (!el) continue;
+        for (let i = 0; i < doubled.length; i++) {
+          const el = itemRefs.current[i];
+          if (!el) continue;
 
-        const r = el.getBoundingClientRect();
-        const key = `${doubled[i].id}:${i}`;
-        const itemCenterX = r.left + r.width / 2;
+          const r = el.getBoundingClientRect();
+          const key = `${doubled[i].id}:${i}`;
+          const itemCenterX = r.left + r.width / 2;
 
-        // Activate when in center zone (sticky)
-        if (Math.abs(itemCenterX - centerX) <= centerZonePx) {
-          toActivate.push(key);
-        }
+          const dist = Math.abs(itemCenterX - centerX);
+          const isActive = next.has(key);
 
-        // Reset only after fully leaving the container to the left
-        if (r.right < cRect.left - 20) {
-          toReset.push(key);
-        }
-      }
-
-      if (toActivate.length || toReset.length) {
-        setActivated((prev) => {
-          let changed = false;
-          const next = new Set(prev);
-
-          for (const k of toReset) {
-            if (next.delete(k)) changed = true;
-          }
-          for (const k of toActivate) {
-            if (!next.has(k)) {
-              next.add(k);
-              changed = true;
-            }
+          // Turn ON when entering center zone
+          if (!isActive && dist <= centerZonePx) {
+            next.add(key);
+            changed = true;
           }
 
-          return changed ? next : prev;
-        });
-      }
+          // Turn OFF only after moving clearly out of zone (hysteresis)
+          if (isActive && dist > centerZonePx + HYSTERESIS_PX) {
+            next.delete(key);
+            changed = true;
+          }
+        }
+
+        return changed ? next : prev;
+      });
 
       raf = requestAnimationFrame(loop);
     };
@@ -147,6 +141,7 @@ export default function ScrollingProofTicker({
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, [doubled, centerZonePx]);
+
 
   return (
     <div className="relative">
@@ -177,7 +172,7 @@ export default function ScrollingProofTicker({
                 ref={(node) => {
                   itemRefs.current[i] = node;
                 }}
-                className="inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-base font-semibold text-[#0b4726]"
+                className="inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-xl font-semibold text-[#0b4726]"
               >
                 <span className="relative inline-flex items-center justify-center w-5">
                   <BulletIcon active={isActive} />

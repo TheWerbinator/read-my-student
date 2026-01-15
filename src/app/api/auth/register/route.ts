@@ -8,17 +8,16 @@ const RegisterSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
   role: z.enum(["STUDENT", "FACULTY"]),
-  fullName: z.string().min(2),
+  firstName: z.string().min(2),
+  lastName: z.string().min(2),
+
+  countryCode: z.string().min(2),
 
   // student
   university: z.string().optional(),
-  program: z.string().optional(),
-  graduationDate: z.string().optional(),
 
   // faculty
   institution: z.string().optional(),
-  title: z.string().optional(),
-  department: z.string().optional(),
 });
 
 function isAcademicEmail(email: string) {
@@ -31,6 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = RegisterSchema.parse(body);
+    console.log(data);
 
     if(data.role === "STUDENT" && !isAcademicEmail(data.email)) {
       return NextResponse.json(
@@ -56,15 +56,15 @@ export async function POST(req: NextRequest) {
     });
 
     if(data.role === "STUDENT") {
-      if(!data.university || !data.program) throw new Error("Missing student fields: university and program required.");
+      if(!data.university) throw new Error("Missing student fields: university and program required.");
 
       await tx.student.create({
         data: {
           userId: user.id,
-          fullName: data.fullName,
+          firstName: data.firstName,
+          lastName: data.lastName,
           university: data.university,
-          program: data.program,
-          graduationDate: data.graduationDate ? new Date(data.graduationDate) : null,
+          countryCode: data.countryCode
         },
       });
     } else {
@@ -73,10 +73,10 @@ export async function POST(req: NextRequest) {
       await tx.faculty.create({
         data: {
           userId: user.id,
-          fullName: data.fullName,
+          firstName: data.firstName,
+          lastName: data.lastName,
           institution: data.institution,
-          title: data.title ?? null,
-          department: data.department ?? null,
+          countryCode: data.countryCode
         },
       });
     }
@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
 
   } catch(err: unknown)  {
     if(err instanceof z.ZodError) {
+      console.log("We have a zod error, ladies and gents. :)");
       return NextResponse.json({ error: "Invalid input", details: err.issues }, { status: 400 });
     }
 

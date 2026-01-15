@@ -20,18 +20,38 @@ export default function HowItWorksPage() {
   return (
     <main className="bg-[#fbfbf8]">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-[#0b1553]">
+      <section className="relative overflow-hidden bg-[#0b4726]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]" />
         <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]" />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
+        <div className="relative mx-auto max-w-7xl px-6 py-10 sm:py-16 md:py-28 lg:py-40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            
+            {/* Image panel */}
+            <div className="relative order-2 lg:order-1">
+              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
+                <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
+                <Image
+                  src={HowItWorksImage}
+                  alt="How ReadMyStudent works"
+                  className="h-80 md:h-105 w-full object-cover"
+                  priority
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted storage" />
+                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Consent-based access" />
+                <Pill icon={<Clock3 className="h-4 w-4" />} text="Deadline tracking" />
+              </div>
+            </div>
+            
+            <div className="relative order-1 lg:order-2">
               <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
                 How It Works
               </div>
 
-              <h1 className="mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-white">
+              <h1 className="mt-6 font-serif text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-white">
                 Recommendation letters are{" "}
                 <span className="italic text-amber-400">hard</span> —
                 <br className="hidden md:block" /> for reasons nobody designed for.
@@ -50,7 +70,7 @@ export default function HowItWorksPage() {
                   size="lg"
                   className="rounded-xl justify-center"
                 >
-                  Start as a Student →
+                  Start as a Student
                 </LinkButton>
 
                 <LinkButton
@@ -68,24 +88,7 @@ export default function HowItWorksPage() {
               </div>
             </div>
 
-            {/* Image panel */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
-                <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
-                <Image
-                  src={HowItWorksImage}
-                  alt="How ReadMyStudent works"
-                  className="h-80 md:h-105 w-full object-cover"
-                  priority
-                />
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted storage" />
-                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Consent-based access" />
-                <Pill icon={<Clock3 className="h-4 w-4" />} text="Deadline tracking" />
-              </div>
-            </div>
+            
           </div>
         </div>
       </section>
@@ -93,15 +96,15 @@ export default function HowItWorksPage() {
       {/* Problems */}
       <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         <div className="text-center">
-          <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#101c5a]">
+          <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]">
             The Problem
           </div>
-          <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0a154a]">
+          <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0b4726]">
             The traditional process is{" "}
             <span className="italic text-amber-500">emotionally</span> and{" "}
             <span className="italic text-amber-500">logistically</span> broken.
           </h2>
-          <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#56608b]">
+          <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b4726]">
             Students feel vulnerable asking. Faculty are overloaded. Institutions struggle
             with fraud risk and compliance.
           </p>
@@ -201,7 +204,7 @@ export default function HowItWorksPage() {
               Why the System Is Broken (Structurally)
             </div>
 
-            <h3 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0a154a]">
+            <h3 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b4726]">
               The current model assumes things that are no longer true.
             </h3>
 
@@ -212,7 +215,7 @@ export default function HowItWorksPage() {
               <AssumptionRow left="Manual trust" right="❌" />
             </div>
 
-            <p className="mt-8 text-sm md:text-base text-[#56608b] leading-relaxed">
+            <p className="mt-8 text-sm md:text-base text-[#0b4726] leading-relaxed">
               Modern application volume and verification needs demand a system that is
               secure, auditable, and respectful of everyone’s time and emotional load.
             </p>
@@ -221,7 +224,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Solutions */}
-      <section className="bg-[#0b1553]">
+      <section className="bg-[#0b5315]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
           <div className="text-center">
             <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
@@ -288,7 +291,7 @@ export default function HowItWorksPage() {
               size="lg"
               className="rounded-xl min-w-56 justify-center"
             >
-              Start as a Student →
+              Start as a Student
             </LinkButton>
 
             <LinkButton
@@ -350,18 +353,18 @@ function ProblemCard({
   const Card = (
     <div className={cardClassName}>
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-2xl bg-[#eef0f8] text-[#0b1553] grid place-items-center border border-black/5">
+        <div className="h-12 w-12 rounded-2xl bg-amber-50 text-[#0b4726] grid place-items-center border border-black/5">
           {icon}
         </div>
         <div>
-          <div className="font-serif text-xl font-semibold text-[#0a154a]">
+          <div className="font-serif text-xl font-semibold text-[#0b4726]">
             {title}
           </div>
           <div className="text-sm font-semibold text-amber-600">{subtitle}</div>
         </div>
       </div>
 
-      <ul className="mt-6 space-y-3 text-sm text-[#56608b]">
+      <ul className="mt-6 space-y-3 text-sm text-[#0b4726]">
         {bullets.map((b) => (
           <li key={b} className="flex items-start gap-3">
             <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500">
@@ -374,10 +377,10 @@ function ProblemCard({
 
       {quotes?.length ? (
         <div className="mt-7 rounded-2xl bg-[#fbfbf8] border border-black/5 px-5 py-4">
-          <div className="text-xs font-bold text-[#0b1553] uppercase tracking-wide">
+          <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">
             Students often wonder
           </div>
-          <div className="mt-2 space-y-2 text-sm italic text-[#3c466a]">
+          <div className="mt-2 space-y-2 text-sm italic text-[#0b4726]">
             {quotes.map((q) => (
               <div key={q}>{q}</div>
             ))}
@@ -424,12 +427,12 @@ function MiniListCard({
         <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center border border-black/5">
           {icon}
         </div>
-        <div className="font-serif text-xl font-semibold text-[#0a154a]">
+        <div className="font-serif text-xl font-semibold text-[#0b4726]">
           {title}
         </div>
       </div>
 
-      <ul className="mt-6 space-y-3 text-sm text-[#56608b]">
+      <ul className="mt-6 space-y-3 text-sm text-[#0b4726]">
         {items.map((i) => (
           <li key={i} className="flex items-start gap-3">
             <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500">
@@ -446,7 +449,7 @@ function MiniListCard({
 function AssumptionRow({ left, right }: { left: string; right: string }) {
   return (
     <div className="flex items-center justify-between rounded-2xl bg-white px-5 py-4 border border-black/5">
-      <span className="font-semibold text-[#0a154a]">{left}</span>
+      <span className="font-semibold text-red-600">{left}</span>
       <span className="text-lg">{right}</span>
     </div>
   );

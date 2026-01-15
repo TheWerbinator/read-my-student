@@ -15,20 +15,40 @@ import {
   // eslint-disable-next-line
   GraduationCap,
   Sparkles,
-  ArrowRight,
 } from "lucide-react";
 
 export default function ForStudentsPage() {
   return (
     <main className="bg-[#fbfbf8]">
       {/* HERO */}
-      <section className="relative overflow-hidden bg-[#0b1553]">
+      <section className="relative overflow-hidden bg-[#0b4726]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]" />
         <div className="absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]" />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
+        <div className="relative mx-auto max-w-7xl px-6 py-10 sm:py-16 md:py-28 lg:py-40">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            
+            {/* Hero image */}
+            <div className="relative order-2 lg:order-1">
+              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
+                <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
+                <Image
+                  src={HeroImage_01}
+                  alt="Students applying to programs"
+                  className="h-80 md:h-105 w-full object-cover"
+                  priority
+                />
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted" />
+                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Consent-based" />
+                <Pill icon={<Clock3 className="h-4 w-4" />} text="Deadline clarity" />
+              </div>
+            </div>
+
+            {/* Text Part of Hero */}
+            <div className="relative order-1 lg:order-2">
               <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15">
                 For Students
               </div>
@@ -51,7 +71,7 @@ export default function ForStudentsPage() {
                   size="lg"
                   className="rounded-xl justify-center"
                 >
-                  Start for Free <ArrowRight className="ml-2 h-4 w-4" />
+                  Start for Free
                 </LinkButton>
 
                 <LinkButton
@@ -69,37 +89,20 @@ export default function ForStudentsPage() {
               </div>
             </div>
 
-            {/* Hero image */}
-            <div className="relative">
-              <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]">
-                <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
-                <Image
-                  src={HeroImage_01}
-                  alt="Students applying to programs"
-                  className="h-80 md:h-105 w-full object-cover"
-                  priority
-                />
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Pill icon={<Lock className="h-4 w-4" />} text="Encrypted" />
-                <Pill icon={<ShieldCheck className="h-4 w-4" />} text="Consent-based" />
-                <Pill icon={<Clock3 className="h-4 w-4" />} text="Deadline clarity" />
-              </div>
-            </div>
+            
           </div>
         </div>
       </section>
 
       {/* PROGRAMS */}
       <section className="mx-auto max-w-7xl px-6 py-14 md:py-18">
-        <div className="rounded-3xl border border-black/10 bg-white px-7 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <div className="rounded-3xl border border-amber-400/60 bg-[#0b5315] px-7 py-7 shadow-[0_18px_50px_rgba(0,0,0,0.25)]">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">
+              <div className="text-xs font-bold text-amber-400 uppercase tracking-wide">
                 Common use cases
               </div>
-              <div className="mt-2 font-serif text-2xl md:text-3xl font-semibold text-[#0a154a]">
+              <div className="mt-2 font-serif text-2xl md:text-3xl font-semibold text-[#e9f6ec]">
                 Built for the programs that shape your future
               </div>
             </div>
@@ -114,7 +117,12 @@ export default function ForStudentsPage() {
               ].map((x) => (
                 <span
                   key={x}
-                  className="inline-flex items-center rounded-full bg-[#eef0f8] px-4 py-2 text-xs font-semibold text-[#101c5a] border border-black/5"
+                  className={[
+                    "inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold",
+                    "bg-white/10 text-[#e9f6ec]",
+                    "border border-amber-400/40",
+                    "backdrop-blur-sm",
+                  ].join(" ")}
                 >
                   {x}
                 </span>
@@ -134,14 +142,14 @@ export default function ForStudentsPage() {
               <span className="italic text-amber-500">they disappear</span>.
             </>
           }
-          subtitle="The dominant model is one letter → one portal → gone. That structure is why faculty get flooded and students panic every cycle."
+          subtitle="The dominant model is one letter, one portal, gone. That structure is why faculty get flooded and students panic every cycle."
         />
 
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SideBySideCard
             tone="pain"
             icon={<FileText className="h-5 w-5" />}
-            title="Pain: One letter → one portal → disappears"
+            title="Pain: One letter, one portal, disappears"
             bullets={[
               "The letter is context-specific",
               "The faculty member controls submission",
@@ -185,11 +193,11 @@ export default function ForStudentsPage() {
                 Why Students Rarely “See” the Letter
               </div>
 
-              <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0a154a]">
+              <h2 className="mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]">
                 The confusion is not your fault.
               </h2>
 
-              <p className="mt-4 text-sm md:text-base leading-relaxed text-[#56608b]">
+              <p className="mt-4 text-sm md:text-base leading-relaxed text-[#0b5315]">
                 Two reasons explain why letters often feel invisible:
               </p>
 
@@ -207,10 +215,10 @@ export default function ForStudentsPage() {
               </div>
 
               <div className="mt-8 rounded-2xl border border-black/10 bg-white px-6 py-5">
-                <div className="text-xs font-bold text-[#0b1553] uppercase tracking-wide">
+                <div className="text-xs font-bold text-[#0b5315] uppercase tracking-wide">
                   This confusion is a signal.
                 </div>
-                <ul className="mt-3 space-y-2 text-sm text-[#56608b]">
+                <ul className="mt-3 space-y-2 text-sm text-[#0b5315]">
                   {[
                     "Students lack visibility",
                     "The system is archaic",
@@ -291,7 +299,7 @@ export default function ForStudentsPage() {
       </section>
 
       {/* WHY STUDENTS FAIL TO CAPTURE VALUE */}
-      <section className="bg-[#0b1553]">
+      <section className="bg-[#0b5315]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
             <div>
@@ -365,7 +373,7 @@ export default function ForStudentsPage() {
               size="lg"
               className="rounded-xl min-w-56 justify-center"
             >
-              Start as a Student →
+              Start as a Student
             </LinkButton>
 
             <Link href="/contact" className="text-sm font-semibold text-white/75 hover:text-white transition-colors">
@@ -391,13 +399,13 @@ function SectionHeader({
 }) {
   return (
     <div className="text-center">
-      <div className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#101c5a]">
+      <div className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]">
         {badge}
       </div>
-      <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0a154a]">
+      <h2 className="mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0b5315]">
         {title}
       </h2>
-      <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#56608b]">
+      <p className="mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b5315]">
         {subtitle}
       </p>
     </div>
@@ -441,18 +449,17 @@ function SideBySideCard({
       <div className="flex items-center gap-3">
         <div
           className={[
-            "h-12 w-12 rounded-2xl grid place-items-center border border-black/5",
-            tone === "pain" ? "bg-[#eef0f8] text-[#0b1553]" : "bg-amber-50 text-amber-600",
+            "h-12 w-12 rounded-2xl grid place-items-center border border-black/5 bg-amber-50 text-amber-600",
           ].join(" ")}
         >
           {icon}
         </div>
-        <div className="font-serif text-xl font-semibold text-[#0a154a]">
+        <div className="font-serif text-xl font-semibold text-[#0b5315]">
           {title}
         </div>
       </div>
 
-      <ul className="mt-6 space-y-3 text-sm text-[#56608b]">
+      <ul className="mt-6 space-y-3 text-sm text-[#0b5315]">
         {bullets.map((b) => (
           <li key={b} className="flex items-start gap-3">
             <span className="mt-0.5 text-amber-500">
@@ -478,14 +485,14 @@ function ReasonCard({
   return (
     <div className="rounded-2xl border border-black/10 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition-colors duration-300 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.18)]">
       <div className="flex items-start gap-3">
-        <div className="h-9 w-9 rounded-xl bg-amber-400 text-[#0b1553] font-extrabold grid place-items-center">
+        <div className="h-9 w-9 rounded-xl bg-amber-500 text-white font-extrabold grid place-items-center">
           {number}
         </div>
         <div>
-          <div className="font-serif text-lg font-semibold text-[#0a154a]">
+          <div className="font-serif text-lg font-semibold text-amber-500">
             {title}
           </div>
-          <div className="mt-1 text-sm text-[#56608b] leading-relaxed">{body}</div>
+          <div className="mt-1 text-sm text-[#0b5315] leading-relaxed">{body}</div>
         </div>
       </div>
     </div>
@@ -534,7 +541,7 @@ function PairCard({
 }) {
   const iconStyle =
     tone === "pain"
-      ? "bg-[#eef0f8] text-[#0b1553]"
+      ? "bg-[#0b5315] text-green-100"
       : "bg-amber-50 text-amber-600";
 
   return (
@@ -544,10 +551,10 @@ function PairCard({
           {icon}
         </div>
         <div>
-          <div className="font-serif text-xl font-semibold text-[#0a154a]">
+          <div className="font-serif text-xl font-semibold text-[#0b5315]">
             {title}
           </div>
-          <div className="mt-2 text-sm text-[#56608b] leading-relaxed">{body}</div>
+          <div className="mt-2 text-sm text-[#0b5315] leading-relaxed">{body}</div>
         </div>
       </div>
     </div>

@@ -1,79 +1,54 @@
 import Link from "next/link";
+import Image from "next/image";
+import LogoOfficial from "../../../public/Logo_Official_White.png";
+
 import {
   Twitter,
   Linkedin,
   Github,
   Mail,
-  ShieldCheck,
-  Globe,
-  Lock,
 } from "lucide-react";
 
 type FooterLink = { label: string; href: string };
 
 export default function Footer() {
   const product: FooterLink[] = [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Security", href: "#trust" },
-    { label: "Integrations", href: "#integrations" },
+    { label: "Features", href: "/how-it-works" },
+    { label: "Pricing", href: "/pricing" },
   ];
 
   const company: FooterLink[] = [
-    { label: "About Us", href: "/about" },
+    { label: "About Us", href: "/about-us" },
     { label: "Careers", href: "/careers" },
-    { label: "Blog", href: "/blog" },
-    { label: "Press", href: "/press" },
   ];
 
   const resources: FooterLink[] = [
-    { label: "Documentation", href: "/docs" },
-    { label: "Help Center", href: "/help" },
     { label: "Contact", href: "/contact" },
-    { label: "Status", href: "/status" },
+    { label: "FAQ", href: "/faq" },
+    { label: "Security", href: "/security" }
+    // { label: "SiteMap", href: "/sitemap.xml" } // NEED TO CHANGE TO ACTUAL SITEMAP ONCE DEPLOYED
   ];
 
   const legal: FooterLink[] = [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
-    { label: "GDPR", href: "/gdpr" },
-    { label: "FERPA Compliance", href: "/ferpa" },
   ];
 
   return (
-    <footer className="bg-[#071225] text-white">
+    <footer className="bg-[#07351c] text-white">
       <div className="mx-auto max-w-7xl px-6 py-14 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
           {/* Brand column */}
           <div className="lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3">
-              <span className="h-10 w-10 rounded-xl bg-amber-400 text-[#071225] grid place-items-center">
-                {/* cap icon */}
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="text-[#071225]"
-                >
-                  <path
-                    d="M12 3 2 8l10 5 10-5-10-5Z"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M6 10v6c0 2 4 4 6 4s6-2 6-4v-6"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-
-              <span className="font-serif text-lg font-semibold">
-                ReadMyStudent
-              </span>
+              <Image
+                src={LogoOfficial}
+                alt="ReadMyStudent logo"
+                width={450}
+                height={400}
+                priority
+                className="h-24 sm:h-36 lg:h-40 xl:h-48 w-auto"
+              />
             </Link>
 
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
@@ -114,20 +89,6 @@ export default function Footer() {
             © 2025 ReadMyStudent. Owned and operated by YS2PC Research Group LLC. All rights reserved.
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-white/60">
-            <span className="inline-flex items-center gap-2">
-              <Lock className="h-4 w-4 text-amber-400" />
-              SOC 2 Type II Certified
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-amber-400" />
-              FERPA Compliant
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Globe className="h-4 w-4 text-amber-400" />
-              GDPR Ready
-            </span>
-          </div>
         </div>
       </div>
     </footer>

@@ -33,7 +33,7 @@ export default function HowItWorks() {
         },
         {
           title: "Request Recommendations",
-          body: "Add faculty by email, specify the purpose (job, MS, PhD, scholarship), target organization, and deadline.",
+          body: "Add faculty by email, specify the purpose (job, MS, PhD, scholarship, immigration), target organization, and deadline.",
           icon: <Send className="h-6 w-6" />,
         },
         {
@@ -80,7 +80,7 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         {/* Top badge */}
         <div className="flex justify-center">
-          <span className="inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#247037]">
+          <span className="inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#247037]">
             How It Works
           </span>
         </div>

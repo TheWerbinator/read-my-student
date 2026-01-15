@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     await setSessionCookie(token);
 
     return NextResponse.json({ user: { id: user.id, email: user.email, role: user.role }}, { status: 200 });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line
   } catch(err: any) {
     if(err?.name === "ZodError") {
       return NextResponse.json({ error: "Invalid input", details: err.errors}, { status: 400 });
