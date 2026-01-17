@@ -1,9 +1,54 @@
 "use client";
 
 import { LinkButton } from "@/components/ui/LinkButton";
+import { contactFormSchema, ContactFormValues } from "@/lib/schemas";
 import { HelpCircle, ShieldCheck, Send } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useTransition } from "react";
+import { toast } from "sonner";
+import { submitContactForm } from "@/app/actions/contact";
+
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ContactClient() {
+  const [isPending, startTransition] = useTransition();
+
+  // 1. Setup the form hook
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      email: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  // 2. Define the submit handler
+  function onSubmit(data: ContactFormValues) {
+    startTransition(async () => {
+      const result = await submitContactForm(data);
+
+      if (result.success) {
+        toast.success("Message sent!", {
+          description: "We'll get back to you shortly.",
+        });
+        form.reset();
+      } else {
+        toast.error("Error", { description: result.error });
+      }
+    });
+  }
   return (
     <main className='bg-[#fbfbf8]'>
       {/* HERO */}
@@ -64,12 +109,12 @@ export default function ContactClient() {
                   Send us a message
                 </h2>
                 <p className='mt-1 text-sm text-[#5f7f6f]'>
-                  We usually respond within 1–2 business days.
+                  We usually respond within 1-2 business days.
                 </p>
               </div>
             </div>
 
-            <form className='space-y-4'>
+            {/* <form className='space-y-4'>
               <input
                 type='text'
                 placeholder='Name (optional)'
@@ -98,10 +143,103 @@ export default function ContactClient() {
               </button>
 
               <p className='text-xs text-[#0b4726]/60'>
-                Please don’t include recommendation letter content or sensitive
-                personal data.
+                Please don&apos;t include recommendation letter content or
+                sensitive personal data. By submitting this form, you agree to
+                our{" "}
+                <a
+                  href='/privacy'
+                  className='underline hover:opacity-80 transition'
+                >
+                  Privacy Policy
+                </a>
+                .
               </p>
-            </form>
+            </form> */}
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className='space-y-6'
+              >
+                {/* Email Field */}
+                <FormField
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                          placeholder=''
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Subject Field */}
+                <FormField
+                  control={form.control}
+                  name='subject'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subject</FormLabel>
+                      <FormControl>
+                        <Input
+                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                          placeholder=''
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Message Field */}
+                <FormField
+                  control={form.control}
+                  name='message'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Message</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm min-h-[120px]'
+                          placeholder='Message content...'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type='submit'
+                  disabled={isPending}
+                  className='rounded-xl bg-[#0b4726] px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition w-1/2'
+                >
+                  {isPending ? "Sending..." : "Send Message"}
+                </Button>
+
+                <p className='text-xs text-[#0b4726]/60'>
+                  Please don&apos;t include recommendation letter content or
+                  sensitive personal data. By submitting this form, you agree to
+                  our{" "}
+                  <a
+                    href='/privacy'
+                    className='underline hover:opacity-80 transition'
+                  >
+                    Privacy Policy
+                  </a>
+                  .
+                </p>
+              </form>
+            </Form>
           </div>
         </div>
       </section>

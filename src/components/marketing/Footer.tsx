@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import LogoOfficial from "../../../public/Logo_Official_White.png";
-
-import { Twitter, Linkedin, Github, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
+import { BrandIcon } from "./BrandIcon";
 
 type FooterLink = { label: string; href: string };
 
@@ -54,14 +54,20 @@ export default function Footer() {
 
             {/* Social icons */}
             <div className='mt-6 flex items-center gap-3'>
-              <SocialIcon href='#' label='Twitter'>
-                <Twitter className='h-4 w-4' />
+              <SocialIcon href='https://x.com/TheWerbinator' label='Twitter'>
+                <BrandIcon className='h-4 w-4' name={"twitter"} />
               </SocialIcon>
-              <SocialIcon href='#' label='LinkedIn'>
-                <Linkedin className='h-4 w-4' />
+              <SocialIcon
+                href='https://www.linkedin.com/in/shawn-werber/'
+                label='LinkedIn'
+              >
+                <BrandIcon className='h-4 w-4' name={"linkedin"} />
               </SocialIcon>
-              <SocialIcon href='#' label='GitHub'>
-                <Github className='h-4 w-4' />
+              <SocialIcon
+                href='https://github.com/TheWerbinator'
+                label='GitHub'
+              >
+                <BrandIcon className='h-4 w-4' name={"github"} />
               </SocialIcon>
               <SocialIcon href='/contact' label='Email'>
                 <Mail className='h-4 w-4' />

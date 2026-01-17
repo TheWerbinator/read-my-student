@@ -15,12 +15,12 @@ function CheckIcon({ active }: { active: boolean }) {
           ? "bg-[#0b5315] scale-100 opacity-100"
           : "bg-transparent scale-75 opacity-0",
       ].join(" ")}
-      aria-hidden="true"
+      aria-hidden='true'
     >
-      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-white">
+      <svg viewBox='0 0 24 24' className='h-3.5 w-3.5 text-white'>
         <path
-          fill="currentColor"
-          d="M9.0 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"
+          fill='currentColor'
+          d='M9.0 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'
         />
       </svg>
     </span>
@@ -39,7 +39,7 @@ function BulletIcon({ active }: { active: boolean }) {
           ? "scale-75 opacity-0"
           : "scale-100 opacity-100 border border-black/20 bg-white/70",
       ].join(" ")}
-      aria-hidden="true"
+      aria-hidden='true'
     >
       <span
         className={[
@@ -142,22 +142,22 @@ export default function ScrollingProofTicker({
     return () => cancelAnimationFrame(raf);
   }, [doubled, centerZonePx]);
 
-
   return (
-    <div className="relative">
+    <div className='relative'>
       {/* Center highlight zone (optional subtle) */}
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-[220px] rounded-2xl bg-white/20 blur-[0.5px]" />
+      <div className='pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-[220px] rounded-2xl bg-white/20 blur-[0.5px]' />
 
       <div
         ref={containerRef}
-        className="relative overflow-hidden rounded-2xl border border-black/10 bg-white/30 backdrop-blur px-4 py-3"
+        className='relative overflow-hidden rounded-2xl border border-black/10 bg-white/30 backdrop-blur px-4 py-3'
       >
         {/* Track uses your global CSS: .marquee-track + CSS vars */}
         <div
           ref={trackRef}
-          className="marquee-track items-center gap-10"
+          className='marquee-track items-center gap-10'
           style={
-            {// eslint-disable-next-line
+            {
+              // eslint-disable-next-line
               ["--marquee-duration" as any]: `${speedSeconds}s`,
             } as React.CSSProperties
           }
@@ -172,16 +172,16 @@ export default function ScrollingProofTicker({
                 ref={(node) => {
                   itemRefs.current[i] = node;
                 }}
-                className="inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-xl font-semibold text-[#0b4726]"
+                className='inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-lg lg:text-xl font-semibold text-[#0b4726]'
               >
-                <span className="relative inline-flex items-center justify-center w-5">
+                <span className='relative inline-flex items-center justify-center w-5'>
                   <BulletIcon active={isActive} />
-                  <span className="absolute inset-0 flex items-center justify-center">
+                  <span className='absolute inset-0 flex items-center justify-center'>
                     <CheckIcon active={isActive} />
                   </span>
                 </span>
 
-                <span className="opacity-90">{it.text}</span>
+                <span className='opacity-90'>{it.text}</span>
               </span>
             );
           })}
