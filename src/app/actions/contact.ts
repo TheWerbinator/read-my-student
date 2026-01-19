@@ -59,6 +59,6 @@ export async function submitContactForm(data: ContactFormValues) {
 
     return { success: true, message: "Message sent successfully!" };
   } catch (error) {
-    return { success: false, error: "Something went wrong." };
+    return { success: false, error: `Something went wrong. ${error}` };
   }
 }

@@ -163,7 +163,7 @@ export default function SideNavbar() {
           {open ? (
             <div className='flex flex-col gap-3'>
               <LinkButton
-                href='/auth/login'
+                href='/login'
                 variant='green'
                 size='md'
                 className='rounded-2xl w-full justify-center shadow-sm shadow-black/10 hover:shadow-md transition'
@@ -172,7 +172,7 @@ export default function SideNavbar() {
               </LinkButton>
 
               <LinkButton
-                href='/auth/signup'
+                href='/signup'
                 variant='gold'
                 size='md'
                 className='rounded-2xl w-full justify-center shadow-sm shadow-black/10 hover:shadow-md transition'
@@ -189,7 +189,7 @@ export default function SideNavbar() {
               {/* Sign In (icon only) */}
               <div className='relative group'>
                 <LinkButton
-                  href='/auth/login'
+                  href='/login'
                   variant='green'
                   size='md'
                   className={[
@@ -220,7 +220,7 @@ export default function SideNavbar() {
               {/* Get Started (icon only) */}
               <div className='relative group'>
                 <LinkButton
-                  href='/auth/signup'
+                  href='/signup'
                   variant='gold'
                   size='md'
                   className={[

@@ -39,14 +39,14 @@ export async function updateSession(request: NextRequest) {
   // 2. Protect the Dashboard Routes
   if (request.nextUrl.pathname.startsWith("/dashboard") && !user) {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/auth/login";
+    loginUrl.pathname = "/login";
     return NextResponse.redirect(loginUrl);
   }
 
   // 3. Redirect Logged-in Users away from Login/Register
   if (
-    (request.nextUrl.pathname === "/auth/login" ||
-      request.nextUrl.pathname === "/auth/register") &&
+    (request.nextUrl.pathname === "/login" ||
+      request.nextUrl.pathname === "/register") &&
     user
   ) {
     const dashboardUrl = request.nextUrl.clone();

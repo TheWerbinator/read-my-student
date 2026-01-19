@@ -40,14 +40,16 @@ export default function MobileNavDrawer() {
   return (
     <>
       {/* Mobile-only: menu button */}
-      <div className="xl:hidden fixed left-4 top-4 z-60">
-        {!open && (<button
-          onClick={() => setOpen(true)}
-          className="rounded-2xl bg-[#0b4726] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all"
-          aria-label="Open menu"
-        >
-          Menu
-        </button>)}
+      <div className='xl:hidden fixed left-4 top-4 z-60'>
+        {!open && (
+          <button
+            onClick={() => setOpen(true)}
+            className='rounded-2xl bg-[#0b4726] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all'
+            aria-label='Open menu'
+          >
+            Menu
+          </button>
+        )}
       </div>
 
       {/* Overlay */}
@@ -74,24 +76,24 @@ export default function MobileNavDrawer() {
             "border-l border-black/10 shadow-xl transition-transform duration-200",
             open ? "translate-x-0" : "translate-x-full",
           ].join(" ")}
-          role="dialog"
-          aria-modal="true"
+          role='dialog'
+          aria-modal='true'
         >
-          <div className="flex h-full flex-col p-6">
+          <div className='flex h-full flex-col p-6'>
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="text-base font-semibold text-[#0b4726]">Menu</div>
+            <div className='flex items-center justify-between'>
+              <div className='text-base font-semibold text-[#0b4726]'>Menu</div>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-2 text-sm font-semibold text-black/70 hover:bg-black/5"
-                aria-label="Close menu"
+                className='rounded-xl px-3 py-2 text-sm font-semibold text-black/70 hover:bg-black/5'
+                aria-label='Close menu'
               >
                 Close
               </button>
             </div>
 
             {/* Links */}
-            <nav className="mt-4 flex flex-col gap-2 text-sm font-semibold text-[#247037]">
+            <nav className='mt-4 flex flex-col gap-2 text-sm font-semibold text-[#247037]'>
               {navLinks.map((l) => {
                 const isActive = pathname === l.href;
 
@@ -113,22 +115,22 @@ export default function MobileNavDrawer() {
             </nav>
 
             {/* CTA buttons */}
-            <div className="mt-auto pt-6 flex flex-col gap-3">
+            <div className='mt-auto pt-6 flex flex-col gap-3'>
               <LinkButton
-                href="/signup"
-                variant="green"
-                size="md"
-                className="rounded-xl px-6 hover:opacity-95 w-full justify-center"
+                href='/login'
+                variant='green'
+                size='md'
+                className='rounded-xl px-6 hover:opacity-95 w-full justify-center'
                 onClick={() => setOpen(false)}
               >
                 Sign In
               </LinkButton>
 
               <LinkButton
-                href="/signup"
-                variant="gold"
-                size="md"
-                className="rounded-xl px-6 hover:opacity-95 w-full justify-center"
+                href='/signup'
+                variant='gold'
+                size='md'
+                className='rounded-xl px-6 hover:opacity-95 w-full justify-center'
                 onClick={() => setOpen(false)}
               >
                 Get Started
