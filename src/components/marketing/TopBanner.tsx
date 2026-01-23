@@ -3,12 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import LogoOfficial from "../../../public/green_yellow_logo_sized.png";
-
-// ✅ Import your ticker component (adjust the path to wherever you saved it)
 import ScrollingProofTicker from "@/components/marketing/ScrollingProofTicker";
 
 export default function TopBanner() {
-  // ✅ Ticker items (bullets → check when centered)
   const tickerItems = [
     {
       id: "commitment-growth",

@@ -19,7 +19,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,7 +85,7 @@ export default function DashboardPage() {
 
 function StudentView() {
   return (
-    <div className='grid gap-6 md:grid-cols-12'>
+    <div className='grid gap-6 grid-cols-1 md:grid-cols-12'>
       {/* LEFT COL: Request Form */}
       <div className='md:col-span-4'>
         <Card className='rounded-2xl border-black/5 shadow-lg shadow-black/5'>
