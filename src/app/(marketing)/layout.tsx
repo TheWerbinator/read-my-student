@@ -9,7 +9,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
       <TopBanner />
       <MobileNavDrawer />
       <SideNavbar />
-      <main className='pt-24 lg:pt-36'>{children}</main>
+      <main>{children}</main>
     </div>
   );
 }

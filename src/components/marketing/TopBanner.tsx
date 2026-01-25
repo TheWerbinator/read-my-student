@@ -66,7 +66,7 @@ export default function TopBanner() {
   ];
 
   return (
-    <header className='fixed top-0 inset-x-0 z-50 bg-[#d9dbe3]'>
+    <header className='bg-[#d9dbe3]'>
       <div className='px-2 md:px-8 py-2 md:py-4'>
         <div className='flex items-center justify-center md:justify-start gap-6'>
           {/* Logo */}
@@ -77,7 +77,7 @@ export default function TopBanner() {
               width={450}
               height={400}
               priority
-              className='h-24 sm:h-36 lg:h-40 xl:h-48 w-auto'
+              className='h-12 lg:h-24 xl:h-32 w-auto'
             />
           </Link>
 
@@ -85,7 +85,7 @@ export default function TopBanner() {
           <div className='min-w-0 w-full hidden md:block'>
             {/* Big tagline */}
             <div className='text-2xl lg:text-3xl xl:text-[44px] font-semibold text-[#0b4726] leading-tight'>
-              Recommendation Letters, One Click Away
+              <p>Recommendation Letters, One Click Away</p>
             </div>
 
             {/* Ticker */}

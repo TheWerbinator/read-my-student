@@ -5,7 +5,7 @@ import { HeroStepper } from "./Stepper";
 
 export default function Hero() {
   return (
-    <section className='relative overflow-hidden bg-[#0b4726] mt-36'>
+    <section className='relative overflow-hidden bg-[#0b4726]'>
       {/* Soft gradient + texture */}
       <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)]' />
       <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[32px_32px]' />
@@ -13,7 +13,7 @@ export default function Hero() {
       {/* Subtle bottom shadow band */}
       <div className='absolute inset-x-0 bottom-0 h-16 bg-black/20 blur-2xl' />
 
-      <div className='relative mx-auto max-w-7xl px-6 py-10 sm:py-16 md:py-40'>
+      <div className='relative mx-auto max-w-7xl px-6 py-10'>
         {/* Badge */}
         <div className='flex justify-center'>
           <div className='inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white/80'>

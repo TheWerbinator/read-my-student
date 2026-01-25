@@ -7,7 +7,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 
 export default function TopBannerDashboard() {
   return (
-    <header className='fixed top-0 inset-x-0 z-50 bg-white/90 backdrop-blur-sm lg:mx-12'>
+    <header className='bg-white/90 backdrop-blur-sm lg:mx-12'>
       <div className='px-4 md:px-8 py-3 flex items-center justify-between gap-4'>
         <Link href='/' className='flex items-center gap-3'>
           <Image
