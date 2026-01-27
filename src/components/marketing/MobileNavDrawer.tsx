@@ -40,7 +40,7 @@ export default function MobileNavDrawer() {
   return (
     <>
       {/* Mobile-only: menu button */}
-      <div className='xl:hidden fixed left-4 top-4 z-60'>
+      <div className='xl:hidden fixed right-4 top-4 z-60'>
         {!open && (
           <button
             onClick={() => setOpen(true)}
