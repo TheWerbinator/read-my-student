@@ -49,7 +49,7 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 mt-50", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       {/* Restoring the "soft" card look:
         - rounded-3xl (larger corners)
         - shadow-xl shadow-black/5 (soft, deep shadow)

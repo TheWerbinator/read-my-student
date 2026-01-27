@@ -45,7 +45,7 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6 mt-50", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
         <CardHeader className='pb-4'>
           <CardTitle className='text-3xl font-serif font-semibold text-[#0b4726]'>

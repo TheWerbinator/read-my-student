@@ -1,4 +1,4 @@
-import TopBannerDashboard from "@/components/marketing/TopBannerDashboard";
+import TopBanner from "@/components/marketing/TopBanner";
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -6,7 +6,7 @@ export default function RootLayout({
 }>) {
   return (
     <main>
-      <TopBannerDashboard />
+      <TopBanner />
       {children}
     </main>
   );
