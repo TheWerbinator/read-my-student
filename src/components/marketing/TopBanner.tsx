@@ -3,12 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import LogoOfficial from "../../../public/green_yellow_logo_sized.png";
-
-// ✅ Import your ticker component (adjust the path to wherever you saved it)
 import ScrollingProofTicker from "@/components/marketing/ScrollingProofTicker";
 
 export default function TopBanner() {
-  // ✅ Ticker items (bullets → check when centered)
   const tickerItems = [
     {
       id: "commitment-growth",
@@ -68,43 +65,42 @@ export default function TopBanner() {
     },
   ];
 
-
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-[#d9dbe3]">
-      <div className="px-2 md:px-8 py-2 md:py-4">
-        <div className="flex items-center justify-center md:justify-start gap-6">
+    <header className='bg-[#d9dbe3]'>
+      <div className='px-2 md:px-8 py-2 md:py-4'>
+        <div className='flex items-center justify-center md:justify-start gap-6'>
           {/* Logo */}
-          <Link href="/" className="shrink-0">
+          <Link href='/' className='shrink-0'>
             <Image
               src={LogoOfficial}
-              alt="ReadMyStudent logo"
+              alt='ReadMyStudent logo'
               width={450}
               height={400}
               priority
-              className="h-24 sm:h-36 lg:h-40 xl:h-48 w-auto"
+              className='h-12 lg:h-24 xl:h-32 w-auto'
             />
           </Link>
 
           {/* Desktop Content Only */}
-          <div className="min-w-0 w-full hidden md:block">
+          <div className='min-w-0 w-full hidden md:block'>
             {/* Big tagline */}
-            <div className="text-3xl lg:text-4xl xl:text-5xl font-semibold text-[#0b4726] leading-tight">
-              Your Recommendation Letter: Just One Click Away
+            <div className='text-2xl lg:text-3xl xl:text-[44px] font-semibold text-[#0b4726] leading-tight'>
+              <p>Recommendation Letters, One Click Away</p>
             </div>
 
             {/* Ticker */}
-            <div className="mt-5 max-w-6xl">
+            <div className='mt-5 max-w-6xl'>
               <ScrollingProofTicker
                 items={tickerItems}
-                speedSeconds={130}   // slower = bigger number
-                centerZonePx={90}   // bigger = easier to trigger check mark
+                speedSeconds={130} // slower = bigger number
+                centerZonePx={90} // bigger = easier to trigger check mark
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="h-px bg-black/10" />
+      <div className='h-px bg-black/10' />
     </header>
   );
 }

@@ -17,14 +17,16 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-[#d9dbe3]">
-      <div className="w-full mx-auto flex justify-center items-center lg:block"> { /* max-w-7xl mx-auto px-6 */}
-        <div className="h-40 flex items-center justify-between">
+    <header className='fixed top-0 inset-x-0 z-50 bg-[#d9dbe3]'>
+      <div className='w-full mx-auto flex justify-center items-center lg:block'>
+        {" "}
+        {/* max-w-7xl mx-auto px-6 */}
+        <div className='h-40 flex items-center justify-between'>
           {/* Left: Logo */}
-          <Link href="/" className="flex items-center gap-3 pt-2">
+          <Link href='/' className='flex items-center gap-3 pt-2'>
             <Image
               src={LogoOfficial}
-              alt="ReadMyStudent logo"
+              alt='ReadMyStudent logo'
               width={450}
               height={400}
               priority
@@ -80,7 +82,6 @@ export default function Navbar() {
             </div>
           </button> */}
         </div>
-
         {/* Mobile dropdown */}
         {/* {open ? (
           <div className="md:hidden pb-5">
@@ -122,7 +123,7 @@ export default function Navbar() {
       </div>
 
       {/* subtle bottom divider like the screenshot */}
-      <div className="h-px bg-black/10" />
+      <div className='h-px bg-black/10' />
     </header>
   );
 }

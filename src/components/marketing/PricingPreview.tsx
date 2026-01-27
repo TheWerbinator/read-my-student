@@ -1,4 +1,4 @@
-import React, { useId } from "react";
+import React from "react";
 import {
   Sparkles,
   Crown,
@@ -29,7 +29,7 @@ export default function PricingSection() {
     {
       tag: "Free to start",
       tagTone: "neutral",
-      icon: <Sparkles className="h-5 w-5" />,
+      icon: <Sparkles className='h-5 w-5' />,
       name: "Free Tier",
       description: "Create an account and send your first requests at no cost.",
       price: "$0",
@@ -45,7 +45,7 @@ export default function PricingSection() {
     {
       tag: "Flexible & simple",
       tagTone: "neutral",
-      icon: <Link2 className="h-5 w-5" />,
+      icon: <Link2 className='h-5 w-5' />,
       name: "Pay-As-You-Go",
       description: "Only pay when you need more application submissions.",
       price: "$5",
@@ -62,7 +62,7 @@ export default function PricingSection() {
     {
       tag: "Best for heavy applications",
       tagTone: "gold",
-      icon: <Crown className="h-5 w-5" />,
+      icon: <Crown className='h-5 w-5' />,
       name: "Application Sprint",
       description:
         "Premium plan for application season — built to be abuse-resistant and admissions-grade.",
@@ -84,7 +84,7 @@ export default function PricingSection() {
     {
       tag: "For verified institutions",
       tagTone: "neutral",
-      icon: <Building2 className="h-5 w-5" />,
+      icon: <Building2 className='h-5 w-5' />,
       name: "University Access",
       description:
         "Secure, read-only access to student-approved recommendation letters.",
@@ -96,12 +96,15 @@ export default function PricingSection() {
         "Audit trail for access events",
         "Simple, frictionless viewer UI",
       ],
-      cta: { label: "Verify University Email", href: "/signup?role=university" },
+      cta: {
+        label: "Verify University Email",
+        href: "/signup?role=university",
+      },
     },
     {
       tag: "For recruiters & hiring managers",
       tagTone: "neutral",
-      icon: <Briefcase className="h-5 w-5" />,
+      icon: <Briefcase className='h-5 w-5' />,
       name: "Employer Access",
       description: "Fast, secure preview of student-approved recommendations.",
       price: "Free",
@@ -117,32 +120,32 @@ export default function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="bg-[#fbfbf8]">
-      <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+    <section id='pricing' className='bg-[#fbfbf8] lg:pl-24'>
+      <div className='mx-auto max-w-7xl px-6 py-16 md:py-24'>
         {/* Heading */}
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight">
+        <div className='mx-auto max-w-3xl text-center'>
+          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
             Simple Pricing for{" "}
-            <span className="italic text-amber-500">Single-Use</span>{" "}
+            <span className='italic text-amber-500'>Single-Use</span>{" "}
             Recommendation Links.
           </h2>
-          <p className="mt-4 text-sm md:text-base leading-relaxed text-[#5f7f6f]">
+          <p className='mt-4 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
             Start free. Pay per link when you need more. Sprint when you’re
             applying everywhere.
           </p>
 
           {/* Core Rule callout */}
-          <div className="mt-6 rounded-2xl border border-[#0b4726]/15 bg-[#eaf3ee] px-5 py-4 text-left shadow-sm">
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#0b4726]/10 text-[#0b4726]">
-                <ShieldCheck className="h-5 w-5" />
+          <div className='mt-6 rounded-2xl border border-[#0b4726]/15 bg-[#eaf3ee] px-5 py-4 text-left shadow-sm'>
+            <div className='flex items-start gap-3'>
+              <span className='mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#0b4726]/10 text-[#0b4726]'>
+                <ShieldCheck className='h-5 w-5' />
               </span>
               <div>
-                <div className="text-sm font-semibold text-[#0a2e1c]">
+                <div className='text-sm font-semibold text-[#0a2e1c]'>
                   Core Rule: every recommendation requires a freshly generated,
                   one-time-use link.
                 </div>
-                <div className="mt-1 text-sm text-[#5f7f6f]">
+                <div className='mt-1 text-sm text-[#5f7f6f]'>
                   Links can never be reused. Once submitted, they expire
                   automatically — closing link sharing, replay submissions, and
                   unauthorized reuse.
@@ -153,56 +156,58 @@ export default function PricingSection() {
         </div>
 
         {/* STUDENTS HEADER */}
-        <div className="mt-14 flex items-center justify-between">
+        <div className='mt-14 flex items-center justify-between'>
           <div>
-            <div className="text-xs font-semibold tracking-wide text-black/45">
+            <div className='text-xs font-semibold tracking-wide text-black/45'>
               FOR STUDENTS
             </div>
-            <div className="mt-1 text-xl font-serif font-semibold text-[#0a2e1c]">
+            <div className='mt-1 text-xl font-serif font-semibold text-[#0a2e1c]'>
               Student Plans
             </div>
           </div>
         </div>
 
         {/* Student plans grid (equal height) */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className='mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch'>
           {studentPlans.map((p) => (
             <PlanCard key={p.name} plan={p} />
           ))}
         </div>
 
         {/* VIEWERS HEADER */}
-        <div className="mt-14 flex items-center justify-between">
+        <div className='mt-14 flex items-center justify-between'>
           <div>
-            <div className="text-xs font-semibold tracking-wide text-black/45">
+            <div className='text-xs font-semibold tracking-wide text-black/45'>
               FOR FACULTY / VIEWERS
             </div>
-            <div className="mt-1 text-xl font-serif font-semibold text-[#0a2e1c]">
+            <div className='mt-1 text-xl font-serif font-semibold text-[#0a2e1c]'>
               Viewer Access
             </div>
           </div>
         </div>
 
         {/* Viewer plans grid (equal height) */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <div className='mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch'>
           {viewerPlans.map((p) => (
             <PlanCard key={p.name} plan={p} />
           ))}
         </div>
 
         {/* footer note */}
-        <div className="mt-14 text-center">
-          <p className="text-sm text-[#5f7f6f]">
-            <span className="font-semibold text-[#0b4726]">Faculty members</span>{" "}
+        <div className='mt-14 text-center'>
+          <p className='text-sm text-[#5f7f6f]'>
+            <span className='font-semibold text-[#0b4726]'>
+              Faculty members
+            </span>{" "}
             — your access is completely free. Join to manage recommendation
             requests with less follow-up and fewer portals.
           </p>
 
-          <div className="mt-6 flex justify-center">
+          <div className='mt-6 flex justify-center'>
             <LinkButton
-              href="/signup?role=faculty"
-              variant="secondary"
-              className="rounded-xl px-6 bg-white border border-[#0b4726]/15 hover:bg-[#f3faf6]"
+              href='/signup?role=faculty'
+              variant='secondary'
+              className='rounded-xl px-6 bg-white border border-[#0b4726]/15 hover:bg-[#f3faf6]'
             >
               Register as Faculty
             </LinkButton>
@@ -217,8 +222,7 @@ function PlanCard({ plan }: { plan: Plan }) {
   const isFeatured = !!plan.featured;
 
   return (
-    <div className="relative h-full">
-
+    <div className='relative h-full'>
       {/* card */}
       <div
         className={[
@@ -242,34 +246,34 @@ function PlanCard({ plan }: { plan: Plan }) {
         </div>
 
         {/* icon */}
-        <div className="mt-4">
-          <div className="h-12 w-12 rounded-2xl grid place-items-center bg-[#eaf3ee] text-[#0b4726] border border-[#0b4726]/10">
+        <div className='mt-4'>
+          <div className='h-12 w-12 rounded-2xl grid place-items-center bg-[#eaf3ee] text-[#0b4726] border border-[#0b4726]/10'>
             {plan.icon}
           </div>
         </div>
 
         {/* content */}
-        <div className="mt-6 font-serif text-xl font-semibold text-[#0a2e1c]">
+        <div className='mt-6 font-serif text-xl font-semibold text-[#0a2e1c]'>
           {plan.name}
         </div>
-        <div className="mt-2 text-sm leading-relaxed text-[#5f7f6f]">
+        <div className='mt-2 text-sm leading-relaxed text-[#5f7f6f]'>
           {plan.description}
         </div>
 
-        <div className="mt-6 font-serif text-3xl font-semibold text-[#0b4726]">
+        <div className='mt-6 font-serif text-3xl font-semibold text-[#0b4726]'>
           {plan.price}
           {plan.priceSuffix ? (
-            <span className="ml-1 text-sm font-semibold text-[#5f7f6f]">
+            <span className='ml-1 text-sm font-semibold text-[#5f7f6f]'>
               {plan.priceSuffix}
             </span>
           ) : null}
         </div>
 
-        <ul className="mt-6 space-y-3 text-sm text-[#5f7f6f]">
+        <ul className='mt-6 space-y-3 text-sm text-[#5f7f6f]'>
           {plan.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-3">
-              <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500">
-                <Check className="h-4 w-4" />
+            <li key={b} className='flex items-start gap-3'>
+              <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500'>
+                <Check className='h-4 w-4' />
               </span>
               <span>{b}</span>
             </li>
@@ -277,7 +281,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         </ul>
 
         {/* CTA pinned to bottom for equal heights */}
-        <div className="mt-auto pt-8">
+        <div className='mt-auto pt-8'>
           <LinkButton
             href={plan.cta.href}
             variant={isFeatured ? "gold" : "green"}
