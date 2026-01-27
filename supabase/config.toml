@@ -2,16 +2,16 @@ project_id = "hzcubrhzoafrxwqrltjz"
 
 [auth.email.template.confirmation]
 subject = "Confirm your signup"
-content_path = "./lib/supabase/templates/confirmation.html"
+content_path = "./templates/confirmation.html"
 
 [auth.email.template.recovery]
 subject = "Reset Your Password"
-content_path = "./lib/supabase/templates/recovery.html"
+content_path = "./templates/recovery.html"
 
 [auth.email.template.invite]
 subject = "You have been invited to ReadMyStudent"
-content_path = "./supabase/templates/invite.html"
+content_path = "./templates/invite.html"
 
 [auth.email.template.magic_link]
 subject = "Your Login Link"
-content_path = "./supabase/templates/magic_link.html"
+content_path = "./templates/magic_link.html"
