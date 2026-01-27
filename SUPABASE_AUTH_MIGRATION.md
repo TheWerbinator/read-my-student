@@ -9,21 +9,17 @@ Your authentication system has been migrated from custom JWT-based auth to Supab
 - **Removed**: `bcryptjs`, `jose` (custom password hashing and JWT)
 - **Added**: `@supabase/supabase-js`, `@supabase/ssr` (Supabase client libraries)
 
-### 2. **Database Schema**
-- **Added**: `supabaseId` field to `User` model (unique reference to `auth.users` table)
-- **Removed**: `passwordHash` field (passwords now managed by Supabase)
-
-### 3. **New Files Created**
+### 2. **New Files Created**
 - `src/lib/supabase.ts` - Supabase client initialization for both browser and server contexts
 
-### 4. **Updated Auth Files**
+### 3. **Remove Auth Files**
 - `src/lib/auth.ts` - Now uses Supabase sessions instead of custom JWT
-- `src/app/api/auth/register/route.ts` - Uses `supabase.auth.admin.createUser()`
-- `src/app/api/auth/login/route.ts` - Uses `supabase.auth.signInWithPassword()`
-- `src/app/api/auth/logout/route.ts` - Uses `supabase.auth.signOut()`
-- `src/app/api/auth/me/route.ts` - Simplified to work with Supabase sessions
+- `src/app/api/auth/register/route.ts` - Uses `supabase.auth.admin.createUser()` in `actions/register.ts`
+- `src/app/api/auth/login/route.ts` - Uses `supabase.auth.signInWithPassword()` in `components/auth/login-form.tsx`
+- `src/app/api/auth/logout/route.ts` - Uses `supabase.auth.signOut()` in `components/auth/logout-button.tsx`
+- `src/app/api/auth/me/route.ts` - replaced with server actions
 
-### 5. **Environment Variables**
+### 4. **Environment Variables**
 New variables needed (in `.env.local`):
 ```
 NEXT_PUBLIC_SUPABASE_URL="https://YOUR_PROJECT_ID.supabase.co"
@@ -34,7 +30,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR_ANON_KEY"
 
 ### Step 1: Install Dependencies
 ```bash
-npm install
+npm i
 ```
 
 ### Step 2: Get Supabase Credentials
@@ -55,41 +51,16 @@ In Supabase Dashboard:
 3. The register endpoint uses `supabase.auth.admin.createUser()` which requires server-side auth
    - For production, ensure environment is secure and this key is never exposed to client
 
-### Step 4: Run Database Migration
-```bash
-npm run db:migrate
-```
-
-This will:
-1. Create the `supabaseId` column in your `User` table
-2. Remove the `passwordHash` column
-3. Update Prisma client
-
-### Step 5: Migrate Existing Users (if applicable)
-If you have existing users in your database, you need to link them with Supabase:
-
-**Option A: Bulk import users to Supabase** (Recommended)
-1. Export existing users from your database
-2. Use Supabase's admin API to batch create these users
-3. Update their `supabaseId` in your database
-
-**Option B: Manual migration** (For small user counts)
-1. Create users in Supabase manually
-2. Update database records with their Supabase IDs
-
-**Option C: Fresh start**
-- Start with an empty user table if this is a development project
-
-### Step 6: Test the Flow
+### Step 4: Test the Flow
 ```bash
 npm run dev
 ```
 
 Then test the complete auth flow:
-1. Sign up: `POST /api/auth/register`
-2. Login: `POST /api/auth/login`
-3. Check session: `GET /api/auth/me`
-4. Logout: `POST /api/auth/logout`
+1. Sign up
+2. Login
+3. Check session
+4. Logout
 
 ## Key Differences from Previous Implementation
 
@@ -105,7 +76,7 @@ POST /register
 
 **After:**
 ```
-POST /register
+actions/register.ts signUpAction
 → Create user in Supabase Auth
 → Create linked user record in database with supabaseId
 → Supabase handles session automatically
@@ -117,13 +88,13 @@ POST /register
 **After:** Supabase's `auth.getSession()` handles everything
 
 ### Password Security
-**Before:** Your responsibility to hash correctly
+**Before:** Our responsibility to hash correctly
 
 **After:** Supabase uses industry-standard Argon2 hashing
 
 ## Future Enhancements
 
-With Supabase Auth, you can now easily add:
+With Supabase Auth, we can now easily add:
 - **Email verification** - Built-in templates
 - **Password reset** - Automatic email links
 - **OAuth** - Google, GitHub, etc. (one function call)
@@ -136,10 +107,6 @@ With Supabase Auth, you can now easily add:
 ### "Missing NEXT_PUBLIC_SUPABASE_URL"
 - Ensure `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Restart dev server: `npm run dev`
-
-### Register returns "supabaseId" error
-- The Prisma migration hasn't been applied yet
-- Run: `npm run db:migrate`
 
 ### Login doesn't return user
 - Check database has the user with correct `supabaseId`
