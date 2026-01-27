@@ -1,15 +1,10 @@
-"use client";
-
-import { useState } from "react";
 import {
   FileText,
-  Send,
   Clock,
   CheckCircle2,
   Upload,
   School,
   Plus,
-  MoreHorizontal,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
