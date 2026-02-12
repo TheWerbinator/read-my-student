@@ -87,11 +87,11 @@ export default function HowItWorks() {
 
         {/* Title + subtitle */}
         <div className='mx-auto mt-6 max-w-3xl text-center'>
-          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726]'>
+          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900'>
             Simple Steps for{" "}
             <span className='italic text-amber-500'>Everyone</span>
           </h2>
-          <p className='mt-4 text-sm md:text-base leading-relaxed text-[#0b4726]'>
+          <p className='mt-4 text-sm md:text-base leading-relaxed text-green-900'>
             Whether you&apos;re a student building your academic portfolio or
             faculty managing recommendations, we&apos;ve made the process warm,
             trustworthy, and professional.
@@ -160,11 +160,11 @@ function ToggleButton({
       className={[
         "inline-flex items-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition cursor-pointer",
         active
-          ? "bg-[#0b4726] text-white shadow"
-          : "text-[#0b4726] hover:text-[#0b1553]",
+          ? "bg-green-900 text-white shadow"
+          : "text-green-900 hover:text-[#0b1553]",
       ].join(" ")}
     >
-      <span className={active ? "text-white" : "text-[#0b4726]"}>{icon}</span>
+      <span className={active ? "text-white" : "text-green-900"}>{icon}</span>
       {label}
     </button>
   );
@@ -196,7 +196,7 @@ function StepCard({
   ].join(" ");
 
   const iconTileClassName = [
-    "h-14 w-14 rounded-2xl bg-[#0b4726] text-amber-400",
+    "h-14 w-14 rounded-2xl bg-green-900 text-amber-400",
     "grid place-items-center shadow-inner border border-black/5",
     "transition-colors duration-300 group-hover:bg-amber-50",
   ].join(" ");
@@ -211,11 +211,11 @@ function StepCard({
       {/* icon tile */}
       <div className={iconTileClassName}>{icon}</div>
 
-      <h3 className='mt-6 font-serif text-xl font-semibold text-[#0b4726]'>
+      <h3 className='mt-6 font-serif text-xl font-semibold text-green-900'>
         {title}
       </h3>
 
-      <p className='mt-3 text-sm leading-relaxed text-[#0b4726]'>{body}</p>
+      <p className='mt-3 text-sm leading-relaxed text-green-900'>{body}</p>
     </div>
   );
 }

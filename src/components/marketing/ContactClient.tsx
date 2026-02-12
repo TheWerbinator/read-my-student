@@ -54,11 +54,11 @@ export default function ContactClient() {
       {/* HERO */}
       <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
         <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-[#0b4726] border border-[#0b4726]/10'>
+          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
             Contact
           </div>
 
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
+          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
             We&apos;re here to help —{" "}
             <span className='italic text-amber-500'>without friction</span>.
           </h1>
@@ -75,9 +75,9 @@ export default function ContactClient() {
       <section className='mx-auto max-w-7xl px-6 py-10 md:py-14 lg:pl-24'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           {/* FAQ */}
-          <div className='rounded-3xl border border-[#0b4726]/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
+          <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
             <div className='flex items-start gap-3'>
-              <div className='h-11 w-11 rounded-2xl bg-[#0b4726]/10 text-[#0b4726] grid place-items-center border border-[#0b4726]/10'>
+              <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
                 <HelpCircle className='h-5 w-5' />
               </div>
               <div>
@@ -99,9 +99,9 @@ export default function ContactClient() {
           </div>
 
           {/* FORM */}
-          <div className='rounded-3xl border border-[#0b4726]/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
+          <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
             <div className='flex items-start gap-3 mb-6'>
-              <div className='h-11 w-11 rounded-2xl bg-[#0b4726]/10 text-[#0b4726] grid place-items-center border border-[#0b4726]/10'>
+              <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
                 <Send className='h-5 w-5' />
               </div>
               <div>
@@ -118,31 +118,31 @@ export default function ContactClient() {
               <input
                 type='text'
                 placeholder='Name (optional)'
-                className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
               />
 
               <input
                 type='email'
                 required
                 placeholder='Email'
-                className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
               />
 
               <textarea
                 rows={4}
                 required
                 placeholder='Message'
-                className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
               />
 
               <button
                 type='submit'
-                className='rounded-xl bg-[#0b4726] px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition'
+                className='rounded-xl bg-green-900 px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition'
               >
                 Send message
               </button>
 
-              <p className='text-xs text-[#0b4726]/60'>
+              <p className='text-xs text-green-900/60'>
                 Please don&apos;t include recommendation letter content or
                 sensitive personal data. By submitting this form, you agree to
                 our{" "}
@@ -170,7 +170,7 @@ export default function ContactClient() {
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input
-                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
                           placeholder=''
                           {...field}
                         />
@@ -189,7 +189,7 @@ export default function ContactClient() {
                       <FormLabel>Subject</FormLabel>
                       <FormControl>
                         <Input
-                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm'
+                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
                           placeholder=''
                           {...field}
                         />
@@ -208,7 +208,7 @@ export default function ContactClient() {
                       <FormLabel>Message</FormLabel>
                       <FormControl>
                         <Textarea
-                          className='w-full rounded-xl border border-[#0b4726]/15 px-4 py-2 text-sm min-h-[120px]'
+                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm min-h-[120px]'
                           placeholder='Message content...'
                           {...field}
                         />
@@ -221,12 +221,12 @@ export default function ContactClient() {
                 <Button
                   type='submit'
                   disabled={isPending}
-                  className='rounded-xl bg-[#0b4726] px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition w-1/2'
+                  className='rounded-xl bg-green-900 px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition w-1/2'
                 >
                   {isPending ? "Sending..." : "Send Message"}
                 </Button>
 
-                <p className='text-xs text-[#0b4726]/60'>
+                <p className='text-xs text-green-900/60'>
                   Please don&apos;t include recommendation letter content or
                   sensitive personal data. By submitting this form, you agree to
                   our{" "}
@@ -246,9 +246,9 @@ export default function ContactClient() {
 
       {/* SECURITY NOTE */}
       <section className='mx-auto max-w-7xl px-6 pb-16 md:pb-24 lg:pl-24'>
-        <div className='rounded-3xl border border-[#0b4726]/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
+        <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
           <div className='flex items-start gap-3'>
-            <div className='h-11 w-11 rounded-2xl bg-[#0b4726]/10 text-[#0b4726] grid place-items-center border border-[#0b4726]/10'>
+            <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
               <ShieldCheck className='h-5 w-5' />
             </div>
             <div>

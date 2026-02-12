@@ -25,7 +25,7 @@ export function CountryCombobox({
 
   const selected = useMemo(
     () => COUNTRIES.find((c) => c.code === value) ?? null,
-    [value]
+    [value],
   );
 
   const filtered = useMemo(() => {
@@ -40,7 +40,7 @@ export function CountryCombobox({
   }, [query]);
 
   const safeActiveIndex =
-  filtered.length === 0 ? 0 : Math.min(activeIndex, filtered.length - 1);
+    filtered.length === 0 ? 0 : Math.min(activeIndex, filtered.length - 1);
 
   // close on outside click
   useEffect(() => {
@@ -86,39 +86,42 @@ export function CountryCombobox({
   }
 
   return (
-    <div ref={wrapRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-center">
-      <label className="text-sm font-medium text-gray-800">
+    <div
+      ref={wrapRef}
+      className='grid grid-cols-1 gap-4 md:grid-cols-3 md:items-center'
+    >
+      <label className='text-sm font-medium text-gray-800'>
         {label}
-        {required ? <span className="text-red-600"> *</span> : null}
+        {required ? <span className='text-red-600'> *</span> : null}
       </label>
 
-      <div className="relative md:col-span-2">
+      <div className='relative md:col-span-2'>
         {/* Button/Trigger */}
         <button
-          type="button"
+          type='button'
           onClick={() => (open ? setOpen(false) : openAndFocus())}
           className={[
             "w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-700",
             "flex items-center justify-between gap-3",
-            "focus:outline-none focus:ring-2 focus:ring-[#0b4726]/30",
+            "focus:outline-none focus:ring-2 focus:ring-green-900/30",
           ].join(" ")}
-          aria-haspopup="listbox"
+          aria-haspopup='listbox'
           aria-expanded={open}
         >
           <span className={selected ? "" : "text-gray-400"}>
             {selected ? selected.name : "Select a country..."}
           </span>
 
-          <span className="text-gray-400">▾</span>
+          <span className='text-gray-400'>▾</span>
         </button>
 
         {/* Dropdown */}
         {open && (
           <div
-            className="absolute z-50 mt-2 w-full rounded-xl border border-black/10 bg-white shadow-xl shadow-black/10"
-            role="listbox"
+            className='absolute z-50 mt-2 w-full rounded-xl border border-black/10 bg-white shadow-xl shadow-black/10'
+            role='listbox'
           >
-            <div className="p-2">
+            <div className='p-2'>
               <input
                 ref={inputRef}
                 value={query}
@@ -127,14 +130,16 @@ export function CountryCombobox({
                   setActiveIndex(0);
                 }}
                 onKeyDown={onKeyDown}
-                placeholder="Search countries..."
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0b4726]/30"
+                placeholder='Search countries...'
+                className='w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-900/30'
               />
             </div>
 
-            <div className="max-h-72 overflow-auto p-1">
+            <div className='max-h-72 overflow-auto p-1'>
               {filtered.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-gray-500">No results.</div>
+                <div className='px-3 py-3 text-sm text-gray-500'>
+                  No results.
+                </div>
               ) : (
                 filtered.map((c, idx) => {
                   const isSelected = c.code === value;
@@ -142,21 +147,23 @@ export function CountryCombobox({
 
                   return (
                     <button
-                      type="button"
+                      type='button'
                       key={c.code}
                       onMouseEnter={() => setActiveIndex(idx)}
                       onClick={() => selectCountry(c.code)}
                       className={[
                         "w-full px-3 py-2 text-left text-sm flex items-center justify-between gap-3 rounded-lg",
-                        isActive ? "bg-[#0b4726]/10" : "hover:bg-black/5",
+                        isActive ? "bg-green-900/10" : "hover:bg-black/5",
                       ].join(" ")}
-                      role="option"
+                      role='option'
                       aria-selected={isSelected}
                     >
-                      <span className="text-gray-800">{c.name}</span>
-                      <span className="text-xs text-black/40 flex items-center gap-2">
+                      <span className='text-gray-800'>{c.name}</span>
+                      <span className='text-xs text-black/40 flex items-center gap-2'>
                         {c.code}
-                        {isSelected ? <span className="text-[#0b4726]">✓</span> : null}
+                        {isSelected ? (
+                          <span className='text-green-900'>✓</span>
+                        ) : null}
                       </span>
                     </button>
                   );

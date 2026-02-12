@@ -44,7 +44,7 @@ export default function MobileNavDrawer() {
         {!open && (
           <button
             onClick={() => setOpen(true)}
-            className='rounded-2xl bg-[#0b4726] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all'
+            className='rounded-2xl bg-green-900 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/20 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all'
             aria-label='Open menu'
           >
             Menu
@@ -82,7 +82,7 @@ export default function MobileNavDrawer() {
           <div className='flex h-full flex-col p-6'>
             {/* Header */}
             <div className='flex items-center justify-between'>
-              <div className='text-base font-semibold text-[#0b4726]'>Menu</div>
+              <div className='text-base font-semibold text-green-900'>Menu</div>
               <button
                 onClick={() => setOpen(false)}
                 className='rounded-xl px-3 py-2 text-sm font-semibold text-black/70 hover:bg-black/5'
@@ -104,8 +104,8 @@ export default function MobileNavDrawer() {
                     onClick={() => setOpen(false)}
                     className={[
                       "rounded-xl px-3 py-3 transition",
-                      "hover:bg-black/10 hover:text-[#0b4726]",
-                      isActive ? "bg-black/10 text-[#0b4726]" : "",
+                      "hover:bg-black/10 hover:text-green-900",
+                      isActive ? "bg-black/10 text-green-900" : "",
                     ].join(" ")}
                   >
                     {l.label}

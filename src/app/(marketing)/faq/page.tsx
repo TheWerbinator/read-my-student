@@ -51,7 +51,7 @@ export default function FAQPage() {
           a: (
             <>
               Yes — signup is free. Students get their first{" "}
-              <span className='font-semibold text-[#0b4726]'>
+              <span className='font-semibold text-green-900'>
                 3 single-use recommendation links
               </span>{" "}
               free. Faculty access is free.
@@ -175,11 +175,11 @@ export default function FAQPage() {
           a: (
             <>
               Students start free with 3 links. After that, it&apos;s{" "}
-              <span className='font-semibold text-[#0b4726]'>
+              <span className='font-semibold text-green-900'>
                 $5 per single-use link
               </span>
               . For heavy application cycles, the Sprint plan is{" "}
-              <span className='font-semibold text-[#0b4726]'>
+              <span className='font-semibold text-green-900'>
                 $399 for up to 100 links
               </span>{" "}
               in 30 days.
@@ -239,11 +239,11 @@ export default function FAQPage() {
       {/* HERO */}
       <section className='mx-auto max-w-7xl px-6 py-16 md:pt-40 lg:pl-24'>
         <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-[#0b4726] border border-[#0b4726]/10'>
+          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
             FAQ
           </div>
 
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
+          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
             Clear answers —{" "}
             <span className='italic text-amber-500'>no ambiguity</span>.
           </h1>
@@ -282,7 +282,7 @@ export default function FAQPage() {
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
           {/* Left: small nav feel */}
           <aside className='lg:col-span-4'>
-            <div className='rounded-3xl border border-[#0b4726]/10 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sticky top-64'>
+            <div className='rounded-3xl border border-green-900/10 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.04)] sticky top-64'>
               <div className='text-xs font-semibold tracking-wide text-black/45'>
                 QUICK LINKS
               </div>
@@ -291,7 +291,7 @@ export default function FAQPage() {
                   <a
                     key={s.section}
                     href={`#${slug(s.section)}`}
-                    className='block rounded-xl px-3 py-2 text-sm font-semibold text-[#0b4726] hover:bg-[#eaf3ee] border border-transparent hover:border-[#0b4726]/10 transition'
+                    className='block rounded-xl px-3 py-2 text-sm font-semibold text-green-900 hover:bg-[#eaf3ee] border border-transparent hover:border-green-900/10 transition'
                   >
                     {s.section}
                   </a>
@@ -318,10 +318,10 @@ export default function FAQPage() {
               <div
                 key={s.section}
                 id={slug(s.section)}
-                className='rounded-3xl border border-[#0b4726]/10 bg-white px-6 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'
+                className='rounded-3xl border border-green-900/10 bg-white px-6 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'
               >
                 <div className='flex items-center gap-3'>
-                  <div className='h-11 w-11 rounded-2xl bg-[#0b4726]/10 text-[#0b4726] grid place-items-center border border-[#0b4726]/10'>
+                  <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
                     {s.icon}
                   </div>
                   <h2 className='font-serif text-2xl font-semibold text-[#0a2e1c]'>
@@ -333,10 +333,10 @@ export default function FAQPage() {
                   {s.items.map((item) => (
                     <details key={String(item.q)} className='group py-4'>
                       <summary className='cursor-pointer list-none flex items-start justify-between gap-4'>
-                        <span className='text-sm md:text-base font-semibold text-[#0b4726]'>
+                        <span className='text-sm md:text-base font-semibold text-green-900'>
                           {item.q}
                         </span>
-                        <span className='mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eaf3ee] text-[#0b4726] border border-[#0b4726]/10 transition group-open:rotate-45'>
+                        <span className='mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#eaf3ee] text-green-900 border border-green-900/10 transition group-open:rotate-45'>
                           +
                         </span>
                       </summary>

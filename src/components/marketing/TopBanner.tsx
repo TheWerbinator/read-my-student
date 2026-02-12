@@ -84,7 +84,7 @@ export default function TopBanner() {
           {/* Desktop Content Only */}
           <div className='min-w-0 w-full hidden md:block'>
             {/* Big tagline */}
-            <div className='text-2xl lg:text-3xl xl:text-[44px] font-semibold text-[#0b4726] leading-tight'>
+            <div className='text-2xl lg:text-3xl xl:text-[44px] font-semibold text-green-900 leading-tight'>
               <p>Recommendation Letters, One Click Away</p>
             </div>
 

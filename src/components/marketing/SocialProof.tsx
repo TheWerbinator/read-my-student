@@ -57,18 +57,18 @@ export default function SocialProof() {
       <div className='mx-auto max-w-7xl px-6 py-16 md:py-24'>
         {/* badge */}
         <div className='flex justify-center'>
-          <span className='inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b4726]'>
+          <span className='inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-green-900'>
             Trusted Worldwide
           </span>
         </div>
 
         {/* heading */}
         <div className='mx-auto mt-6 max-w-3xl text-center'>
-          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726]'>
+          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900'>
             Loved by Students &amp;{" "}
             <span className='italic text-amber-500'>Faculty</span>
           </h2>
-          <p className='mt-4 text-sm md:text-base leading-relaxed text-[#0b4726]'>
+          <p className='mt-4 text-sm md:text-base leading-relaxed text-green-900'>
             Join thousands of academic professionals and students who trust
             ReadMyStudent for their recommendation letters.
           </p>
@@ -91,7 +91,7 @@ export default function SocialProof() {
               <div className='font-serif text-3xl md:text-4xl font-semibold text-amber-500'>
                 {s.value}
               </div>
-              <div className='mt-2 text-sm font-semibold text-[#0b4726]'>
+              <div className='mt-2 text-sm font-semibold text-green-900'>
                 {s.label}
               </div>
             </div>
@@ -120,18 +120,18 @@ function TestimonialCard({ t }: { t: Testimonial }) {
       </div>
 
       {/* quote */}
-      <p className='mt-4 text-sm leading-relaxed text-[#0b4726] italic'>
+      <p className='mt-4 text-sm leading-relaxed text-green-900 italic'>
         {`"${t.quote}"`}
       </p>
 
       {/* footer */}
       <div className='mt-8 flex items-center gap-4'>
-        <div className='h-12 w-12 rounded-full bg-[#0b4726] text-white font-bold grid place-items-center'>
+        <div className='h-12 w-12 rounded-full bg-green-900 text-white font-bold grid place-items-center'>
           {t.initials}
         </div>
 
         <div className='leading-tight'>
-          <div className='font-semibold text-[#0b4726]'>{t.name}</div>
+          <div className='font-semibold text-green-900'>{t.name}</div>
           <div className='text-xs font-semibold text-[#3f8b61]'>{t.title}</div>
           <div className='text-xs italic text-amber-600'>{t.org}</div>
         </div>

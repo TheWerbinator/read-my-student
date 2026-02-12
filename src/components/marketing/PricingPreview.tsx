@@ -124,7 +124,7 @@ export default function PricingSection() {
       <div className='mx-auto max-w-7xl px-6 py-16 md:py-24'>
         {/* Heading */}
         <div className='mx-auto max-w-3xl text-center'>
-          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
+          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
             Simple Pricing for{" "}
             <span className='italic text-amber-500'>Single-Use</span>{" "}
             Recommendation Links.
@@ -135,9 +135,9 @@ export default function PricingSection() {
           </p>
 
           {/* Core Rule callout */}
-          <div className='mt-6 rounded-2xl border border-[#0b4726]/15 bg-[#eaf3ee] px-5 py-4 text-left shadow-sm'>
+          <div className='mt-6 rounded-2xl border border-green-900/15 bg-[#eaf3ee] px-5 py-4 text-left shadow-sm'>
             <div className='flex items-start gap-3'>
-              <span className='mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[#0b4726]/10 text-[#0b4726]'>
+              <span className='mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-green-900/10 text-green-900'>
                 <ShieldCheck className='h-5 w-5' />
               </span>
               <div>
@@ -196,7 +196,7 @@ export default function PricingSection() {
         {/* footer note */}
         <div className='mt-14 text-center'>
           <p className='text-sm text-[#5f7f6f]'>
-            <span className='font-semibold text-[#0b4726]'>
+            <span className='font-semibold text-green-900'>
               Faculty members
             </span>{" "}
             — your access is completely free. Join to manage recommendation
@@ -207,7 +207,7 @@ export default function PricingSection() {
             <LinkButton
               href='/signup?role=faculty'
               variant='secondary'
-              className='rounded-xl px-6 bg-white border border-[#0b4726]/15 hover:bg-[#f3faf6]'
+              className='rounded-xl px-6 bg-white border border-green-900/15 hover:bg-[#f3faf6]'
             >
               Register as Faculty
             </LinkButton>
@@ -227,7 +227,7 @@ function PlanCard({ plan }: { plan: Plan }) {
       <div
         className={[
           "relative z-10 h-full rounded-2xl bg-white px-7 py-8 flex flex-col",
-          "border border-[#0b4726]/10",
+          "border border-green-900/10",
           "shadow-[0_10px_30px_rgba(15,23,42,0.04)]",
           "transition-all duration-300 ease-out",
           "hover:shadow-[0_20px_50px_rgba(11,71,38,0.18)]",
@@ -238,8 +238,8 @@ function PlanCard({ plan }: { plan: Plan }) {
           className={[
             "inline-flex w-fit items-center rounded-full px-3 py-1 text-[11px] font-bold",
             plan.tagTone === "gold"
-              ? "bg-amber-400/90 text-[#0b4726]"
-              : "bg-[#eaf3ee] text-[#0b4726] border border-[#0b4726]/10",
+              ? "bg-amber-400/90 text-green-900"
+              : "bg-[#eaf3ee] text-green-900 border border-green-900/10",
           ].join(" ")}
         >
           {plan.tag}
@@ -247,7 +247,7 @@ function PlanCard({ plan }: { plan: Plan }) {
 
         {/* icon */}
         <div className='mt-4'>
-          <div className='h-12 w-12 rounded-2xl grid place-items-center bg-[#eaf3ee] text-[#0b4726] border border-[#0b4726]/10'>
+          <div className='h-12 w-12 rounded-2xl grid place-items-center bg-[#eaf3ee] text-green-900 border border-green-900/10'>
             {plan.icon}
           </div>
         </div>
@@ -260,7 +260,7 @@ function PlanCard({ plan }: { plan: Plan }) {
           {plan.description}
         </div>
 
-        <div className='mt-6 font-serif text-3xl font-semibold text-[#0b4726]'>
+        <div className='mt-6 font-serif text-3xl font-semibold text-green-900'>
           {plan.price}
           {plan.priceSuffix ? (
             <span className='ml-1 text-sm font-semibold text-[#5f7f6f]'>
@@ -288,8 +288,8 @@ function PlanCard({ plan }: { plan: Plan }) {
             className={[
               "w-full justify-center rounded-xl",
               isFeatured
-                ? "bg-amber-500 text-[#0b4726] hover:bg-amber-400"
-                : "bg-[#0b4726] text-white hover:opacity-95",
+                ? "bg-amber-500 text-green-900 hover:bg-amber-400"
+                : "bg-green-900 text-white hover:opacity-95",
             ].join(" ")}
           >
             {plan.cta.label}

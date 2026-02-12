@@ -26,7 +26,7 @@ export default function HowItWorksPage() {
   return (
     <main className='bg-[#fbfbf8]'>
       {/* Hero */}
-      <section className='relative overflow-hidden bg-[#0b4726] lg:pl-24'>
+      <section className='relative overflow-hidden bg-green-900 lg:pl-24'>
         <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]' />
         <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]' />
 
@@ -114,12 +114,12 @@ export default function HowItWorksPage() {
           <div className='inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]'>
             The Problem
           </div>
-          <h2 className='mt-6 font-serif text-4xl md:text-5xl font-semibold text-[#0b4726]'>
+          <h2 className='mt-6 font-serif text-4xl md:text-5xl font-semibold text-green-900'>
             The traditional process is{" "}
             <span className='italic text-amber-500'>emotionally</span> and{" "}
             <span className='italic text-amber-500'>logistically</span> broken.
           </h2>
-          <p className='mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b4726]'>
+          <p className='mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-green-900'>
             Students feel vulnerable asking. Faculty are overloaded.
             Institutions struggle with fraud risk and compliance.
           </p>
@@ -219,7 +219,7 @@ export default function HowItWorksPage() {
               Why the System Is Broken (Structurally)
             </div>
 
-            <h3 className='mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b4726]'>
+            <h3 className='mt-6 font-serif text-3xl md:text-4xl font-semibold text-green-900'>
               The current model assumes things that are no longer true.
             </h3>
 
@@ -230,7 +230,7 @@ export default function HowItWorksPage() {
               <AssumptionRow left='Manual trust' right='❌' />
             </div>
 
-            <p className='mt-8 text-sm md:text-base text-[#0b4726] leading-relaxed'>
+            <p className='mt-8 text-sm md:text-base text-green-900 leading-relaxed'>
               Modern application volume and verification needs demand a system
               that is secure, auditable, and respectful of everyone’s time and
               emotional load.
@@ -369,18 +369,18 @@ function ProblemCard({
   const Card = (
     <div className={cardClassName}>
       <div className='flex items-center gap-3'>
-        <div className='h-12 w-12 rounded-2xl bg-amber-50 text-[#0b4726] grid place-items-center border border-black/5'>
+        <div className='h-12 w-12 rounded-2xl bg-amber-50 text-green-900 grid place-items-center border border-black/5'>
           {icon}
         </div>
         <div>
-          <div className='font-serif text-xl font-semibold text-[#0b4726]'>
+          <div className='font-serif text-xl font-semibold text-green-900'>
             {title}
           </div>
           <div className='text-sm font-semibold text-amber-600'>{subtitle}</div>
         </div>
       </div>
 
-      <ul className='mt-6 space-y-3 text-sm text-[#0b4726]'>
+      <ul className='mt-6 space-y-3 text-sm text-green-900'>
         {bullets.map((b) => (
           <li key={b} className='flex items-start gap-3'>
             <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500'>
@@ -396,7 +396,7 @@ function ProblemCard({
           <div className='text-xs font-bold text-amber-600 uppercase tracking-wide'>
             Students often wonder
           </div>
-          <div className='mt-2 space-y-2 text-sm italic text-[#0b4726]'>
+          <div className='mt-2 space-y-2 text-sm italic text-green-900'>
             {quotes.map((q) => (
               <div key={q}>{q}</div>
             ))}
@@ -443,12 +443,12 @@ function MiniListCard({
         <div className='h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center border border-black/5'>
           {icon}
         </div>
-        <div className='font-serif text-xl font-semibold text-[#0b4726]'>
+        <div className='font-serif text-xl font-semibold text-green-900'>
           {title}
         </div>
       </div>
 
-      <ul className='mt-6 space-y-3 text-sm text-[#0b4726]'>
+      <ul className='mt-6 space-y-3 text-sm text-green-900'>
         {items.map((i) => (
           <li key={i} className='flex items-start gap-3'>
             <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500'>

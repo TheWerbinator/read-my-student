@@ -51,10 +51,10 @@ export function ForgotPasswordForm({
       {success ? (
         <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
           <CardHeader className='pb-4'>
-            <CardTitle className='text-3xl font-serif font-semibold text-[#0b4726]'>
+            <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
               Check Your Email
             </CardTitle>
-            <CardDescription className='text-[#0b4726]/70'>
+            <CardDescription className='text-green-900/70'>
               Password reset instructions sent
             </CardDescription>
           </CardHeader>
@@ -69,10 +69,10 @@ export function ForgotPasswordForm({
         <>
           <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
             <CardHeader className='pb-4'>
-              <CardTitle className='text-3xl font-serif font-semibold text-[#0b4726]'>
+              <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
                 Reset Your Password
               </CardTitle>
-              <CardDescription className='text-[#0b4726]/70'>
+              <CardDescription className='text-green-900/70'>
                 Type in your email and we&apos;ll send you a link to reset your
                 password
               </CardDescription>
@@ -89,7 +89,7 @@ export function ForgotPasswordForm({
                   />
                 </div>
                 <div className='min-w-0'>
-                  <div className='text-sm font-semibold text-[#0b4726]'>
+                  <div className='text-sm font-semibold text-green-900'>
                     ReadMyStudent
                   </div>
                   <div className='text-xs text-black/50'>
@@ -114,7 +114,7 @@ export function ForgotPasswordForm({
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                      className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
                     />
                   </div>
 
@@ -126,7 +126,7 @@ export function ForgotPasswordForm({
                   <Button
                     type='submit'
                     disabled={isLoading}
-                    className='w-full rounded-2xl bg-[#0b4726] py-6 text-sm font-semibold text-white shadow-md transition hover:bg-[#0b4726]/90 hover:shadow-lg disabled:opacity-60'
+                    className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
                   >
                     {isLoading ? "Sending..." : "Send reset email"}
                   </Button>
@@ -135,7 +135,7 @@ export function ForgotPasswordForm({
                   Already have an account?{" "}
                   <Link
                     href='/login'
-                    className='font-semibold text-[#0b4726] hover:underline'
+                    className='font-semibold text-green-900 hover:underline'
                   >
                     Login
                   </Link>
@@ -147,11 +147,11 @@ export function ForgotPasswordForm({
           {/* Form Footer Links
           <div className='text-center text-xs text-black/45'>
             By logging in, you agree to our{" "}
-            <Link className='text-[#0b4726] hover:underline' href='/terms'>
+            <Link className='text-green-900 hover:underline' href='/terms'>
               Terms
             </Link>{" "}
             and{" "}
-            <Link className='text-[#0b4726] hover:underline' href='/privacy'>
+            <Link className='text-green-900 hover:underline' href='/privacy'>
               Privacy Policy
             </Link>
             .

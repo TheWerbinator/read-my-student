@@ -123,10 +123,10 @@ export function SignUpForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
         <CardHeader className='pb-4'>
-          <CardTitle className='text-3xl font-serif font-semibold text-[#0b4726]'>
+          <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
             Create account
           </CardTitle>
-          <CardDescription className='text-[#0b4726]/70'>
+          <CardDescription className='text-green-900/70'>
             Join ReadMyStudent to get started
           </CardDescription>
         </CardHeader>
@@ -143,7 +143,7 @@ export function SignUpForm({
               />
             </div>
             <div className='min-w-0'>
-              <div className='text-sm font-semibold text-[#0b4726]'>
+              <div className='text-sm font-semibold text-green-900'>
                 ReadMyStudent
               </div>
               <div className='text-xs text-black/50'>
@@ -155,7 +155,7 @@ export function SignUpForm({
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
             {/* Role Selector */}
             <div>
-              <Label className='mb-2 block text-sm font-semibold text-[#0b4726]'>
+              <Label className='mb-2 block text-sm font-semibold text-green-900'>
                 I am a...
               </Label>
               <div className='grid grid-cols-2 gap-2'>
@@ -167,7 +167,7 @@ export function SignUpForm({
                     className={cn(
                       "rounded-2xl border px-4 py-3 text-sm font-semibold transition-all",
                       role === r
-                        ? "border-[#0b4726] bg-[#0b4726]/10 text-[#0b4726]"
+                        ? "border-green-900 bg-green-900/10 text-green-900"
                         : "border-black/10 bg-white text-black/60 hover:bg-black/5",
                     )}
                   >
@@ -184,7 +184,7 @@ export function SignUpForm({
                 <Input
                   {...form.register("firstName")}
                   placeholder='Jane'
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
                 />
                 {form.formState.errors.firstName && (
                   <span className='text-xs text-red-600'>
@@ -197,7 +197,7 @@ export function SignUpForm({
                 <Input
                   {...form.register("lastName")}
                   placeholder='Doe'
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
                 />
                 {form.formState.errors.lastName && (
                   <span className='text-xs text-red-600'>
@@ -218,7 +218,7 @@ export function SignUpForm({
                     ? "you@university.edu"
                     : "professor@university.edu"
                 }
-                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
               />
               {form.formState.errors.email && (
                 <span className='text-xs text-red-600'>
@@ -315,7 +315,7 @@ export function SignUpForm({
                 {...form.register("password")}
                 type='password'
                 placeholder='••••••••'
-                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
               />
               {form.formState.errors.password && (
                 <span className='text-xs text-red-600'>
@@ -335,7 +335,7 @@ export function SignUpForm({
             <Button
               type='submit'
               disabled={isPending}
-              className='w-full rounded-2xl bg-[#0b4726] py-6 text-sm font-semibold text-white shadow-md transition hover:bg-[#0b4726]/90 hover:shadow-lg disabled:opacity-60'
+              className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
             >
               {isPending ? "Creating account..." : "Sign up"}
             </Button>
@@ -345,7 +345,7 @@ export function SignUpForm({
             Already have an account?{" "}
             <Link
               href='/login'
-              className='font-semibold text-[#0b4726] hover:underline'
+              className='font-semibold text-green-900 hover:underline'
             >
               Login
             </Link>

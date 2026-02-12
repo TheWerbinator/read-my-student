@@ -85,7 +85,7 @@ export default function PricingPage() {
   return (
     <main className='bg-[#fbfbf8]'>
       {/* HERO */}
-      <section className='relative overflow-hidden bg-[#0b4726]'>
+      <section className='relative overflow-hidden bg-green-900'>
         <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]' />
         <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]' />
 

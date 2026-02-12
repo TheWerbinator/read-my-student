@@ -13,8 +13,8 @@ type University = {
 };
 
 type Props = {
-  countryCode: string;                 // ISO-2, e.g. "US"
-  value: University | null;            // selected university (store object or just id/name)
+  countryCode: string; // ISO-2, e.g. "US"
+  value: University | null; // selected university (store object or just id/name)
   onChange: (u: University | null) => void;
   required?: boolean;
   disabled?: boolean;
@@ -39,7 +39,8 @@ export function UniversityCombobox({
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const safeActiveIndex = results.length === 0 ? 0 : Math.min(activeIndex, results.length - 1);
+  const safeActiveIndex =
+    results.length === 0 ? 0 : Math.min(activeIndex, results.length - 1);
 
   // close on outside click
   useEffect(() => {
@@ -69,10 +70,11 @@ export function UniversityCombobox({
       setError("");
       try {
         const res = await fetch(
-          `/api/universities?countryCode=${encodeURIComponent(countryCode)}&q=${encodeURIComponent(q)}`
+          `/api/universities?countryCode=${encodeURIComponent(countryCode)}&q=${encodeURIComponent(q)}`,
         );
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error ?? "Failed to load universities");
+        if (!res.ok)
+          throw new Error(data?.error ?? "Failed to load universities");
         setResults(data.results ?? []);
         setActiveIndex(0);
         // eslint-disable-next-line
@@ -117,49 +119,60 @@ export function UniversityCombobox({
   }
 
   return (
-    <div ref={wrapRef} className="grid grid-cols-1 gap-4 md:grid-cols-3 md:items-center">
-      <label className="text-sm font-medium text-gray-800">
+    <div
+      ref={wrapRef}
+      className='grid grid-cols-1 gap-4 md:grid-cols-3 md:items-center'
+    >
+      <label className='text-sm font-medium text-gray-800'>
         {label}
-        {required ? <span className="text-red-600"> *</span> : null}
+        {required ? <span className='text-red-600'> *</span> : null}
       </label>
 
-      <div className="relative md:col-span-2">
+      <div className='relative md:col-span-2'>
         <button
-          type="button"
+          type='button'
           disabled={disabled}
           onClick={() => (open ? setOpen(false) : openAndFocus())}
           className={[
             "w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-700",
             "flex items-center justify-between gap-3",
-            disabled ? "cursor-not-allowed bg-gray-50 opacity-60" : "hover:bg-black/2",
+            disabled
+              ? "cursor-not-allowed bg-gray-50 opacity-60"
+              : "hover:bg-black/2",
           ].join(" ")}
         >
           <span className={value ? "" : "text-gray-400"}>
-            {value ? value.name : disabled ? "Select a country first" : "Search and select..."}
+            {value
+              ? value.name
+              : disabled
+                ? "Select a country first"
+                : "Search and select..."}
           </span>
-          <span className="text-gray-400">▾</span>
+          <span className='text-gray-400'>▾</span>
         </button>
 
         {open && !disabled && (
-          <div className="absolute z-50 mt-2 w-full rounded-xl border border-black/10 bg-white shadow-xl shadow-black/10">
-            <div className="p-2">
+          <div className='absolute z-50 mt-2 w-full rounded-xl border border-black/10 bg-white shadow-xl shadow-black/10'>
+            <div className='p-2'>
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Type at least 3 letters..."
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0b4726]/30"
+                placeholder='Type at least 3 letters...'
+                className='w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-900/30'
               />
             </div>
 
-            <div className="max-h-72 overflow-auto p-1">
+            <div className='max-h-72 overflow-auto p-1'>
               {loading ? (
-                <div className="px-3 py-3 text-sm text-gray-500">Loading…</div>
+                <div className='px-3 py-3 text-sm text-gray-500'>Loading…</div>
               ) : error ? (
-                <div className="px-3 py-3 text-sm text-red-700">{error}</div>
+                <div className='px-3 py-3 text-sm text-red-700'>{error}</div>
               ) : results.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-gray-500">No results.</div>
+                <div className='px-3 py-3 text-sm text-gray-500'>
+                  No results.
+                </div>
               ) : (
                 results.map((u, idx) => {
                   const isActive = idx === safeActiveIndex;
@@ -168,16 +181,16 @@ export function UniversityCombobox({
                   return (
                     <button
                       key={u.id}
-                      type="button"
+                      type='button'
                       onMouseEnter={() => setActiveIndex(idx)}
                       onClick={() => selectUniversity(u)}
                       className={[
                         "w-full px-3 py-2 text-left text-sm rounded-lg",
-                        isActive ? "bg-[#0b4726]/10" : "hover:bg-black/5",
+                        isActive ? "bg-green-900/10" : "hover:bg-black/5",
                       ].join(" ")}
                     >
-                      <div className="text-gray-800 font-medium">{u.name}</div>
-                      <div className="text-xs text-black/50">
+                      <div className='text-gray-800 font-medium'>{u.name}</div>
+                      <div className='text-xs text-black/50'>
                         {hint ? hint : "—"} · {u.countryCode}
                       </div>
                     </button>
@@ -186,16 +199,16 @@ export function UniversityCombobox({
               )}
             </div>
 
-            <div className="border-t border-black/10 p-2">
+            <div className='border-t border-black/10 p-2'>
               <button
-                type="button"
+                type='button'
                 onClick={() => {
                   // allow clearing selection
                   onChange(null);
                   setOpen(false);
                   setQuery("");
                 }}
-                className="text-xs font-semibold text-[#0b4726] hover:underline"
+                className='text-xs font-semibold text-green-900 hover:underline'
               >
                 Clear selection
               </button>

@@ -56,7 +56,7 @@ export default function SideNavbar() {
           {/* Brand shows only when open; no hover expansion */}
           <div className='min-w-0'>
             {open ? (
-              <div className='text-sm font-semibold text-[#0b4726] whitespace-nowrap'>
+              <div className='text-sm font-semibold text-green-900 whitespace-nowrap'>
                 ReadMyStudent
               </div>
             ) : null}
@@ -70,9 +70,9 @@ export default function SideNavbar() {
               aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
             >
               {open ? (
-                <PanelLeftClose className='h-4 w-4 text-[#0b4726]' />
+                <PanelLeftClose className='h-4 w-4 text-green-900' />
               ) : (
-                <PanelLeftOpen className='h-4 w-4 text-[#0b4726]' />
+                <PanelLeftOpen className='h-4 w-4 text-green-900' />
               )}
             </button>
 
@@ -82,7 +82,7 @@ export default function SideNavbar() {
                 className={[
                   "pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3",
                   "whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold",
-                  "bg-white/90 text-[#0b4726]",
+                  "bg-white/90 text-green-900",
                   "border border-black/10 shadow-lg shadow-black/10",
                   "opacity-0 translate-x-1",
                   "transition-all duration-200 ease-out",
@@ -103,12 +103,12 @@ export default function SideNavbar() {
             const Icon = l.icon;
             const isActive = pathname === l.href;
 
-            const baseBg = isActive ? "bg-[#0b4726]/10" : "bg-transparent";
+            const baseBg = isActive ? "bg-green-900/10" : "bg-transparent";
             const hoverBg = isActive
-              ? "hover:bg-[#0b4726]/10"
+              ? "hover:bg-green-900/10"
               : "hover:bg-black/10";
-            const textColor = isActive ? "text-[#0b4726]" : "text-[#247037]";
-            const hoverText = "hover:text-[#0b4726]";
+            const textColor = isActive ? "text-green-900" : "text-[#247037]";
+            const hoverText = "hover:text-green-900";
 
             return (
               <Link
@@ -141,8 +141,8 @@ export default function SideNavbar() {
                       "border border-black/10 shadow-lg shadow-black/10",
                       // same “feel” as the hovered item
                       isActive
-                        ? "bg-[#eaf3ee] text-[#0b4726]"
-                        : "bg-white/90 text-[#0b4726]",
+                        ? "bg-[#eaf3ee] text-green-900"
+                        : "bg-white/90 text-green-900",
                       "opacity-0 translate-x-1",
                       "transition-all duration-200 ease-out",
                       "group-hover:opacity-100 group-hover:translate-x-0",
@@ -206,7 +206,7 @@ export default function SideNavbar() {
                   className={[
                     "pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3",
                     "whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold",
-                    "bg-white/90 text-[#0b4726]",
+                    "bg-white/90 text-green-900",
                     "border border-black/10 shadow-lg shadow-black/10",
                     "opacity-0 translate-x-1",
                     "transition-all duration-200 ease-out",
@@ -237,7 +237,7 @@ export default function SideNavbar() {
                   className={[
                     "pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3",
                     "whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-semibold",
-                    "bg-white/90 text-[#0b4726]",
+                    "bg-white/90 text-green-900",
                     "border border-black/10 shadow-lg shadow-black/10",
                     "opacity-0 translate-x-1",
                     "transition-all duration-200 ease-out",

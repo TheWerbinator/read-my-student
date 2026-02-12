@@ -58,10 +58,10 @@ export function LoginForm({
       <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
         <CardHeader className='pb-4'>
           {/* Restoring the Serif Font and Green Color */}
-          <CardTitle className='text-3xl font-serif font-semibold text-[#0b4726]'>
+          <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
             Welcome back
           </CardTitle>
-          <CardDescription className='text-[#0b4726]/70'>
+          <CardDescription className='text-green-900/70'>
             Log in to continue your recommendation workflow.
           </CardDescription>
         </CardHeader>
@@ -78,7 +78,7 @@ export function LoginForm({
               />
             </div>
             <div className='min-w-0'>
-              <div className='text-sm font-semibold text-[#0b4726]'>
+              <div className='text-sm font-semibold text-green-900'>
                 ReadMyStudent
               </div>
               <div className='text-xs text-black/50'>
@@ -100,7 +100,7 @@ export function LoginForm({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
                 />
               </div>
 
@@ -114,7 +114,7 @@ export function LoginForm({
                   </Label>
                   <Link
                     href='/forgot-password'
-                    className='ml-auto inline-block text-xs font-semibold text-[#0b4726] hover:underline'
+                    className='ml-auto inline-block text-xs font-semibold text-green-900 hover:underline'
                   >
                     Forgot password?
                   </Link>
@@ -125,7 +125,7 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-[#0b4726] focus-visible:ring-[#0b4726]/20'
+                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
                 />
               </div>
 
@@ -138,7 +138,7 @@ export function LoginForm({
               <Button
                 type='submit'
                 disabled={isLoading}
-                className='w-full rounded-2xl bg-[#0b4726] py-6 text-sm font-semibold text-white shadow-md transition hover:bg-[#0b4726]/90 hover:shadow-lg disabled:opacity-60'
+                className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
               >
                 {isLoading ? "Logging in..." : "Log in"}
               </Button>
@@ -148,7 +148,7 @@ export function LoginForm({
               Don&apos;t have an account?{" "}
               <Link
                 href='/signup'
-                className='font-semibold text-[#0b4726] hover:underline'
+                className='font-semibold text-green-900 hover:underline'
               >
                 Create an account
               </Link>
@@ -160,11 +160,11 @@ export function LoginForm({
       {/* Form Footer Links */}
       <div className='text-center text-xs text-black/45'>
         By logging in, you agree to our{" "}
-        <Link className='text-[#0b4726] hover:underline' href='/terms'>
+        <Link className='text-green-900 hover:underline' href='/terms'>
           Terms
         </Link>{" "}
         and{" "}
-        <Link className='text-[#0b4726] hover:underline' href='/privacy'>
+        <Link className='text-green-900 hover:underline' href='/privacy'>
           Privacy Policy
         </Link>
         .

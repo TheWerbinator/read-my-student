@@ -17,7 +17,7 @@ export default function TopBannerDashboard() {
             height={48}
             className='h-10 w-auto'
           />
-          <span className='hidden sm:inline-block font-semibold text-sm text-[#0b4726]'>
+          <span className='hidden sm:inline-block font-semibold text-sm text-green-900'>
             Dashboard
           </span>
         </Link>

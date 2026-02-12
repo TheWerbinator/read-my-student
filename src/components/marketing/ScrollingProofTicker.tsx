@@ -172,7 +172,7 @@ export default function ScrollingProofTicker({
                 ref={(node) => {
                   itemRefs.current[i] = node;
                 }}
-                className='inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-lg lg:text-xl font-semibold text-[#0b4726]'
+                className='inline-flex items-center gap-3 whitespace-nowrap text-sm md:text-lg lg:text-xl font-semibold text-green-900'
               >
                 <span className='relative inline-flex items-center justify-center w-5'>
                   <BulletIcon active={isActive} />

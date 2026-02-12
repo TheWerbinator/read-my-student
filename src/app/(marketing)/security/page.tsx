@@ -12,11 +12,11 @@ export default function SecurityPage() {
       {/* HERO */}
       <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
         <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-[#0b4726] border border-[#0b4726]/10'>
+          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
             Security
           </div>
 
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
+          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
             Built for trust,{" "}
             <span className='italic text-amber-500'>by design</span>.
           </h1>
@@ -68,7 +68,7 @@ export default function SecurityPage() {
             without authorization violate our{" "}
             <Link
               href='/terms'
-              className='font-semibold text-[#0b4726] hover:underline'
+              className='font-semibold text-green-900 hover:underline'
             >
               Terms of Service
             </Link>
@@ -81,7 +81,7 @@ export default function SecurityPage() {
             reach out through our{" "}
             <Link
               href='/contact'
-              className='font-semibold text-[#0b4726] hover:underline'
+              className='font-semibold text-green-900 hover:underline'
             >
               contact page
             </Link>

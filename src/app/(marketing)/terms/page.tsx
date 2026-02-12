@@ -12,11 +12,11 @@ export default function TermsOfServicePage() {
       {/* HERO */}
       <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
         <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-[#0b4726] border border-[#0b4726]/10'>
+          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
             Terms of Service
           </div>
 
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-[#0b4726] leading-tight'>
+          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
             Clear terms —{" "}
             <span className='italic text-amber-500'>no surprises</span>.
           </h1>
@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
             an account or using the platform, you agree to the terms below.
           </p>
 
-          <p className='mt-4 text-xs font-semibold text-[#0b4726]/60'>
+          <p className='mt-4 text-xs font-semibold text-green-900/60'>
             Last updated: {new Date().toLocaleDateString()}
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function TermsOfServicePage() {
             Your use of the platform is also governed by our{" "}
             <Link
               href='/privacy'
-              className='font-semibold text-[#0b4726] hover:underline'
+              className='font-semibold text-green-900 hover:underline'
             >
               Privacy Policy
             </Link>
@@ -121,7 +121,7 @@ export default function TermsOfServicePage() {
             our{" "}
             <Link
               href='/contact'
-              className='font-semibold text-[#0b4726] hover:underline'
+              className='font-semibold text-green-900 hover:underline'
             >
               contact page
             </Link>

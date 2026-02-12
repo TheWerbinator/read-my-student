@@ -156,7 +156,7 @@ export function HeroStepper() {
                     isActive
                       ? "text-[#3a2a00]"
                       : isDone
-                        ? "text-[#0b4726]"
+                        ? "text-green-900"
                         : "text-black/60",
                   ].join(" ")}
                 >
