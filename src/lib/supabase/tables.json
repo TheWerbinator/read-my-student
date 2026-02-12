@@ -1,0 +1,118 @@
+{
+  "tables": [
+    {
+      "table": "students",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "user_id", "type": "uuid", "nullable": false },
+        { "name": "created_at", "type": "timestamptz", "nullable": false },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false },
+        { "name": "university", "type": "text", "nullable": true },
+        { "name": "university_opeid", "type": "text", "nullable": true }
+      ]
+    },
+    {
+      "table": "faculty",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "user_id", "type": "uuid", "nullable": false },
+        { "name": "created_at", "type": "timestamptz", "nullable": false },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false },
+        { "name": "institution", "type": "text", "nullable": true },
+        { "name": "institution_opeid", "type": "text", "nullable": true },
+        { "name": "department", "type": "text", "nullable": true },
+        { "name": "title", "type": "text", "nullable": true },
+        { "name": "country", "type": "text", "nullable": true },
+        { "name": "state", "type": "text", "nullable": true },
+        { "name": "city", "type": "text", "nullable": true },
+        { "name": "postal_code", "type": "text", "nullable": true },
+        { "name": "street", "type": "text", "nullable": true }
+      ]
+    },
+    {
+      "table": "letter_requests",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "student_id", "type": "uuid", "nullable": false },
+        { "name": "faculty_id", "type": "uuid", "nullable": false },
+        { "name": "course_context", "type": "text", "nullable": true },
+        { "name": "student_note", "type": "text", "nullable": true },
+        { "name": "status", "type": "text", "nullable": false, "default": "requested" },
+        { "name": "created_at", "type": "timestamptz", "nullable": false },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false }
+      ]
+    },
+    {
+      "table": "letters",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "request_id", "type": "uuid", "nullable": false },
+        { "name": "faculty_id", "type": "uuid", "nullable": false },
+        { "name": "student_id", "type": "uuid", "nullable": false },
+        { "name": "is_draft", "type": "bool", "nullable": false, "default": true },
+        { "name": "status", "type": "text", "nullable": false, "default": "draft" },
+        { "name": "letter_body_json", "type": "jsonb", "nullable": true },
+        { "name": "letter_body_html", "type": "text", "nullable": true },
+        { "name": "storage_path", "type": "text", "nullable": true },
+        { "name": "finalized_at", "type": "timestamptz", "nullable": true },
+        { "name": "finalized_ip", "type": "text", "nullable": true },
+        { "name": "finalized_user_agent", "type": "text", "nullable": true },
+        { "name": "created_at", "type": "timestamptz", "nullable": false },
+        { "name": "updated_at", "type": "timestamptz", "nullable": false }
+      ]
+    },
+    {
+      "table": "letter_signatures",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "letter_id", "type": "uuid", "nullable": false },
+        { "name": "pdf_sha256", "type": "text", "nullable": false },
+        { "name": "signature", "type": "text", "nullable": false },
+        { "name": "signature_alg", "type": "text", "nullable": false, "default": "ed25519" },
+        { "name": "signed_at", "type": "timestamptz", "nullable": false },
+        { "name": "signing_key_id", "type": "text", "nullable": true },
+        { "name": "created_at", "type": "timestamptz", "nullable": false }
+      ]
+    },
+    {
+      "table": "delivery_links",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "letter_id", "type": "uuid", "nullable": false },
+        { "name": "token_hash", "type": "text", "nullable": false },
+        { "name": "recipient_email_hash", "type": "text", "nullable": false },
+        { "name": "expires_at", "type": "timestamptz", "nullable": false },
+        { "name": "consumed_at", "type": "timestamptz", "nullable": true },
+        { "name": "payment_status", "type": "text", "nullable": false, "default": "unpaid" },
+        { "name": "stripe_checkout_session_id", "type": "text", "nullable": true },
+        { "name": "created_at", "type": "timestamptz", "nullable": false }
+      ]
+    },
+    {
+      "table": "access_logs",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "letter_id", "type": "uuid", "nullable": false },
+        { "name": "delivery_link_id", "type": "uuid", "nullable": true },
+        { "name": "accessed_at", "type": "timestamptz", "nullable": false },
+        { "name": "viewer_email_hash", "type": "text", "nullable": true },
+        { "name": "ip", "type": "text", "nullable": true },
+        { "name": "user_agent", "type": "text", "nullable": true }
+      ]
+    },
+    {
+      "table": "payment_events",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "letter_id", "type": "uuid", "nullable": true },
+        { "name": "delivery_link_id", "type": "uuid", "nullable": true },
+        { "name": "stripe_event_id", "type": "text", "nullable": false },
+        { "name": "stripe_event_type", "type": "text", "nullable": false },
+        { "name": "amount_cents", "type": "int4", "nullable": true },
+        { "name": "currency", "type": "text", "nullable": true, "default": "usd" },
+        { "name": "status", "type": "text", "nullable": true },
+        { "name": "created_at", "type": "timestamptz", "nullable": false }
+      ]
+    }
+  ]
+}

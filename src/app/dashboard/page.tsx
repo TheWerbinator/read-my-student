@@ -530,6 +530,7 @@ function SendToSchoolDialog() {
 }
 
 function WriteLetterDialog({ studentName }: { studentName: string }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<
     "details" | "letterhead" | "letter" | "preview"
   >("details");
@@ -544,6 +545,9 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
   );
   const [letterHtml, setLetterHtml] = useState<string>("");
   const [letterPlainText, setLetterPlainText] = useState<string>("");
+  const [letterEditorState, setLetterEditorState] = useState<string | null>(
+    null,
+  );
   const [signatureHasTransparency, setSignatureHasTransparency] = useState<
     boolean | null
   >(null);
@@ -558,6 +562,50 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
       [field]: value,
     }));
   };
+
+  const draftStorageKey = `letterDraft:${studentName}`;
+
+  const handleLogoSelect = (file: File | null) => {
+    setLogoFile(file);
+  };
+
+  const handleSignatureSelect = (file: File | null) => {
+    setSignatureFile(file);
+  };
+
+  const handleSaveDraft = () => {
+    const payload = {
+      recommenderForm,
+      letterHtml,
+      letterPlainText,
+      letterEditorState,
+    };
+
+    localStorage.setItem(draftStorageKey, JSON.stringify(payload));
+  };
+
+  useEffect(() => {
+    const storedDraft = localStorage.getItem(draftStorageKey);
+    if (!storedDraft) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(storedDraft) as {
+        recommenderForm: RecommenderForm;
+        letterHtml: string;
+        letterPlainText: string;
+        letterEditorState: string | null;
+      };
+
+      setRecommenderForm(parsed.recommenderForm ?? EMPTY_RECOMMENDER_FORM);
+      setLetterHtml(parsed.letterHtml ?? "");
+      setLetterPlainText(parsed.letterPlainText ?? "");
+      setLetterEditorState(parsed.letterEditorState ?? null);
+    } catch {
+      localStorage.removeItem(draftStorageKey);
+    }
+  }, [draftStorageKey]);
 
   useEffect(() => {
     if (!logoFile) {
@@ -574,15 +622,18 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
   }, [logoFile]);
 
   useEffect(() => {
-    if (!signatureFile) {
+    const previewSource = signatureFile
+      ? URL.createObjectURL(signatureFile)
+      : null;
+
+    if (!previewSource) {
       setSignaturePreviewUrl(null);
       setSignatureHasTransparency(null);
       setSignatureError(null);
       return;
     }
 
-    const previewUrl = URL.createObjectURL(signatureFile);
-    setSignaturePreviewUrl(previewUrl);
+    setSignaturePreviewUrl(previewSource);
 
     const image = new Image();
     image.onload = () => {
@@ -620,10 +671,12 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
       setSignatureError("Unable to read the signature image.");
     };
 
-    image.src = previewUrl;
+    image.src = previewSource;
 
     return () => {
-      URL.revokeObjectURL(previewUrl);
+      if (signatureFile) {
+        URL.revokeObjectURL(previewSource);
+      }
     };
   }, [signatureFile]);
 
@@ -667,7 +720,9 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
       ? missingDetailsHint
       : step === "letterhead"
         ? (signatureError ??
-          (signatureFile ? null : "Upload a transparent PNG signature."))
+          (signatureFile || signatureDataUrl
+            ? null
+            : "Upload a transparent PNG signature."))
         : step === "letter"
           ? isLetterComplete
             ? null
@@ -675,7 +730,15 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
           : null;
 
   return (
-    <Dialog>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          setStep("details");
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button
           size='sm'
@@ -974,30 +1037,52 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
                 <div className='grid gap-4 sm:grid-cols-2'>
                   <div className='grid gap-2'>
                     <Label htmlFor='letterhead-logo'>Letterhead logo</Label>
-                    <Input
-                      id='letterhead-logo'
-                      type='file'
-                      accept='image/*'
-                      className='rounded-xl file:mr-3 file:rounded-lg file:border-0 file:bg-green-900/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-green-900 hover:file:bg-green-900/20'
-                      onChange={(event) =>
-                        setLogoFile(event.target.files?.[0] ?? null)
-                      }
-                    />
+                    <div className='flex items-center gap-3 rounded-xl border border-black/10 bg-white px-3 py-2'>
+                      <label
+                        htmlFor='letterhead-logo'
+                        className='cursor-pointer rounded-lg bg-green-900/10 px-3 py-1.5 text-sm font-semibold text-green-900 hover:bg-green-900/20'
+                      >
+                        Choose file
+                      </label>
+                      <span className='text-sm text-gray-600'>
+                        {logoFile ? logoFile.name : "No file chosen"}
+                      </span>
+                      <Input
+                        id='letterhead-logo'
+                        type='file'
+                        accept='image/*'
+                        className='sr-only'
+                        onChange={(event) =>
+                          handleLogoSelect(event.target.files?.[0] ?? null)
+                        }
+                      />
+                    </div>
                     <p className='text-xs text-gray-500'>
                       {logoFile ? `Selected: ${logoFile.name}` : "Optional"}
                     </p>
                   </div>
                   <div className='grid gap-2'>
                     <Label htmlFor='signature-upload'>Signature (PNG)</Label>
-                    <Input
-                      id='signature-upload'
-                      type='file'
-                      accept='image/png'
-                      className='rounded-xl file:mr-3 file:rounded-lg file:border-0 file:bg-green-900/10 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-green-900 hover:file:bg-green-900/20'
-                      onChange={(event) =>
-                        setSignatureFile(event.target.files?.[0] ?? null)
-                      }
-                    />
+                    <div className='flex items-center gap-3 rounded-xl border border-black/10 bg-white px-3 py-2'>
+                      <label
+                        htmlFor='signature-upload'
+                        className='cursor-pointer rounded-lg bg-green-900/10 px-3 py-1.5 text-sm font-semibold text-green-900 hover:bg-green-900/20'
+                      >
+                        Choose file
+                      </label>
+                      <span className='text-sm text-gray-600'>
+                        {signatureFile ? signatureFile.name : "No file chosen"}
+                      </span>
+                      <Input
+                        id='signature-upload'
+                        type='file'
+                        accept='image/png'
+                        className='sr-only'
+                        onChange={(event) =>
+                          handleSignatureSelect(event.target.files?.[0] ?? null)
+                        }
+                      />
+                    </div>
                     <p className='text-xs text-gray-500'>
                       {signatureFile
                         ? `Selected: ${signatureFile.name}`
@@ -1043,9 +1128,11 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
               <div className='grid gap-2'>
                 <Label htmlFor='letter-content'>Letter content</Label>
                 <LetterEditor
-                  onChange={({ html, plainText }) => {
+                  initialState={letterEditorState}
+                  onChange={({ html, plainText, editorState }) => {
                     setLetterHtml(html);
                     setLetterPlainText(plainText);
+                    setLetterEditorState(editorState);
                   }}
                 />
                 <div className='rounded-lg bg-slate-50 p-3 text-xs text-gray-500 mt-8'>
@@ -1200,7 +1287,11 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
                   </span>{" "}
                   Once finalized, edits are locked and the letter is sealed.
                 </div>
-                <Button variant='outline' className='rounded-xl'>
+                <Button
+                  variant='outline'
+                  className='rounded-xl'
+                  onClick={handleSaveDraft}
+                >
                   Save Draft
                 </Button>
                 <Button className='rounded-xl bg-green-900 hover:bg-[#093820]'>
@@ -1216,9 +1307,15 @@ function WriteLetterDialog({ studentName }: { studentName: string }) {
 }
 
 function LetterEditor({
+  initialState,
   onChange,
 }: {
-  onChange: (payload: { html: string; plainText: string }) => void;
+  initialState: string | null;
+  onChange: (payload: {
+    html: string;
+    plainText: string;
+    editorState: string;
+  }) => void;
 }) {
   const editorConfig = {
     namespace: "letter-editor",
@@ -1226,6 +1323,7 @@ function LetterEditor({
       throw error;
     },
     nodes: [ListNode, ListItemNode],
+    editorState: initialState ?? undefined,
     theme: {
       paragraph: "mb-2",
       text: {
@@ -1266,7 +1364,8 @@ function LetterEditor({
             editorState.read(() => {
               const html = $generateHtmlFromNodes(editor);
               const plainText = $getRoot().getTextContent();
-              onChange({ html, plainText });
+              const serializedState = JSON.stringify(editorState.toJSON());
+              onChange({ html, plainText, editorState: serializedState });
             });
           }}
         />
