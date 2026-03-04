@@ -301,3 +301,261 @@ export async function sendLetterRequest(
 
   return { status: "invited" };
 }
+
+// ─── Student dashboard queries ────────────────────────────────────────────────
+
+export type FinishedLetter = {
+  letterId: string;
+  requestId: string;
+  facultyName: string;
+  finalizedAt: string;
+};
+
+export type PendingRequest = {
+  requestId: string;
+  facultyEmail: string;
+  createdAt: string;
+  status: string;
+};
+
+/**
+ * Returns finalized (non-draft) letters that belong to the current student.
+ */
+export async function getFinishedLetters(): Promise<FinishedLetter[]> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: studentRow } = await supabase
+    .from("students")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!studentRow) return [];
+
+  const { data, error } = await supabase
+    .from("letters")
+    .select(
+      "id, request_id, finalized_at, faculty:faculty_id(first_name, last_name)",
+    )
+    .eq("student_id", studentRow.id)
+    .eq("is_draft", false)
+    .order("finalized_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const fRaw = row.faculty as unknown as
+      | { first_name: string | null; last_name: string | null }[]
+      | { first_name: string | null; last_name: string | null }
+      | null;
+    const f = Array.isArray(fRaw) ? (fRaw[0] ?? null) : fRaw;
+    const facultyName =
+      [f?.first_name, f?.last_name].filter(Boolean).join(" ") || "Professor";
+    return {
+      letterId: row.id as string,
+      requestId: row.request_id as string,
+      facultyName,
+      finalizedAt: row.finalized_at as string,
+    };
+  });
+}
+
+/**
+ * Returns letter requests that are still pending (no finalized letter yet).
+ */
+export async function getPendingRequests(): Promise<PendingRequest[]> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: studentRow } = await supabase
+    .from("students")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!studentRow) return [];
+
+  const { data, error } = await supabase
+    .from("letter_requests")
+    .select("id, status, created_at, faculty:faculty_id(email)")
+    .eq("student_id", studentRow.id)
+    .in("status", ["requested", "in_progress"])
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const fRaw = row.faculty as unknown as
+      | { email: string | null }[]
+      | { email: string | null }
+      | null;
+    const f = Array.isArray(fRaw) ? (fRaw[0] ?? null) : fRaw;
+    return {
+      requestId: row.id as string,
+      facultyEmail: f?.email ?? "Unknown",
+      createdAt: row.created_at as string,
+      status: row.status as string,
+    };
+  });
+}
+
+// ─── Faculty delivery-approval queries ────────────────────────────────────────
+
+export type PendingDelivery = {
+  deliveryLinkId: string;
+  letterId: string;
+  studentFullName: string;
+  schoolName: string;
+  paidAt: string;
+};
+
+/**
+ * Returns delivery_links that are awaiting faculty approval for the current
+ * faculty member. Uses the admin client + explicit faculty_id guard so this
+ * works regardless of the RLS policy on delivery_links.
+ *
+ * Required delivery_links columns (run in Supabase SQL editor if missing):
+ *   ALTER TABLE delivery_links ADD COLUMN IF NOT EXISTS school_name text;
+ *   ALTER TABLE delivery_links ADD COLUMN IF NOT EXISTS student_user_id uuid;
+ */
+export async function getPendingDeliveries(): Promise<PendingDelivery[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Resolve faculty row for this user
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return [];
+
+  // delivery_links → letters (to enforce faculty ownership)
+  const { data, error } = await supabaseAdmin
+    .from("delivery_links")
+    .select(
+      "id, letter_id, school_name, student_user_id, created_at, letters!inner(faculty_id)",
+    )
+    .eq("payment_status", "pending_approval")
+    .eq("letters.faculty_id", facultyRow.id)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  // Fetch student display names from Auth metadata in a single batch
+  const results: PendingDelivery[] = [];
+  for (const row of data) {
+    const studentUserId = row.student_user_id as string | null;
+    let studentFullName = "Student";
+    if (studentUserId) {
+      const { data: authUser } =
+        await supabaseAdmin.auth.admin.getUserById(studentUserId);
+      const meta = authUser?.user?.user_metadata ?? {};
+      studentFullName =
+        [meta.firstName, meta.lastName].filter(Boolean).join(" ") || "Student";
+    }
+    results.push({
+      deliveryLinkId: row.id as string,
+      letterId: row.letter_id as string,
+      studentFullName,
+      schoolName: (row.school_name as string | null) ?? "Unknown school",
+      paidAt: row.created_at as string,
+    });
+  }
+  return results;
+}
+
+/**
+ * Faculty approves a pending delivery.
+ * Sets payment_status = 'paid' and starts the 48-hour expiry window NOW.
+ */
+export async function approveDelivery(
+  deliveryLinkId: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return { error: "Faculty record not found." };
+
+  // Verify the delivery_link belongs to a letter authored by this faculty
+  const { data: link } = await supabaseAdmin
+    .from("delivery_links")
+    .select("id, payment_status, letters!inner(faculty_id)")
+    .eq("id", deliveryLinkId)
+    .eq("letters.faculty_id", facultyRow.id)
+    .maybeSingle();
+
+  if (!link) return { error: "Delivery not found or access denied." };
+  if ((link.payment_status as string) !== "pending_approval")
+    return { error: "This delivery is not awaiting approval." };
+
+  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+  const { error: updateError } = await supabaseAdmin
+    .from("delivery_links")
+    .update({ payment_status: "paid", expires_at: expiresAt })
+    .eq("id", deliveryLinkId);
+
+  if (updateError) return { error: updateError.message };
+  return { error: null };
+}
+
+/**
+ * Faculty rejects a pending delivery.
+ * Sets payment_status = 'rejected'; student will need to request a refund.
+ */
+export async function rejectDelivery(
+  deliveryLinkId: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return { error: "Faculty record not found." };
+
+  const { data: link } = await supabaseAdmin
+    .from("delivery_links")
+    .select("id, payment_status, letters!inner(faculty_id)")
+    .eq("id", deliveryLinkId)
+    .eq("letters.faculty_id", facultyRow.id)
+    .maybeSingle();
+
+  if (!link) return { error: "Delivery not found or access denied." };
+  if ((link.payment_status as string) !== "pending_approval")
+    return { error: "This delivery is not awaiting approval." };
+
+  const { error: updateError } = await supabaseAdmin
+    .from("delivery_links")
+    .update({ payment_status: "rejected" })
+    .eq("id", deliveryLinkId);
+
+  if (updateError) return { error: updateError.message };
+  return { error: null };
+}

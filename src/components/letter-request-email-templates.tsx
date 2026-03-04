@@ -121,3 +121,45 @@ export function FacultyInvitationEmail(p: FacultyInvitationProps): string {
 
   return wrap(body);
 }
+
+// Send-to-School Notification (faculty notified when student pays to deliver)
+
+interface SendApprovalProps {
+  facultyFirstName: string;
+  studentFullName: string;
+  schoolName: string;
+  dashboardUrl: string;
+}
+
+export function SendApprovalEmail(p: SendApprovalProps): string {
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Action required: approve letter delivery</h1>
+    <p style="font-size:16px;line-height:1.6;">Hi ${p.facultyFirstName},</p>
+    <p style="font-size:16px;line-height:1.6;">
+      <strong>${p.studentFullName}</strong> has paid to have your finalized recommendation letter
+      delivered to <strong>${p.schoolName}</strong>.
+    </p>
+    <p style="font-size:16px;line-height:1.6;">
+      <strong>Your approval is required before the letter is released.</strong>
+      Once you approve, the admissions office will receive a secure, one-time view link
+      that expires after <strong>48 hours</strong>.
+    </p>
+    <div style="background-color:#fff8e1;border-left:4px solid #eebd32;padding:12px 16px;border-radius:4px;margin:20px 0;">
+      <p style="margin:0;font-size:14px;color:#555;">
+        <strong>Destination:</strong> ${p.schoolName}
+      </p>
+      <p style="margin:8px 0 0;font-size:14px;color:#555;">
+        <strong>Requested by:</strong> ${p.studentFullName}
+      </p>
+    </div>
+    <p style="font-size:16px;line-height:1.6;">
+      Go to your dashboard to approve or reject this delivery request.
+      If you believe this request was made in error, you can safely reject it.
+    </p>
+    ${ctaButton(p.dashboardUrl, "Review in Dashboard")}
+    <p style="font-size:13px;color:#999999;">
+      ReadMyStudent &mdash; Secure, Respectful Recommendation Letters.
+    </p>`;
+
+  return wrap(body);
+}

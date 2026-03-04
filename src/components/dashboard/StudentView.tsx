@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { sendLetterRequest } from "@/app/actions/letters";
+import { useState, useEffect } from "react";
+import {
+  sendLetterRequest,
+  getFinishedLetters,
+  getPendingRequests,
+} from "@/app/actions/letters";
+import type { FinishedLetter, PendingRequest } from "@/app/actions/letters";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { SendToSchoolDialog } from "@/components/dashboard/SendToSchoolDialog";
 
 export function StudentView() {
   const [profEmail, setProfEmail] = useState("");
@@ -33,6 +39,29 @@ export function StudentView() {
     | { status: "error"; error: string }
     | null
   >(null);
+
+  const [finishedLetters, setFinishedLetters] = useState<FinishedLetter[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // Show a banner if returning from Stripe
+  const paymentStatus =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("payment")
+      : null;
+
+  useEffect(() => {
+    async function load() {
+      const [finished, pending] = await Promise.all([
+        getFinishedLetters(),
+        getPendingRequests(),
+      ]);
+      setFinishedLetters(finished);
+      setPendingRequests(pending);
+      setDataLoading(false);
+    }
+    void load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +80,9 @@ export function StudentView() {
       setProfEmail("");
       setCourseContext("");
       setStudentNote("");
+      // Refresh pending list
+      const pending = await getPendingRequests();
+      setPendingRequests(pending);
     }
 
     setIsLoading(false);
@@ -70,6 +102,17 @@ export function StudentView() {
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
+            {paymentStatus === "success" && (
+              <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
+                ✅ Payment successful! Your professor has been notified and your
+                delivery link has been generated.
+              </div>
+            )}
+            {paymentStatus === "cancelled" && (
+              <div className='rounded-xl bg-amber-50 p-3 text-sm text-amber-800'>
+                Payment cancelled — no charge was made.
+              </div>
+            )}
             {result?.status === "requested" && (
               <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
                 ✅ Request sent! Your professor has been notified and will see
@@ -165,14 +208,39 @@ export function StudentView() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        className='py-10 text-center text-sm text-gray-400'
-                      >
-                        No letters ready to send yet.
-                      </TableCell>
-                    </TableRow>
+                    {dataLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className='py-10 text-center text-sm text-gray-400'
+                        >
+                          Loading…
+                        </TableCell>
+                      </TableRow>
+                    ) : finishedLetters.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className='py-10 text-center text-sm text-gray-400'
+                        >
+                          No letters ready to send yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      finishedLetters.map((letter) => (
+                        <TableRow key={letter.letterId}>
+                          <TableCell className='font-medium'>
+                            {letter.facultyName}
+                          </TableCell>
+                          <TableCell className='text-sm text-gray-500'>
+                            {new Date(letter.finalizedAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <SendToSchoolDialog letterId={letter.letterId} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -192,14 +260,41 @@ export function StudentView() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        className='py-10 text-center text-sm text-gray-400'
-                      >
-                        No pending requests yet.
-                      </TableCell>
-                    </TableRow>
+                    {dataLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className='py-10 text-center text-sm text-gray-400'
+                        >
+                          Loading…
+                        </TableCell>
+                      </TableRow>
+                    ) : pendingRequests.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          className='py-10 text-center text-sm text-gray-400'
+                        >
+                          No pending requests yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      pendingRequests.map((req) => (
+                        <TableRow key={req.requestId}>
+                          <TableCell className='text-sm text-gray-700'>
+                            {req.facultyEmail}
+                          </TableCell>
+                          <TableCell className='text-sm text-gray-500'>
+                            {new Date(req.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <span className='rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 capitalize'>
+                              {req.status}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
