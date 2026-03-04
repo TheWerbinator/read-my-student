@@ -23,6 +23,12 @@ export default function TopBannerDashboard() {
         </Link>
 
         <div className='ml-auto flex items-center gap-3'>
+          <Link
+            href='/dashboard/settings'
+            className='text-sm font-medium text-green-900/70 hover:text-green-900 transition-colors'
+          >
+            Settings
+          </Link>
           <LogoutButton />
         </div>
       </div>

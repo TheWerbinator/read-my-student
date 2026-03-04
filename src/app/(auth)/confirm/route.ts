@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
       token_hash,
     });
     if (!error) {
-      // redirect user to specified redirect URL or root of app
+      // Send signup and email_change confirmations to a dedicated success page
+      if (type === "signup" || type === "email_change") {
+        redirect(`/email-confirmed?type=${type}`);
+      }
+      // All other flows (recovery, magiclink, invite, etc.) use the next param
       redirect(next);
     } else {
       // redirect the user to an error page with some instructions

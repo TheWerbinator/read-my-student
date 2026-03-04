@@ -82,27 +82,7 @@ export async function signUpAction(data: RegisterFormValues) {
 
     const userId = authData.user.id;
 
-    // 4. Insert into USERS Table (Shared Data)
-    const { error: profileError } = await supabaseAdmin.from("users").insert({
-      id: userId,
-      email,
-      role,
-      first_name: firstName,
-      last_name: lastName,
-      country_code: countryCode,
-    });
-
-    if (profileError) {
-      console.error("Profile Insert Error:", profileError);
-      // ROLLBACK: Delete the auth user so we don't have a "ghost" account
-      await supabaseAdmin.auth.admin.deleteUser(userId);
-      return {
-        success: false,
-        error: "Failed to create user profile. Please try again.",
-      };
-    }
-
-    // 5. Insert into Specific Role Tables
+    // Insert into role-specific table
     if (role === "STUDENT") {
       const { error: studentError } = await supabaseAdmin
         .from("students")

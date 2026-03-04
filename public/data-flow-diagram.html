@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Read My Student — Data Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    h1 { font-size: 1.25rem; color: #1a1a1a; margin: 0; }
+    .controls { display: flex; gap: 0.75rem; }
+    button {
+      padding: 0.5rem 1.25rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    #btn-svg  { background: #0070f3; color: #fff; }
+    #btn-png  { background: #18a34a; color: #fff; }
+    button:hover { opacity: 0.85; }
+    #diagram-wrapper {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 2rem;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Read My Student — Data Flow</h1>
+  <div class="controls">
+    <button id="btn-svg">Download SVG</button>
+    <button id="btn-png">Download PNG</button>
+  </div>
+  <div id="diagram-wrapper">
+    <div class="mermaid">
+sequenceDiagram
+    actor S as Student
+    actor F as Faculty
+    actor R as Recipient School
+    participant DB as Supabase DB
+    participant Store as Supabase Storage
+    participant API as Next.js API Route
+    participant Stripe as Stripe
+
+    rect rgb(220, 235, 255)
+        note over S,DB: 1. Student requests a letter
+        S->>DB: INSERT letter_requests<br/>(student_id, faculty_id, course_context, student_note)
+        DB-->>S: status = "requested"
+    end
+
+    rect rgb(220, 255, 220)
+        note over F,Store: 2. Faculty writes & finalises the letter
+        F->>DB: SELECT letter_requests WHERE faculty_id = me
+        DB-->>F: pending request rows
+        F->>DB: INSERT letters (is_draft=true, letter_body_json, letter_body_html)
+        F->>DB: UPDATE letters SET is_draft=false, status="finalized", finalized_at=now()
+        F->>Store: PUT signed PDF → storage_path
+        F->>DB: INSERT letter_signatures (letter_id, pdf_sha256, signature)
+        F->>DB: UPDATE letter_requests SET status="completed"
+    end
+
+    rect rgb(255, 245, 200)
+        note over S,DB: 3. Student monitors progress (read-only, no letter body)
+        S->>DB: SELECT letter_requests WHERE student_id = me
+        DB-->>S: status, created_at, updated_at only<br/>(letter body columns withheld by RLS view)
+    end
+
+    rect rgb(255, 225, 200)
+        note over F,Stripe: 4. Faculty creates delivery link & student pays
+        S->>API: POST /api/deliver  { letter_id, recipient_email }
+        API->>Stripe: Create Checkout Session
+        Stripe-->>API: checkout URL
+        API->>DB: INSERT delivery_links<br/>(letter_id, token_hash, recipient_email_hash,<br/>expires_at, payment_status="unpaid")
+        S->>Stripe: completes payment
+        Stripe->>API: webhook checkout.session.completed
+        API->>DB: UPDATE delivery_links SET payment_status="paid"
+        API->>DB: INSERT payment_events
+        API->>R: email delivery_link token URL
+    end
+
+    rect rgb(240, 220, 255)
+        note over R,DB: 5. Recipient school accesses letter via token
+        R->>API: GET /api/letter?token=raw_token
+        API->>DB: SELECT delivery_links WHERE token_hash = sha256(token)<br/>AND expires_at > now() AND payment_status = "paid"
+        DB-->>API: delivery_link row (service role — bypasses RLS)
+        API->>DB: SELECT letters WHERE id = delivery_link.letter_id (service role)
+        API->>Store: GET signed PDF (storage_path)
+        Store-->>API: PDF bytes
+        API-->>R: letter HTML + PDF download
+        API->>DB: INSERT access_logs
+        API->>DB: UPDATE delivery_links SET consumed_at = now()
+    end
+    </div>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+    function getSvgElement() {
+      return document.querySelector('#diagram-wrapper svg');
+    }
+
+    document.getElementById('btn-svg').addEventListener('click', () => {
+      const svg = getSvgElement();
+      if (!svg) return alert('Diagram not rendered yet, please wait.');
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svg);
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'read-my-student-data-flow.svg';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('btn-png').addEventListener('click', () => {
+      const svg = getSvgElement();
+      if (!svg) return alert('Diagram not rendered yet, please wait.');
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svg);
+      const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => {
+        const scale = 2; // retina / high-res
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.naturalWidth  * scale;
+        canvas.height = img.naturalHeight * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = 'read-my-student-data-flow.png';
+        a.click();
+      };
+      img.src = url;
+    });
+  </script>
+</body>
+</html>

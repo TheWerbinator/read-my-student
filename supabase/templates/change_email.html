@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Your Login Link</title>
+    <title>Confirm Your New Email Address</title>
     <style>
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -37,8 +37,19 @@
             </tr>
             <tr>
               <td style="padding: 40px;">
-                <h1 style="font-family: 'Georgia', serif; font-size: 28px; color: #103f30; margin-top: 0;">Sign in to ReadMyStudent</h1>
-                <p style="font-size: 16px; line-height: 1.6;">Click the button below to sign in directly. This link acts as your password and will expire shortly.</p>
+                <h1 style="font-family: 'Georgia', serif; font-size: 28px; color: #103f30; margin-top: 0;">Confirm Your New Email Address</h1>
+                <p style="font-size: 16px; line-height: 1.6;">
+                  We received a request to update the email address on your
+                  <strong>ReadMyStudent</strong>
+                  account.
+                </p>
+                <p style="font-size: 16px; line-height: 1.6;">
+                  Your email will be changed from
+                  <strong>{{ .Email }}</strong> to
+                  <strong>{{ .NewEmail }}</strong>
+                  . Click the button below to confirm this change.
+                </p>
+                <p style="font-size: 16px; line-height: 1.6;">If you didn't make this request, you can safely ignore this email — your current address will remain unchanged.</p>
                 <table
                   border="0"
                   cellpadding="0"
@@ -47,7 +58,7 @@
                 >
                   <tr>
                     <td>
-                      <a href="{{ .ConfirmationURL }}" class="button">Sign In Now</a>
+                      <a href="{{ .ConfirmationURL }}" class="button">Confirm New Email</a>
                     </td>
                   </tr>
                 </table>

@@ -50,7 +50,7 @@ export async function submitContactForm(data: ContactFormValues) {
         Message:
         ${message}
       `,
-      react: EmailTemplate({ email, subject, message }),
+      html: EmailTemplate({ email, subject, message }),
     });
 
     if (data.error) {

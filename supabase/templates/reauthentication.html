@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Reset Your Password</title>
+    <title>Confirm Your Identity</title>
     <style>
     body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
     table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
@@ -10,8 +10,7 @@
     table { border-collapse: collapse !important; }
     body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f4f4f4; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; }
     .brand-green { background-color: #103f30; }
-    .button { background-color: #eebd32; color: #103f30; display: inline-block; font-weight: bold; padding: 14px 30px; text-decoration: none; border-radius: 4px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .button:hover { background-color: #d4a728; }
+    .otp-code { background-color: #f5f5f0; border: 2px solid #e0e0d8; border-radius: 8px; color: #103f30; display: inline-block; font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; letter-spacing: 10px; padding: 16px 28px; text-align: center; }
     </style>
   </head>
   <body style="margin: 0; padding: 0; background-color: #f4f4f4;">
@@ -32,31 +31,33 @@
           >
             <tr>
               <td align="center" class="brand-green" style="padding: 30px;">
-                <h2 style="color: #ffffff; margin: 0; font-family: 'Georgia', serif; letter-spacing: 1px;">ReadMyStudent</h2>
+                <img src="https://readmystudent.com/Logo_Official_White.png" alt="ReadMyStudent" style="height: 50px; width: auto; display: block; margin: 0 auto;">
               </td>
             </tr>
             <tr>
               <td style="padding: 40px;">
-                <h1 style="font-family: 'Georgia', serif; font-size: 28px; color: #103f30; margin-top: 0;">Reset Your Password</h1>
-                <p style="font-size: 16px; line-height: 1.6;">We received a request to reset the password for your
-                  <strong>ReadMyStudent</strong> account.
+                <h1 style="font-family: 'Georgia', serif; font-size: 28px; color: #103f30; margin-top: 0;">Confirm Your Identity</h1>
+                <p style="font-size: 16px; line-height: 1.6;">
+                  To continue, please enter the verification code below. This code confirms it's really you before making changes to your account.
                 </p>
-                <p style="font-size: 16px; line-height: 1.6;">If you didn't make this request, you can safely ignore this email.</p>
+                <p style="font-size: 16px; line-height: 1.6;">If you didn't request this, you can safely ignore this email.</p>
                 <table
                   border="0"
                   cellpadding="0"
                   cellspacing="0"
-                  style="margin-top: 20px; margin-bottom: 30px;"
+                  style="margin-top: 24px; margin-bottom: 32px;"
                 >
                   <tr>
-                    <td>
-                      <a href="{{ .ConfirmationURL }}" class="button">Reset Password</a>
+                    <td align="left">
+                      <div class="otp-code">{{ .Token }}</div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding-top: 12px;">
+                      <p style="font-size: 13px; color: #999999; margin: 0;">This code expires shortly. Do not share it with anyone.</p>
                     </td>
                   </tr>
                 </table>
-                <p style="font-size: 14px; color: #666666;">Or copy this link:
-                  <a href="{{ .ConfirmationURL }}" style="color: #103f30;">{{ .ConfirmationURL }}</a>
-                </p>
               </td>
             </tr>
             <tr>

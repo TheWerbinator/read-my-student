@@ -1,0 +1,212 @@
+"use client";
+
+import { useState } from "react";
+import { sendLetterRequest } from "@/app/actions/letters";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+
+export function StudentView() {
+  const [profEmail, setProfEmail] = useState("");
+  const [courseContext, setCourseContext] = useState("");
+  const [studentNote, setStudentNote] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<
+    | { status: "requested" | "invited" }
+    | { status: "error"; error: string }
+    | null
+  >(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setResult(null);
+
+    const res = await sendLetterRequest({
+      professorEmail: profEmail,
+      courseContext: courseContext || undefined,
+      studentNote: studentNote || undefined,
+    });
+
+    setResult(res.status === "error" ? res : { status: res.status });
+
+    if (res.status !== "error") {
+      setProfEmail("");
+      setCourseContext("");
+      setStudentNote("");
+    }
+
+    setIsLoading(false);
+  };
+
+  return (
+    <div className='grid gap-6 grid-cols-1 md:grid-cols-12'>
+      {/* LEFT COL: Request Form */}
+      <div className='md:col-span-4'>
+        <Card className='rounded-2xl border-black/5 shadow-lg shadow-black/5'>
+          <CardHeader>
+            <CardTitle className='text-xl font-serif text-green-900'>
+              Request a Letter
+            </CardTitle>
+            <CardDescription>
+              Ask a professor for a recommendation.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {result?.status === "requested" && (
+              <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
+                ✅ Request sent! Your professor has been notified and will see
+                it in their dashboard.
+              </div>
+            )}
+            {result?.status === "invited" && (
+              <div className='rounded-xl bg-blue-50 p-3 text-sm text-blue-800'>
+                📨 Invitation sent! Your professor doesn&apos;t have an account
+                yet — we&apos;ve emailed them a personal invitation to join and
+                help you.
+              </div>
+            )}
+            {result?.status === "error" && (
+              <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
+                ❌ {(result as { status: "error"; error: string }).error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className='space-y-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='prof-email'>Professor&apos;s Email</Label>
+                <Input
+                  id='prof-email'
+                  type='email'
+                  required
+                  placeholder='professor@university.edu'
+                  value={profEmail}
+                  onChange={(e) => setProfEmail(e.target.value)}
+                  className='rounded-xl border-black/10 focus-visible:ring-green-900'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='course'>Course / Context (Optional)</Label>
+                <Input
+                  id='course'
+                  placeholder='e.g. BIO 101, Fall 2023'
+                  value={courseContext}
+                  onChange={(e) => setCourseContext(e.target.value)}
+                  className='rounded-xl border-black/10 focus-visible:ring-green-900'
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='message'>Personal Note</Label>
+                <Textarea
+                  id='message'
+                  placeholder="Hi Professor, I'm applying to med school..."
+                  value={studentNote}
+                  onChange={(e) => setStudentNote(e.target.value)}
+                  className='rounded-xl border-black/10 min-h-[100px] focus-visible:ring-green-900'
+                />
+              </div>
+              <Button
+                type='submit'
+                disabled={isLoading}
+                className='w-full rounded-xl bg-green-900 hover:bg-[#093820] disabled:opacity-60'
+              >
+                {isLoading ? "Sending…" : "Send Request"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* RIGHT COL: Status Tabs */}
+      <div className='md:col-span-8'>
+        <Tabs defaultValue='completed' className='w-full'>
+          <TabsList className='grid w-full grid-cols-2 rounded-xl bg-green-900/5 p-1'>
+            <TabsTrigger
+              value='completed'
+              className='rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm'
+            >
+              Ready to Send
+            </TabsTrigger>
+            <TabsTrigger
+              value='pending'
+              className='rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm'
+            >
+              Pending
+            </TabsTrigger>
+          </TabsList>
+
+          {/* COMPLETED REQUESTS (Ready to send to schools) */}
+          <TabsContent value='completed' className='mt-4 space-y-4'>
+            <Card className='rounded-2xl border-black/5'>
+              <CardContent className='p-0'>
+                <Table>
+                  <TableHeader>
+                    <TableRow className='hover:bg-transparent'>
+                      <TableHead>Professor</TableHead>
+                      <TableHead>Date Signed</TableHead>
+                      <TableHead className='text-right'>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className='py-10 text-center text-sm text-gray-400'
+                      >
+                        No letters ready to send yet.
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* PENDING REQUESTS */}
+          <TabsContent value='pending' className='mt-4'>
+            <Card className='rounded-2xl border-black/5'>
+              <CardContent className='p-0'>
+                <Table>
+                  <TableHeader>
+                    <TableRow className='hover:bg-transparent'>
+                      <TableHead>Professor</TableHead>
+                      <TableHead>Sent On</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className='py-10 text-center text-sm text-gray-400'
+                      >
+                        No pending requests yet.
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
