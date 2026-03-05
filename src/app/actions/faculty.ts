@@ -26,7 +26,14 @@ const PROFILE_COLUMNS = [
   "email",
   "signature_storage_path",
   "logo_storage_path",
+  "logo_uploaded_at",
+  "signature_uploaded_at",
 ].join(", ");
+
+// Supabase Storage bucket names — create these in the Supabase dashboard
+// (Storage → New bucket, private) before deploying.
+const BUCKET_LOGOS = "faculty-logos";
+const BUCKET_SIGNATURES = "faculty-signatures";
 
 /**
  * Fetch the faculty profile row for the currently authenticated user.
@@ -80,13 +87,14 @@ export async function saveFacultyProfile(
 }
 
 /**
- * Upload a logo or signature image to the faculty-assets Storage bucket,
- * then persist the storage path on the faculty row.
+ * Upload a logo or signature image to the appropriate private Storage bucket,
+ * then persist the storage path and per-asset upload timestamp on the faculty row.
  * Returns a 1-hour signed URL so the client can display the image immediately.
  *
- * Bucket setup required in Supabase:
- *   - Bucket name: faculty-assets  (private, not public)
- *   - RLS: allow auth users to SELECT/INSERT/UPDATE their own folder ({user.id}/*)
+ * Supabase Storage buckets required (create in the dashboard: Storage → New bucket,
+ * set to private for both):
+ *   - faculty-logos       → stores logo files at {user_id}/logo.{ext}
+ *   - faculty-signatures  → stores signature files at {user_id}/signature.{ext}
  */
 export async function uploadFacultyAsset(
   formData: FormData,
@@ -108,26 +116,58 @@ export async function uploadFacultyAsset(
   if (!file) return { success: false, error: "No file provided." };
 
   const ext = file.name.split(".").pop() ?? "bin";
+  // One file per user per asset type — stable path so upsert replaces the old one.
   const storagePath = `${user.id}/${assetType}.${ext}`;
+  const bucket = assetType === "logo" ? BUCKET_LOGOS : BUCKET_SIGNATURES;
 
   const { error: uploadError } = await supabase.storage
-    .from("faculty-assets")
+    .from(bucket)
     .upload(storagePath, file, { upsert: true, contentType: file.type });
 
   if (uploadError) return { success: false, error: uploadError.message };
 
-  // Persist path to the faculty profile row
-  const column =
+  // Persist path + refresh the per-asset retention clock on the faculty profile row
+  const pathColumn =
     assetType === "logo" ? "logo_storage_path" : "signature_storage_path";
+  const tsColumn =
+    assetType === "logo" ? "logo_uploaded_at" : "signature_uploaded_at";
+  const now = new Date().toISOString();
   await supabase
     .from("faculty")
-    .update({ [column]: storagePath, updated_at: new Date().toISOString() })
+    .update({ [pathColumn]: storagePath, [tsColumn]: now, updated_at: now })
     .eq("user_id", user.id);
 
   // Short-lived signed URL so the component can render the image immediately
   const { data: signedData } = await supabase.storage
-    .from("faculty-assets")
+    .from(bucket)
     .createSignedUrl(storagePath, 3600);
 
   return { success: true, storagePath, signedUrl: signedData?.signedUrl };
+}
+
+/**
+ * Confirm an existing asset file is still valid — resets the 1-year retention
+ * clock for that asset WITHOUT re-uploading. Faculty call this from the
+ * expiry warning prompt in settings.
+ */
+export async function refreshAssetTimestamp(
+  assetType: "logo" | "signature",
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated." };
+
+  const tsColumn =
+    assetType === "logo" ? "logo_uploaded_at" : "signature_uploaded_at";
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("faculty")
+    .update({ [tsColumn]: now, updated_at: now })
+    .eq("user_id", user.id);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
 }

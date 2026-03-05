@@ -12,6 +12,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   Table,
   TableBody,
   TableCell,
@@ -21,25 +31,81 @@ import {
 } from "@/components/ui/table";
 
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { WriteLetterDialog } from "@/components/dashboard/WriteLetterDialog";
 import {
   getPendingDeliveries,
+  getFacultyRequests,
+  getFacultyFinalizedLetters,
   approveDelivery,
   rejectDelivery,
+  rejectLetterRequest,
+  setStudentPreviewEnabled,
   type PendingDelivery,
+  type FacultyLetterRequest,
+  type FacultyFinalizedLetter,
 } from "@/app/actions/letters";
+import { getFacultyProfile, saveFacultyProfile } from "@/app/actions/faculty";
+import type { FacultyProfileRow, RecommenderForm } from "@/lib/faculty-profile";
+import { dbRowToProfile } from "@/lib/faculty-profile";
 
 export function FacultyView() {
   const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>(
     [],
   );
+  const [letterRequests, setLetterRequests] = useState<FacultyLetterRequest[]>(
+    [],
+  );
   const [loadingDeliveries, setLoadingDeliveries] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [facultyProfile, setFacultyProfile] =
+    useState<FacultyProfileRow | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Reject request dialog state
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(
+    null,
+  );
+  const [rejectReason, setRejectReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [rejectError, setRejectError] = useState<string | null>(null);
+
+  // Verification settings dialog
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [finalizedLetters, setFinalizedLetters] = useState<FacultyFinalizedLetter[]>([]);
+  const [loadingFinalized, setLoadingFinalized] = useState(false);
+  const [previewToggles, setPreviewToggles] = useState<Record<string, boolean>>({});
+
+  function openVerificationDialog() {
+    setVerificationDialogOpen(true);
+    if (finalizedLetters.length === 0) {
+      setLoadingFinalized(true);
+      getFacultyFinalizedLetters().then((letters) => {
+        setFinalizedLetters(letters);
+        setPreviewToggles(
+          Object.fromEntries(letters.map((l) => [l.letterId, l.studentPreviewEnabled])),
+        );
+        setLoadingFinalized(false);
+      });
+    }
+  }
+
+  async function handleTogglePreview(letterId: string, enabled: boolean) {
+    setPreviewToggles((prev) => ({ ...prev, [letterId]: enabled }));
+    await setStudentPreviewEnabled(letterId, enabled);
+  }
 
   useEffect(() => {
     getPendingDeliveries()
       .then(setPendingDeliveries)
       .finally(() => setLoadingDeliveries(false));
+
+    getFacultyRequests()
+      .then(setLetterRequests)
+      .finally(() => setLoadingRequests(false));
+
+    getFacultyProfile().then(setFacultyProfile);
   }, []);
 
   const handleApprove = (id: string) => {
@@ -70,8 +136,35 @@ export function FacultyView() {
     });
   };
 
+  const handleSaveProfile = async (form: RecommenderForm) => {
+    return saveFacultyProfile(form);
+  };
+
+  const openRejectDialog = (requestId: string) => {
+    setRejectingRequestId(requestId);
+    setRejectReason("");
+    setRejectError(null);
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectRequest = async () => {
+    if (!rejectingRequestId) return;
+    setIsRejecting(true);
+    setRejectError(null);
+    const result = await rejectLetterRequest(rejectingRequestId, rejectReason);
+    if (result.error) {
+      setRejectError(result.error);
+    } else {
+      setLetterRequests((prev) =>
+        prev.filter((r) => r.requestId !== rejectingRequestId),
+      );
+      setRejectDialogOpen(false);
+    }
+    setIsRejecting(false);
+  };
+
   return (
-    <div className='space-y-6'>
+    <>
       {/* Stats Row */}
       <div className='grid gap-4 md:grid-cols-3'>
         <StatsCard
@@ -81,8 +174,8 @@ export function FacultyView() {
           color='text-amber-600'
         />
         <StatsCard
-          title='Letters Finalized'
-          value='—'
+          title='Incoming Requests'
+          value={loadingRequests ? "…" : String(letterRequests.length)}
           icon={FileText}
           color='text-emerald-600'
         />
@@ -113,8 +206,9 @@ export function FacultyView() {
           <Button
             variant='outline'
             className='mt-2 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10 sm:mt-0'
+            onClick={openVerificationDialog}
           >
-            View Verification Settings
+            Student Preview Settings
           </Button>
         </CardContent>
       </Card>
@@ -224,14 +318,64 @@ export function FacultyView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className='py-10 text-center text-sm text-gray-400'
-                >
-                  No pending requests yet.
-                </TableCell>
-              </TableRow>
+              {loadingRequests ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className='py-10 text-center text-sm text-gray-400'
+                  >
+                    Loading…
+                  </TableCell>
+                </TableRow>
+              ) : letterRequests.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className='py-10 text-center text-sm text-gray-400'
+                  >
+                    No pending requests yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                letterRequests.map((req) => (
+                  <TableRow key={req.requestId}>
+                    <TableCell className='font-medium'>
+                      {req.studentName}
+                    </TableCell>
+                    <TableCell className='text-sm text-gray-500'>
+                      {req.courseContext ?? "—"}
+                    </TableCell>
+                    <TableCell className='text-sm text-gray-500'>
+                      {new Date(req.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className='text-right'>
+                      <div className='flex justify-end gap-2'>
+                        <WriteLetterDialog
+                          studentName={req.studentName}
+                          requestId={req.requestId}
+                          savedProfile={
+                            facultyProfile
+                              ? dbRowToProfile(facultyProfile)
+                              : undefined
+                          }
+                          onSaveProfile={handleSaveProfile}
+                          onDraftSaved={() =>
+                            getFacultyRequests().then(setLetterRequests)
+                          }
+                        />
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          className='rounded-lg border-red-200 text-red-600 hover:bg-red-50 text-xs'
+                          onClick={() => openRejectDialog(req.requestId)}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -269,6 +413,117 @@ export function FacultyView() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+
+      {/* Student preview settings dialog */}
+      <Dialog open={verificationDialogOpen} onOpenChange={setVerificationDialogOpen}>
+        <DialogContent className='rounded-2xl sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-green-900'>
+              Student Preview Settings
+            </DialogTitle>
+            <DialogDescription>
+              Control whether students can see a watermarked preview of their
+              letter in their dashboard. Letters are cryptographically sealed at
+              finalization — students never receive an unsecured copy.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-3 py-1'>
+            {loadingFinalized ? (
+              <p className='py-6 text-center text-sm text-gray-400'>Loading…</p>
+            ) : finalizedLetters.length === 0 ? (
+              <p className='py-6 text-center text-sm text-gray-400'>
+                No finalized letters yet.
+              </p>
+            ) : (
+              finalizedLetters.map((letter) => (
+                <div
+                  key={letter.letterId}
+                  className='flex items-center justify-between gap-4 rounded-xl border border-black/5 bg-slate-50 px-4 py-3'
+                >
+                  <div>
+                    <p className='text-sm font-medium text-gray-800'>
+                      {letter.studentName}
+                    </p>
+                    <p className='text-xs text-gray-500'>
+                      Finalized {new Date(letter.finalizedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button
+                    type='button'
+                    role='switch'
+                    aria-checked={previewToggles[letter.letterId] ?? false}
+                    onClick={() =>
+                      handleTogglePreview(
+                        letter.letterId,
+                        !(previewToggles[letter.letterId] ?? false),
+                      )
+                    }
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 ${
+                      (previewToggles[letter.letterId] ?? false)
+                        ? 'bg-green-900'
+                        : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                        (previewToggles[letter.letterId] ?? false)
+                          ? 'translate-x-5'
+                          : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject request dialog */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className='rounded-2xl sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-green-900'>
+              Decline Request
+            </DialogTitle>
+            <DialogDescription>
+              The student will be notified by email. You can optionally include
+              a brief message.
+            </DialogDescription>
+          </DialogHeader>
+          <div className='space-y-3 py-2'>
+            <Label htmlFor='reject-reason'>Message to student (optional)</Label>
+            <Textarea
+              id='reject-reason'
+              placeholder="e.g. I don't have capacity this semester..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className='rounded-xl min-h-[100px] border-black/10 focus-visible:ring-green-900'
+            />
+            {rejectError && (
+              <p className='text-sm text-red-600'>❌ {rejectError}</p>
+            )}
+          </div>
+          <DialogFooter className='gap-2'>
+            <Button
+              variant='outline'
+              className='rounded-xl'
+              onClick={() => setRejectDialogOpen(false)}
+              disabled={isRejecting}
+            >
+              Cancel
+            </Button>
+            <Button
+              className='rounded-xl bg-red-600 hover:bg-red-700 text-white'
+              onClick={handleRejectRequest}
+              disabled={isRejecting}
+            >
+              {isRejecting ? "Declining…" : "Decline Request"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

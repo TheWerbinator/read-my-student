@@ -168,6 +168,34 @@ export function InstitutionDeliveryEmail(p: InstitutionDeliveryProps): string {
   return wrap(body);
 }
 
+// Request rejection notice (sent to student when faculty declines to write the letter)
+
+interface RequestRejectionProps {
+  studentFirstName: string;
+  facultyName: string;
+  reason?: string;
+  supportUrl: string;
+}
+
+export function RequestRejectionEmail(p: RequestRejectionProps): string {
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Recommendation request declined</h1>
+    <p style="font-size:16px;line-height:1.6;">Hi ${p.studentFirstName},</p>
+    <p style="font-size:16px;line-height:1.6;">
+      <strong>${p.facultyName}</strong> has declined your request for a letter of recommendation.
+    </p>
+    ${p.reason ? noteBlock("Their message", p.reason) : ""}
+    <p style="font-size:16px;line-height:1.6;">
+      We recommend reaching out to another professor or contacting your institution's advising office for assistance.
+    </p>
+    ${ctaButton(p.supportUrl, "Contact Support")}
+    <p style="font-size:13px;color:#999999;">
+      ReadMyStudent &mdash; Secure, Respectful Recommendation Letters.
+    </p>`;
+
+  return wrap(body);
+}
+
 // Student rejection notice (sent to student when faculty rejects the delivery)
 
 interface StudentRejectionProps {

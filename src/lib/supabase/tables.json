@@ -31,7 +31,9 @@
         { "name": "postal_code", "type": "text", "nullable": true },
         { "name": "street", "type": "text", "nullable": true },
         { "name": "signature_storage_path", "type": "text", "nullable": true },
-        { "name": "logo_storage_path", "type": "text", "nullable": true }
+        { "name": "logo_storage_path", "type": "text", "nullable": true },
+        { "name": "logo_uploaded_at", "type": "timestamptz", "nullable": true, "comment": "Set when logo is uploaded; nulled by cron after 1-year retention window" },
+        { "name": "signature_uploaded_at", "type": "timestamptz", "nullable": true, "comment": "Set when signature is uploaded; nulled by cron after 1-year retention window" }
       ]
     },
     {
@@ -39,10 +41,11 @@
       "columns": [
         { "name": "id", "type": "uuid", "nullable": false },
         { "name": "student_id", "type": "uuid", "nullable": false },
-        { "name": "faculty_id", "type": "uuid", "nullable": false },
+        { "name": "faculty_id", "type": "uuid", "nullable": true },
+        { "name": "professor_email", "type": "text", "nullable": true },
         { "name": "course_context", "type": "text", "nullable": true },
         { "name": "student_note", "type": "text", "nullable": true },
-        { "name": "status", "type": "text", "nullable": false, "default": "requested" },
+        { "name": "status", "type": "letter_request_status", "nullable": false, "default": "requested", "enum_values": ["invited", "requested", "in_progress", "completed", "rejected"] },
         { "name": "created_at", "type": "timestamptz", "nullable": false },
         { "name": "updated_at", "type": "timestamptz", "nullable": false }
       ]
@@ -56,6 +59,7 @@
         { "name": "student_id", "type": "uuid", "nullable": false },
         { "name": "is_draft", "type": "bool", "nullable": false, "default": true },
         { "name": "status", "type": "text", "nullable": false, "default": "draft" },
+        { "name": "student_preview_enabled", "type": "bool", "nullable": false, "default": false },
         { "name": "letter_body_json", "type": "jsonb", "nullable": true },
         { "name": "letter_body_html", "type": "text", "nullable": true },
         { "name": "storage_path", "type": "text", "nullable": true },
@@ -64,6 +68,7 @@
         { "name": "signature_image_storage_path", "type": "text", "nullable": true },
         { "name": "letter_plain_text", "type": "text", "nullable": true },
         { "name": "finalized_at", "type": "timestamptz", "nullable": true },
+        { "name": "expires_at", "type": "timestamptz", "nullable": true, "comment": "Set to finalized_at + 1 year; cron deletes letter + PDF once past this date" },
         { "name": "finalized_ip", "type": "text", "nullable": true },
         { "name": "finalized_user_agent", "type": "text", "nullable": true },
         { "name": "created_at", "type": "timestamptz", "nullable": false },

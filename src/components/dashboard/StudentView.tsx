@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { SendToSchoolDialog } from "@/components/dashboard/SendToSchoolDialog";
+import { LetterPreviewDialog } from "@/components/dashboard/LetterPreviewDialog";
 
 export function StudentView() {
   const [profEmail, setProfEmail] = useState("");
@@ -236,7 +237,14 @@ export function StudentView() {
                             {new Date(letter.finalizedAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell className='text-right'>
-                            <SendToSchoolDialog letterId={letter.letterId} />
+                            <div className='flex items-center justify-end gap-2'>
+                              <LetterPreviewDialog
+                                letterId={letter.letterId}
+                                facultyName={letter.facultyName}
+                                previewEnabled={letter.studentPreviewEnabled}
+                              />
+                              <SendToSchoolDialog letterId={letter.letterId} />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
@@ -288,7 +296,15 @@ export function StudentView() {
                             {new Date(req.createdAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <span className='rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 capitalize'>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
+                                req.status === "rejected"
+                                  ? "bg-red-100 text-red-700"
+                                  : req.status === "invited"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-yellow-100 text-yellow-800"
+                              }`}
+                            >
                               {req.status}
                             </span>
                           </TableCell>

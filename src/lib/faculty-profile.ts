@@ -78,6 +78,10 @@ export type FacultyProfileRow = {
   signature_storage_path: string | null;
   logo_storage_path: string | null;
   sign_off: string | null;
+  /** ISO timestamp of the last logo upload; nulled by the cron after the 1-year retention window */
+  logo_uploaded_at: string | null;
+  /** ISO timestamp of the last signature upload; nulled by the cron after the 1-year retention window */
+  signature_uploaded_at: string | null;
 };
 
 // ─── Mapping helpers ──────────────────────────────────────────────────────────

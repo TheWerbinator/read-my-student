@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { saveFacultyProfile, uploadFacultyAsset } from "@/app/actions/faculty";
+import {
+  saveFacultyProfile,
+  uploadFacultyAsset,
+  refreshAssetTimestamp,
+} from "@/app/actions/faculty";
 import type { FacultyProfileRow } from "@/lib/faculty-profile";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const PREFIX_OPTIONS = ["", "Dr.", "Prof.", "Mr.", "Ms.", "Mrs.", "Mx."];
+
+// Evaluated once at module load — stable enough for a 30-day expiry warning.
+const MODULE_LOAD_TS = Date.now();
 
 const INPUT_CLS =
   "rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20";
@@ -56,6 +63,85 @@ function rowToFields(row: FacultyProfileRow | null): Fields {
   };
 }
 
+// ─── Per-asset retention warning banner ────────────────────────────────────────
+
+function AssetRetentionBanner({
+  daysRemaining,
+  onReupload,
+  onConfirm,
+  isConfirming,
+  confirmError,
+}: {
+  daysRemaining: number | null;
+  onReupload: () => void;
+  onConfirm: () => void;
+  isConfirming: boolean;
+  confirmError: string | null;
+}) {
+  if (daysRemaining === null || daysRemaining > 30) return null;
+
+  if (daysRemaining <= 0) {
+    return (
+      <div className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+        <p className='font-semibold'>
+          ⚠️ This file has expired and will be removed at the next cleanup.
+          Re-upload to continue using it on new letters.
+        </p>
+        <Button
+          type='button'
+          size='sm'
+          variant='outline'
+          className='mt-2 rounded-xl border-red-400 text-red-700 hover:bg-red-100'
+          onClick={onReupload}
+        >
+          Re-upload now
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className='rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800'>
+      <p className='font-semibold'>
+        ⏳ Expires in{" "}
+        <span className='underline'>
+          {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}
+        </span>
+        .
+      </p>
+      <p className='mt-0.5'>
+        Per our retention policy, raw asset files are kept for one year.
+        Re-upload to replace, or confirm to extend for another year.
+      </p>
+      <div className='mt-2 flex flex-wrap gap-2'>
+        <Button
+          type='button'
+          size='sm'
+          variant='outline'
+          className='rounded-xl border-amber-400 text-amber-900 hover:bg-amber-100'
+          onClick={onReupload}
+        >
+          Re-upload
+        </Button>
+        <Button
+          type='button'
+          size='sm'
+          disabled={isConfirming}
+          className='rounded-xl bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60'
+          onClick={onConfirm}
+        >
+          {isConfirming ? "Confirming…" : "Keep existing file"}
+        </Button>
+      </div>
+      {confirmError && (
+        <p className='mt-1 text-xs text-red-600'>{confirmError}</p>
+      )}
+    </div>
+  );
+}
+
+// ─── Main form ─────────────────────────────────────────────────────────────────
+
 export function FacultyProfileSettingsForm({
   initialProfile,
   className,
@@ -83,6 +169,57 @@ export function FacultyProfileSettingsForm({
   const logoRef = useRef<HTMLInputElement>(null);
   const sigRef = useRef<HTMLInputElement>(null);
 
+  // Asset retention: per-asset upload timestamps so the clocks are independent.
+  const [logoUploadedAt, setLogoUploadedAt] = useState<string | null>(
+    initialProfile?.logo_uploaded_at ?? null,
+  );
+  const [sigUploadedAt, setSigUploadedAt] = useState<string | null>(
+    initialProfile?.signature_uploaded_at ?? null,
+  );
+  const [logoConfirming, setLogoConfirming] = useState(false);
+  const [sigConfirming, setSigConfirming] = useState(false);
+  const [logoConfirmError, setLogoConfirmError] = useState<string | null>(null);
+  const [sigConfirmError, setSigConfirmError] = useState<string | null>(null);
+
+  // Days until each asset's 1-year retention window closes (null = no asset on record)
+  const logoDaysRemaining = useMemo(() => {
+    if (!logoUploadedAt) return null;
+    return Math.ceil(
+      (new Date(logoUploadedAt).getTime() +
+        365 * 24 * 60 * 60 * 1000 -
+        MODULE_LOAD_TS) /
+        (24 * 60 * 60 * 1000),
+    );
+  }, [logoUploadedAt]);
+
+  const sigDaysRemaining = useMemo(() => {
+    if (!sigUploadedAt) return null;
+    return Math.ceil(
+      (new Date(sigUploadedAt).getTime() +
+        365 * 24 * 60 * 60 * 1000 -
+        MODULE_LOAD_TS) /
+        (24 * 60 * 60 * 1000),
+    );
+  }, [sigUploadedAt]);
+
+  async function handleConfirmAsset(assetType: "logo" | "signature") {
+    if (assetType === "logo") {
+      setLogoConfirming(true);
+      setLogoConfirmError(null);
+      const res = await refreshAssetTimestamp("logo");
+      if (res.success) setLogoUploadedAt(new Date().toISOString());
+      else setLogoConfirmError(res.error ?? "Failed to confirm logo.");
+      setLogoConfirming(false);
+    } else {
+      setSigConfirming(true);
+      setSigConfirmError(null);
+      const res = await refreshAssetTimestamp("signature");
+      if (res.success) setSigUploadedAt(new Date().toISOString());
+      else setSigConfirmError(res.error ?? "Failed to confirm signature.");
+      setSigConfirming(false);
+    }
+  }
+
   function set(key: keyof Fields) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setFields((prev) => ({ ...prev, [key]: e.target.value }));
@@ -101,8 +238,13 @@ export function FacultyProfileSettingsForm({
     if (!result.success) {
       setAssetError(result.error ?? "Upload failed.");
     } else {
-      if (assetType === "logo") setLogoName(file.name);
-      else setSigName(file.name);
+      if (assetType === "logo") {
+        setLogoName(file.name);
+        setLogoUploadedAt(new Date().toISOString());
+      } else {
+        setSigName(file.name);
+        setSigUploadedAt(new Date().toISOString());
+      }
     }
     // Reset the input so the same file can be re-selected after a failure
     e.target.value = "";
@@ -358,8 +500,8 @@ export function FacultyProfileSettingsForm({
                 className={INPUT_CLS}
               />
               <p className='text-xs text-black/50'>
-                Closing line used at the bottom of letters (e.g. "Sincerely," /
-                "Best regards,").
+                Closing line used at the bottom of letters (e.g.
+                &ldquo;Sincerely,&rdquo; / &ldquo;Best regards,&rdquo;).
               </p>
             </div>
 
@@ -398,59 +540,77 @@ export function FacultyProfileSettingsForm({
         </CardHeader>
         <CardContent className='flex flex-col gap-6'>
           {/* Logo */}
-          <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
-            <div>
-              <p className='text-sm font-semibold text-green-900'>
-                Institution logo
-              </p>
-              <p className='mt-0.5 truncate text-xs text-black/50'>
-                {logoName ?? "Not uploaded"}
-              </p>
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
+              <div>
+                <p className='text-sm font-semibold text-green-900'>
+                  Institution logo
+                </p>
+                <p className='mt-0.5 truncate text-xs text-black/50'>
+                  {logoName ?? "Not uploaded"}
+                </p>
+              </div>
+              <input
+                ref={logoRef}
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={(e) => handleAssetUpload(e, "logo")}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => logoRef.current?.click()}
+                className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
+              >
+                {logoName ? "Replace" : "Upload"}
+              </Button>
             </div>
-            <input
-              ref={logoRef}
-              type='file'
-              accept='image/*'
-              className='hidden'
-              onChange={(e) => handleAssetUpload(e, "logo")}
+            <AssetRetentionBanner
+              daysRemaining={logoDaysRemaining}
+              onReupload={() => logoRef.current?.click()}
+              onConfirm={() => handleConfirmAsset("logo")}
+              isConfirming={logoConfirming}
+              confirmError={logoConfirmError}
             />
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => logoRef.current?.click()}
-              className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
-            >
-              {logoName ? "Replace" : "Upload"}
-            </Button>
           </div>
 
           {/* Signature */}
-          <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
-            <div>
-              <p className='text-sm font-semibold text-green-900'>
-                Signature image
-              </p>
-              <p className='mt-0.5 truncate text-xs text-black/50'>
-                {sigName ?? "Not uploaded"}
-              </p>
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
+              <div>
+                <p className='text-sm font-semibold text-green-900'>
+                  Signature image
+                </p>
+                <p className='mt-0.5 truncate text-xs text-black/50'>
+                  {sigName ?? "Not uploaded"}
+                </p>
+              </div>
+              <input
+                ref={sigRef}
+                type='file'
+                accept='image/*'
+                className='hidden'
+                onChange={(e) => handleAssetUpload(e, "signature")}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => sigRef.current?.click()}
+                className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
+              >
+                {sigName ? "Replace" : "Upload"}
+              </Button>
             </div>
-            <input
-              ref={sigRef}
-              type='file'
-              accept='image/*'
-              className='hidden'
-              onChange={(e) => handleAssetUpload(e, "signature")}
+            <AssetRetentionBanner
+              daysRemaining={sigDaysRemaining}
+              onReupload={() => sigRef.current?.click()}
+              onConfirm={() => handleConfirmAsset("signature")}
+              isConfirming={sigConfirming}
+              confirmError={sigConfirmError}
             />
-            <Button
-              type='button'
-              variant='outline'
-              size='sm'
-              onClick={() => sigRef.current?.click()}
-              className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
-            >
-              {sigName ? "Replace" : "Upload"}
-            </Button>
           </div>
 
           {assetError && (

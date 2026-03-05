@@ -8,6 +8,7 @@ import {
   FacultyInvitationEmail,
   InstitutionDeliveryEmail,
   StudentRejectionEmail,
+  RequestRejectionEmail,
 } from "@/components/letter-request-email-templates";
 import { randomBytes, createHash } from "crypto";
 import { stripe } from "@/lib/stripe";
@@ -45,6 +46,15 @@ export type DraftRow = {
   letter_editor_state: string | null;
   letterhead_logo_storage_path: string | null;
   signature_image_storage_path: string | null;
+  student_preview_enabled: boolean;
+};
+
+export type StudentLetterPreview = {
+  html: string | null;
+  recommenderSnapshot: RecommenderForm | null;
+  logoSignedUrl: string | null;
+  signatureSignedUrl: string | null;
+  finalizedAt: string | null;
 };
 
 // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -64,7 +74,7 @@ export type DraftRow = {
 export async function saveDraft(
   requestId: string,
   payload: DraftPayload,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; letterId?: string; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -109,26 +119,30 @@ export async function saveDraft(
     ? sanitizeLetterHtml(payload.letterHtml)
     : null;
 
-  const { error } = await supabase.from("letters").upsert(
-    {
-      request_id: requestId,
-      faculty_id: facultyRow.id,
-      student_id: requestRow.student_id,
-      is_draft: true,
-      status: "draft",
-      recommender_snapshot: payload.recommenderForm,
-      letter_body_html: safeHtml,
-      letter_plain_text: payload.letterPlainText || null,
-      letter_body_json: editorJson,
-      letterhead_logo_storage_path: payload.logoStoragePath ?? null,
-      signature_image_storage_path: payload.signatureStoragePath ?? null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "request_id" },
-  );
+  const { data: upserted, error } = await supabase
+    .from("letters")
+    .upsert(
+      {
+        request_id: requestId,
+        faculty_id: facultyRow.id,
+        student_id: requestRow.student_id,
+        is_draft: true,
+        status: "draft",
+        recommender_snapshot: payload.recommenderForm,
+        letter_body_html: safeHtml,
+        letter_plain_text: payload.letterPlainText || null,
+        letter_body_json: editorJson,
+        letterhead_logo_storage_path: payload.logoStoragePath ?? null,
+        signature_image_storage_path: payload.signatureStoragePath ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "request_id" },
+    )
+    .select("id")
+    .single();
 
   if (error) return { success: false, error: error.message };
-  return { success: true };
+  return { success: true, letterId: upserted.id as string };
 }
 
 /**
@@ -146,7 +160,7 @@ export async function loadDraft(requestId: string): Promise<DraftRow | null> {
   const { data, error } = await supabase
     .from("letters")
     .select(
-      "id, recommender_snapshot, letter_body_html, letter_plain_text, letter_body_json, letterhead_logo_storage_path, signature_image_storage_path",
+      "id, recommender_snapshot, letter_body_html, letter_plain_text, letter_body_json, letterhead_logo_storage_path, signature_image_storage_path, student_preview_enabled",
     )
     .eq("request_id", requestId)
     .eq("is_draft", true)
@@ -172,6 +186,7 @@ export async function loadDraft(requestId: string): Promise<DraftRow | null> {
     signature_image_storage_path: data.signature_image_storage_path as
       | string
       | null,
+    student_preview_enabled: (data.student_preview_enabled as boolean) ?? false,
   };
 }
 
@@ -185,7 +200,7 @@ export type SendRequestPayload = {
 
 export type SendRequestResult =
   | { status: "requested"; requestId: string }
-  | { status: "invited" }
+  | { status: "invited"; requestId: string }
   | { status: "error"; error: string };
 
 /**
@@ -210,8 +225,8 @@ export async function sendLetterRequest(
       .filter(Boolean)
       .join(" ") || "A student";
 
-  // Get student row for university info
-  const { data: studentRow } = await supabase
+  // Get student row for university info (use admin client to bypass any RLS gaps)
+  const { data: studentRow } = await supabaseAdmin
     .from("students")
     .select("id, university")
     .eq("user_id", user.id)
@@ -223,10 +238,10 @@ export async function sendLetterRequest(
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
 
-  // ── Look up professor in faculty table ────────────────────────────────────
-  // Primary: match by email stored on the faculty row (set since registration fix).
-  // Fallback: some faculty registered before email was saved — look them up via
-  //   auth.users by email, then join to the faculty row by user_id.
+  // ── Look up professor in faculty table via auth.users ────────────────────
+  // The faculty table has no email/name columns — those live in auth.users
+  // metadata. We find the auth user by email, then confirm they have a faculty
+  // row by user_id.
   type FacultyLookup = {
     id: string;
     first_name: string | null;
@@ -234,37 +249,26 @@ export async function sendLetterRequest(
   };
   let facultyRow: FacultyLookup | null = null;
 
-  const { data: directMatch } = await supabaseAdmin
-    .from("faculty")
-    .select("id, first_name, email")
-    .ilike("email", payload.professorEmail.trim())
-    .maybeSingle();
-
-  if (directMatch) {
-    facultyRow = directMatch as unknown as FacultyLookup;
-  } else {
-    // Fallback: find auth user by email, then look up faculty row by user_id
-    const { data: authUserList } = await supabaseAdmin.auth.admin.listUsers({
-      perPage: 1000,
-    });
-    const matchedAuthUser = authUserList?.users?.find(
-      (u) =>
-        u.email?.toLowerCase() === payload.professorEmail.trim().toLowerCase(),
-    );
-    if (matchedAuthUser) {
-      const { data: facultyByUserId } = await supabaseAdmin
-        .from("faculty")
-        .select("id, first_name, email")
-        .eq("user_id", matchedAuthUser.id)
-        .maybeSingle();
-      if (facultyByUserId) {
-        facultyRow = facultyByUserId as unknown as FacultyLookup;
-        // Backfill the email column so future lookups are fast
-        await supabaseAdmin
-          .from("faculty")
-          .update({ email: matchedAuthUser.email })
-          .eq("id", facultyByUserId.id);
-      }
+  const { data: authUserList } = await supabaseAdmin.auth.admin.listUsers({
+    perPage: 1000,
+  });
+  const matchedAuthUser = authUserList?.users?.find(
+    (u) =>
+      u.email?.toLowerCase() === payload.professorEmail.trim().toLowerCase(),
+  );
+  if (matchedAuthUser) {
+    const { data: facultyByUserId } = await supabaseAdmin
+      .from("faculty")
+      .select("id")
+      .eq("user_id", matchedAuthUser.id)
+      .maybeSingle();
+    if (facultyByUserId) {
+      facultyRow = {
+        id: facultyByUserId.id as string,
+        first_name:
+          (matchedAuthUser.user_metadata?.firstName as string | null) ?? null,
+        email: matchedAuthUser.email ?? null,
+      };
     }
   }
 
@@ -274,7 +278,7 @@ export async function sendLetterRequest(
       return {
         status: "error",
         error:
-          "Your student profile is incomplete. Please sign out and sign back up to finish setting up your account, or contact support.",
+          "Your student profile could not be found. Please contact support.",
       };
     }
 
@@ -298,7 +302,7 @@ export async function sendLetterRequest(
     }
 
     const { error: emailError } = await resend.emails.send({
-      from: "ReadMyStudent <onboarding@resend.dev>",
+      from: "ReadMyStudent <notification@readmystudent.com>",
       to: facultyRow.email ?? payload.professorEmail,
       subject: `${studentFullName} has requested a letter of recommendation`,
       html: RequestNotificationEmail({
@@ -323,7 +327,35 @@ export async function sendLetterRequest(
     return { status: "requested", requestId: requestRow.id as string };
   }
 
-  // ── Case B: Professor not registered — send invitation ────────────────────
+  // ── Case B: Professor not registered — insert request row then invite ──────
+  if (!studentId) {
+    return {
+      status: "error",
+      error: "Your student profile could not be found. Please contact support.",
+    };
+  }
+
+  const { data: inviteRequestRow, error: inviteInsertError } =
+    await supabaseAdmin
+      .from("letter_requests")
+      .insert({
+        student_id: studentId,
+        faculty_id: null,
+        professor_email: payload.professorEmail.trim(),
+        course_context: payload.courseContext || null,
+        student_note: payload.studentNote || null,
+        status: "invited",
+      })
+      .select("id")
+      .single();
+
+  if (inviteInsertError || !inviteRequestRow) {
+    return {
+      status: "error",
+      error: inviteInsertError?.message ?? "Failed to create request.",
+    };
+  }
+
   const { error: inviteError } = await resend.emails.send({
     from: "ReadMyStudent <notification@readmystudent.com>",
     to: payload.professorEmail.trim(),
@@ -338,10 +370,15 @@ export async function sendLetterRequest(
   });
 
   if (inviteError) {
+    // Roll back the inserted row
+    await supabaseAdmin
+      .from("letter_requests")
+      .delete()
+      .eq("id", inviteRequestRow.id);
     return { status: "error", error: `Email failed: ${inviteError.message}` };
   }
 
-  return { status: "invited" };
+  return { status: "invited", requestId: inviteRequestRow.id as string };
 }
 
 // ─── Student dashboard queries ────────────────────────────────────────────────
@@ -351,6 +388,7 @@ export type FinishedLetter = {
   requestId: string;
   facultyName: string;
   finalizedAt: string;
+  studentPreviewEnabled: boolean;
 };
 
 export type PendingRequest = {
@@ -382,7 +420,7 @@ export async function getFinishedLetters(): Promise<FinishedLetter[]> {
   const { data, error } = await supabase
     .from("letters")
     .select(
-      "id, request_id, finalized_at, faculty:faculty_id(first_name, last_name)",
+      "id, request_id, finalized_at, student_preview_enabled, faculty:faculty_id(first_name, last_name)",
     )
     .eq("student_id", studentRow.id)
     .eq("is_draft", false)
@@ -403,6 +441,7 @@ export async function getFinishedLetters(): Promise<FinishedLetter[]> {
       requestId: row.request_id as string,
       facultyName,
       finalizedAt: row.finalized_at as string,
+      studentPreviewEnabled: (row.student_preview_enabled as boolean) ?? false,
     };
   });
 }
@@ -428,9 +467,11 @@ export async function getPendingRequests(): Promise<PendingRequest[]> {
 
   const { data, error } = await supabase
     .from("letter_requests")
-    .select("id, status, created_at, faculty:faculty_id(email)")
+    .select(
+      "id, status, created_at, professor_email, faculty:faculty_id(email)",
+    )
     .eq("student_id", studentRow.id)
-    .in("status", ["requested", "in_progress"])
+    .in("status", ["requested", "in_progress", "invited", "rejected"])
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -441,9 +482,11 @@ export async function getPendingRequests(): Promise<PendingRequest[]> {
       | { email: string | null }
       | null;
     const f = Array.isArray(fRaw) ? (fRaw[0] ?? null) : fRaw;
+    const facultyEmail =
+      f?.email ?? (row.professor_email as string | null) ?? "Unknown";
     return {
       requestId: row.id as string,
-      facultyEmail: f?.email ?? "Unknown",
+      facultyEmail,
       createdAt: row.created_at as string,
       status: row.status as string,
     };
@@ -459,6 +502,232 @@ export type PendingDelivery = {
   schoolName: string;
   paidAt: string;
 };
+
+// ─── Reject letter request ───────────────────────────────────────────────────
+
+/**
+ * Faculty declines to write a recommendation for a student.
+ * Updates the request status to 'rejected' and emails the student.
+ */
+export async function rejectLetterRequest(
+  requestId: string,
+  reason?: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  // Verify faculty owns this request
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return { error: "Faculty record not found." };
+
+  const { data: requestRow, error: fetchError } = await supabaseAdmin
+    .from("letter_requests")
+    .select("id, student_id, status")
+    .eq("id", requestId)
+    .eq("faculty_id", facultyRow.id)
+    .maybeSingle();
+
+  if (fetchError || !requestRow)
+    return { error: "Request not found or access denied." };
+  if (requestRow.status !== "requested")
+    return { error: "Request is no longer in a rejectable state." };
+
+  const { error: updateError } = await supabaseAdmin
+    .from("letter_requests")
+    .update({ status: "rejected" })
+    .eq("id", requestId);
+  if (updateError) return { error: updateError.message };
+
+  // Resolve student email and name from auth
+  const { data: studentRow } = await supabaseAdmin
+    .from("students")
+    .select("user_id")
+    .eq("id", requestRow.student_id as string)
+    .maybeSingle();
+
+  if (studentRow?.user_id) {
+    const { data: studentAuth } = await supabaseAdmin.auth.admin.getUserById(
+      studentRow.user_id as string,
+    );
+    const studentUser = studentAuth?.user;
+    if (studentUser?.email) {
+      const smeta = studentUser.user_metadata ?? {};
+      const studentFirstName = (smeta.firstName as string | null) ?? "there";
+
+      const fmeta = user.user_metadata ?? {};
+      const facultyName =
+        [fmeta.firstName, fmeta.lastName].filter(Boolean).join(" ") ||
+        user.email ||
+        "Your professor";
+
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
+
+      await resend.emails.send({
+        from: "ReadMyStudent <notification@readmystudent.com>",
+        to: studentUser.email,
+        subject: `${facultyName} has declined your recommendation request`,
+        html: RequestRejectionEmail({
+          studentFirstName,
+          facultyName,
+          reason: reason?.trim() || undefined,
+          supportUrl: `${siteUrl}/contact`,
+        }),
+      });
+    }
+  }
+
+  return { error: null };
+}
+
+// ─── Faculty incoming requests ────────────────────────────────────────────────
+
+export type FacultyLetterRequest = {
+  requestId: string;
+  studentName: string;
+  courseContext: string | null;
+  studentNote: string | null;
+  createdAt: string;
+};
+
+/**
+ * Returns letter_requests rows assigned to the current faculty member that
+ * still need a letter written (status = 'requested').
+ */
+export async function getFacultyRequests(): Promise<FacultyLetterRequest[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("letter_requests")
+    .select("id, student_id, course_context, student_note, created_at")
+    .eq("faculty_id", facultyRow.id)
+    .eq("status", "requested")
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  // Resolve student names via auth.users (names live in user_metadata)
+  const results: FacultyLetterRequest[] = [];
+  for (const row of data) {
+    const { data: studentRow } = await supabaseAdmin
+      .from("students")
+      .select("user_id")
+      .eq("id", row.student_id as string)
+      .maybeSingle();
+
+    let studentName = "Unknown Student";
+    if (studentRow?.user_id) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
+        studentRow.user_id as string,
+      );
+      if (authUser?.user) {
+        const meta = authUser.user.user_metadata ?? {};
+        studentName =
+          [meta.firstName, meta.lastName].filter(Boolean).join(" ") ||
+          authUser.user.email ||
+          "Unknown Student";
+      }
+    }
+
+    results.push({
+      requestId: row.id as string,
+      studentName,
+      courseContext: (row.course_context as string | null) ?? null,
+      studentNote: (row.student_note as string | null) ?? null,
+      createdAt: row.created_at as string,
+    });
+  }
+
+  return results;
+}
+
+// ─── Faculty finalized letters list ───────────────────────────────────────────
+
+export type FacultyFinalizedLetter = {
+  letterId: string;
+  studentName: string;
+  finalizedAt: string;
+  studentPreviewEnabled: boolean;
+};
+
+/**
+ * Returns all finalized (non-draft) letters belonging to the current faculty.
+ */
+export async function getFacultyFinalizedLetters(): Promise<
+  FacultyFinalizedLetter[]
+> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("letters")
+    .select("id, student_id, finalized_at, student_preview_enabled")
+    .eq("faculty_id", facultyRow.id)
+    .eq("is_draft", false)
+    .order("finalized_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  const results: FacultyFinalizedLetter[] = [];
+  for (const row of data) {
+    const { data: studentRow } = await supabaseAdmin
+      .from("students")
+      .select("user_id")
+      .eq("id", row.student_id as string)
+      .maybeSingle();
+
+    let studentName = "Unknown Student";
+    if (studentRow?.user_id) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
+        studentRow.user_id as string,
+      );
+      if (authUser?.user) {
+        const meta = authUser.user.user_metadata ?? {};
+        studentName =
+          [meta.firstName, meta.lastName].filter(Boolean).join(" ") ||
+          authUser.user.email ||
+          "Unknown Student";
+      }
+    }
+
+    results.push({
+      letterId: row.id as string,
+      studentName,
+      finalizedAt: row.finalized_at as string,
+      studentPreviewEnabled: (row.student_preview_enabled as boolean) ?? false,
+    });
+  }
+
+  return results;
+}
 
 /**
  * Returns delivery_links that are awaiting faculty approval for the current
@@ -608,7 +877,7 @@ export async function approveDelivery(
 
   if (recipientEmail) {
     await resend.emails.send({
-      from: "ReadMyStudent <onboarding@resend.dev>",
+      from: "ReadMyStudent <notification@readmystudent.com>",
       to: recipientEmail,
       subject: `Recommendation letter available for ${studentFullName}`,
       html: InstitutionDeliveryEmail({
@@ -684,7 +953,7 @@ export async function rejectDelivery(
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
       await resend.emails.send({
-        from: "ReadMyStudent <onboarding@resend.dev>",
+        from: "ReadMyStudent <notification@readmystudent.com>",
         to: studentEmail,
         subject: `Your delivery request to ${rejLink.school_name ?? "the institution"} was declined`,
         html: StudentRejectionEmail({
@@ -698,4 +967,101 @@ export async function rejectDelivery(
   }
 
   return { error: null };
+}
+
+// ─── Student preview toggle (faculty action) ──────────────────────────────────
+
+/**
+ * Faculty toggles whether the student can see a watermarked preview of their
+ * finalized (or draft) letter in the student dashboard.
+ */
+export async function setStudentPreviewEnabled(
+  letterId: string,
+  enabled: boolean,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated." };
+
+  const { data: facultyRow } = await supabaseAdmin
+    .from("faculty")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!facultyRow) return { error: "Faculty record not found." };
+
+  const { error } = await supabaseAdmin
+    .from("letters")
+    .update({ student_preview_enabled: enabled })
+    .eq("id", letterId)
+    .eq("faculty_id", facultyRow.id);
+
+  return { error: error?.message ?? null };
+}
+
+// ─── Student letter preview (student action) ──────────────────────────────────
+
+/**
+ * Returns the HTML content (and asset signed URLs) of a finalized letter for a
+ * student preview. Returns null if:
+ *   - the user is not authenticated
+ *   - the letter does not belong to the student
+ *   - the letter is still a draft
+ *   - student_preview_enabled is false
+ */
+export async function getStudentLetterPreview(
+  letterId: string,
+): Promise<StudentLetterPreview | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: studentRow } = await supabase
+    .from("students")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!studentRow) return null;
+
+  const { data: letter } = await supabaseAdmin
+    .from("letters")
+    .select(
+      "student_id, is_draft, student_preview_enabled, letter_body_html, recommender_snapshot, letterhead_logo_storage_path, signature_image_storage_path, finalized_at",
+    )
+    .eq("id", letterId)
+    .maybeSingle();
+
+  if (!letter) return null;
+  if ((letter.student_id as string) !== studentRow.id) return null;
+  if (letter.is_draft === true) return null;
+  if (!letter.student_preview_enabled) return null;
+
+  // Generate short-lived signed URLs so the student can't hotlink the raw paths
+  let logoSignedUrl: string | null = null;
+  let signatureSignedUrl: string | null = null;
+
+  if (letter.letterhead_logo_storage_path) {
+    const { data } = await supabaseAdmin.storage
+      .from("faculty-logos")
+      .createSignedUrl(letter.letterhead_logo_storage_path as string, 3600);
+    logoSignedUrl = data?.signedUrl ?? null;
+  }
+  if (letter.signature_image_storage_path) {
+    const { data } = await supabaseAdmin.storage
+      .from("faculty-signatures")
+      .createSignedUrl(letter.signature_image_storage_path as string, 3600);
+    signatureSignedUrl = data?.signedUrl ?? null;
+  }
+
+  return {
+    html: letter.letter_body_html as string | null,
+    recommenderSnapshot: letter.recommender_snapshot as RecommenderForm | null,
+    logoSignedUrl,
+    signatureSignedUrl,
+    finalizedAt: letter.finalized_at as string | null,
+  };
 }

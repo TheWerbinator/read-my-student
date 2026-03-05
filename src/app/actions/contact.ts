@@ -38,7 +38,7 @@ export async function submitContactForm(data: ContactFormValues) {
 
   try {
     const data = await resend.emails.send({
-      from: "ReadMyStudent Contact <onboarding@resend.dev>", // Use your verified domain in prod
+      from: "ReadMyStudent Contact <notification@readmystudent.com>",
       to: process.env.STAFF_EMAIL as string,
       replyTo: email,
       subject: `[ReadMyStudent Support] ${subject}`,

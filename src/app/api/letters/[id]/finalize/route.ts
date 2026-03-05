@@ -35,14 +35,15 @@ const adminSupabase = createAdminClient(
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
 
-// ─── Helper: fetch an asset from faculty-assets and return a data URI ─────────
+// ─── Helper: fetch an asset from a faculty Storage bucket and return a data URI
 
 async function fetchAssetAsDataUri(
+  bucket: string,
   storagePath: string,
 ): Promise<string | null> {
   // Generate a short-lived signed URL via the admin client
   const { data, error } = await adminSupabase.storage
-    .from("faculty-assets")
+    .from(bucket)
     .createSignedUrl(storagePath, 120); // 2-minute window — enough for one PDF render
 
   if (error || !data?.signedUrl) return null;
@@ -119,10 +120,16 @@ export async function POST(
   // ── 4. Fetch images as base64 data URIs ──────────────────────────────────────
   const [logoDataUri, signatureDataUri] = await Promise.all([
     letter.letterhead_logo_storage_path
-      ? fetchAssetAsDataUri(letter.letterhead_logo_storage_path as string)
+      ? fetchAssetAsDataUri(
+          "faculty-logos",
+          letter.letterhead_logo_storage_path as string,
+        )
       : Promise.resolve(null),
     letter.signature_image_storage_path
-      ? fetchAssetAsDataUri(letter.signature_image_storage_path as string)
+      ? fetchAssetAsDataUri(
+          "faculty-signatures",
+          letter.signature_image_storage_path as string,
+        )
       : Promise.resolve(null),
   ]);
 
@@ -197,6 +204,11 @@ export async function POST(
   const userAgent = req.headers.get("user-agent") ?? null;
   const finalizedAt = new Date().toISOString();
 
+  // expires_at = finalized_at + 1 year (retention policy)
+  const expiresAt = new Date(
+    new Date(finalizedAt).getTime() + 365 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+
   const { error: updateError } = await adminSupabase
     .from("letters")
     .update({
@@ -204,6 +216,7 @@ export async function POST(
       status: "finalized",
       storage_path: pdfStoragePath,
       finalized_at: finalizedAt,
+      expires_at: expiresAt,
       finalized_ip: ip,
       finalized_user_agent: userAgent,
       updated_at: finalizedAt,

@@ -118,11 +118,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // ── b. Load faculty contact info for the notification email ───────────────
-  const { data: faculty } = await adminSupabase
+  const { data: facultyRow } = await adminSupabase
     .from("faculty")
-    .select("first_name, email")
+    .select("user_id")
     .eq("id", letter.faculty_id as string)
     .maybeSingle();
+
+  let faculty: { first_name: string | null; email: string | null } | null =
+    null;
+  if (facultyRow?.user_id) {
+    const { data: facultyAuthUser } =
+      await adminSupabase.auth.admin.getUserById(facultyRow.user_id as string);
+    if (facultyAuthUser?.user) {
+      faculty = {
+        first_name:
+          (facultyAuthUser.user.user_metadata?.firstName as string | null) ??
+          null,
+        email: facultyAuthUser.user.email ?? null,
+      };
+    }
+  }
 
   // ── c. Load student name for the notification email ───────────────────────
   const { data: studentAuthUser } = await adminSupabase.auth.admin.getUserById(
@@ -180,7 +195,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
 
     await resend.emails.send({
-      from: "ReadMyStudent <onboarding@resend.dev>",
+      from: "ReadMyStudent <notification@readmystudent.com>",
       to: faculty.email,
       subject: `Action required: approve delivery of your letter for ${studentFullName}`,
       html: SendApprovalEmail({

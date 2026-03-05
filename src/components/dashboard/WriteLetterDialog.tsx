@@ -22,7 +22,11 @@ import {
   buildRecommenderForm,
 } from "@/lib/faculty-profile";
 import { LetterEditor } from "@/components/dashboard/LetterEditor";
-import { saveDraft, loadDraft } from "@/app/actions/letters";
+import {
+  saveDraft,
+  loadDraft,
+  setStudentPreviewEnabled as setPreviewEnabledAction,
+} from "@/app/actions/letters";
 import { uploadFacultyAsset } from "@/app/actions/faculty";
 
 export function WriteLetterDialog({
@@ -78,6 +82,8 @@ export function WriteLetterDialog({
   >(null);
   const [signatureError, setSignatureError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
+  const [letterDbId, setLetterDbId] = useState<string | null>(null);
+  const [studentPreviewEnabled, setStudentPreviewEnabled] = useState(false);
 
   // Upload state
   const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
@@ -100,6 +106,15 @@ export function WriteLetterDialog({
     setProfileSaved(false);
     setDraftSaved(false);
     setRecommenderForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleToggleStudentPreview = async () => {
+    const next = !studentPreviewEnabled;
+    setStudentPreviewEnabled(next);
+    if (letterDbId) {
+      await setPreviewEnabledAction(letterDbId, next);
+    }
+    // If no letterId yet the value will be saved with the next draft save.
   };
 
   const draftStorageKey = `letterDraft:${studentName}`;
@@ -147,6 +162,7 @@ export function WriteLetterDialog({
           (signatureFile ? null : (signatureDataUrl ?? null)),
       });
       if (!result.success) return;
+      if (result.letterId) setLetterDbId(result.letterId);
     } else {
       // Fallback: no real request ID yet (mock data)
       localStorage.setItem(
@@ -345,6 +361,8 @@ export function WriteLetterDialog({
                 setLogoDataUrl(draft.letterhead_logo_storage_path);
               if (draft.signature_image_storage_path)
                 setSignatureDataUrl(draft.signature_image_storage_path);
+              setLetterDbId(draft.id);
+              setStudentPreviewEnabled(draft.student_preview_enabled);
               setDraftSaved(true);
             }
           }
@@ -965,6 +983,37 @@ export function WriteLetterDialog({
                       )}
                     </div>
                   </div>
+                </div>
+
+                {/* Student preview toggle */}
+                <div className='flex items-center justify-between rounded-xl border border-black/5 bg-slate-50 px-4 py-3'>
+                  <div>
+                    <p className='text-sm font-semibold text-green-900'>
+                      Allow student preview
+                    </p>
+                    <p className='mt-0.5 text-xs text-black/50'>
+                      Student can view a watermarked copy in their dashboard.
+                    </p>
+                  </div>
+                  <button
+                    type='button'
+                    role='switch'
+                    aria-checked={studentPreviewEnabled}
+                    onClick={() => void handleToggleStudentPreview()}
+                    className={
+                      "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none " +
+                      (studentPreviewEnabled ? "bg-green-900" : "bg-black/20")
+                    }
+                  >
+                    <span
+                      className={
+                        "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform " +
+                        (studentPreviewEnabled
+                          ? "translate-x-5"
+                          : "translate-x-0")
+                      }
+                    />
+                  </button>
                 </div>
               </div>
             )}
