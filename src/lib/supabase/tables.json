@@ -92,12 +92,14 @@
       "columns": [
         { "name": "id", "type": "uuid", "nullable": false },
         { "name": "letter_id", "type": "uuid", "nullable": false },
-        { "name": "token_hash", "type": "text", "nullable": false },
+        { "name": "token_hash", "type": "text", "nullable": true },
         { "name": "recipient_email_hash", "type": "text", "nullable": false },
-        { "name": "expires_at", "type": "timestamptz", "nullable": false },
+        { "name": "expires_at", "type": "timestamptz", "nullable": true },
         { "name": "consumed_at", "type": "timestamptz", "nullable": true },
         { "name": "payment_status", "type": "text", "nullable": false, "default": "unpaid" },
         { "name": "stripe_checkout_session_id", "type": "text", "nullable": true },
+        { "name": "school_name", "type": "text", "nullable": true },
+        { "name": "student_user_id", "type": "uuid", "nullable": true },
         { "name": "created_at", "type": "timestamptz", "nullable": false }
       ]
     },
@@ -125,6 +127,17 @@
         { "name": "currency", "type": "text", "nullable": true, "default": "usd" },
         { "name": "status", "type": "text", "nullable": true },
         { "name": "created_at", "type": "timestamptz", "nullable": false }
+      ]
+    },
+    {
+      "table": "delivery_access_events",
+      "columns": [
+        { "name": "id", "type": "uuid", "nullable": false },
+        { "name": "delivery_link_id", "type": "uuid", "nullable": false },
+        { "name": "event_type", "type": "text", "nullable": false },
+        { "name": "ip_address", "type": "text", "nullable": true },
+        { "name": "user_agent", "type": "text", "nullable": true },
+        { "name": "created_at", "type": "timestamptz", "nullable": true }
       ]
     }
   ]

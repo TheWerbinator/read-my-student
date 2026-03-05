@@ -122,6 +122,88 @@ export function FacultyInvitationEmail(p: FacultyInvitationProps): string {
   return wrap(body);
 }
 
+// Institution delivery link (sent to admissions office after faculty approves)
+
+interface InstitutionDeliveryProps {
+  schoolName: string;
+  studentFullName: string;
+  viewUrl: string;
+  expiresAt: string; // ISO string
+}
+
+export function InstitutionDeliveryEmail(p: InstitutionDeliveryProps): string {
+  const expiry = new Date(p.expiresAt).toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Recommendation letter available for secure viewing</h1>
+    <p style="font-size:16px;line-height:1.6;">Dear Admissions Team,</p>
+    <p style="font-size:16px;line-height:1.6;">
+      A recommendation letter for <strong>${p.studentFullName}</strong> has been securely delivered
+      to <strong>${p.schoolName}</strong> via ReadMyStudent.
+    </p>
+    <p style="font-size:16px;line-height:1.6;">
+      Use the button below to view the letter. This link is <strong>single-use</strong> and
+      will expire on <strong>${expiry}</strong>.
+    </p>
+    <div style="background-color:#f9f9f0;border-left:4px solid #eebd32;padding:12px 16px;border-radius:4px;margin:20px 0;">
+      <p style="margin:0;font-size:14px;color:#555;">
+        <strong>Applicant:</strong> ${p.studentFullName}
+      </p>
+      <p style="margin:8px 0 0;font-size:14px;color:#555;">
+        <strong>Link expires:</strong> ${expiry}
+      </p>
+    </div>
+    ${ctaButton(p.viewUrl, "View Recommendation Letter")}
+    <p style="font-size:13px;color:#999999;">
+      This letter was signed and sealed via ReadMyStudent. The link may only be used once.
+      If you have questions, reply to this email.
+    </p>`;
+
+  return wrap(body);
+}
+
+// Student rejection notice (sent to student when faculty rejects the delivery)
+
+interface StudentRejectionProps {
+  studentFirstName: string;
+  facultyName: string;
+  schoolName: string;
+  supportUrl: string;
+}
+
+export function StudentRejectionEmail(p: StudentRejectionProps): string {
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Delivery request declined</h1>
+    <p style="font-size:16px;line-height:1.6;">Hi ${p.studentFirstName},</p>
+    <p style="font-size:16px;line-height:1.6;">
+      <strong>${p.facultyName}</strong> has declined the delivery of your recommendation letter
+      to <strong>${p.schoolName}</strong>.
+    </p>
+    <p style="font-size:16px;line-height:1.6;">
+      The letter was <strong>not</strong> sent to the institution. If you believe this was
+      a mistake, we recommend reaching out to your professor directly.
+    </p>
+    <div style="background-color:#fff0f0;border-left:4px solid #e57373;padding:12px 16px;border-radius:4px;margin:20px 0;">
+      <p style="margin:0;font-size:14px;color:#555;">
+        A refund for the $5.00 delivery fee will be processed within 5–10 business days
+        to your original payment method.
+      </p>
+    </div>
+    ${ctaButton(p.supportUrl, "Contact Support")}
+    <p style="font-size:13px;color:#999999;">
+      ReadMyStudent &mdash; Secure, Respectful Recommendation Letters.
+    </p>`;
+
+  return wrap(body);
+}
+
 // Send-to-School Notification (faculty notified when student pays to deliver)
 
 interface SendApprovalProps {

@@ -105,7 +105,12 @@ export async function POST(
     .eq("recipient_email_hash", schoolEmailHash)
     .maybeSingle();
 
-  if (existingLink?.payment_status === "paid") {
+  if (
+    existingLink &&
+    ["pending_approval", "paid", "used"].includes(
+      existingLink.payment_status as string,
+    )
+  ) {
     return NextResponse.json(
       { error: "This letter has already been sent to that institution." },
       { status: 409 },

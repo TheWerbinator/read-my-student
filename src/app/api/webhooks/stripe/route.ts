@@ -10,12 +10,11 @@
  *
  * Handled events:
  *   checkout.session.completed — student paid $5 delivery fee:
- *     1. Generate a cryptographically random delivery token.
- *     2. SHA-256 hash it and store in delivery_links (never store plaintext token).
- *     3. SHA-256 hash the recipient email for privacy.
- *     4. Set payment_status = 'pending_approval' — token is NOT live yet.
- *        expires_at will be set to 48 hours from faculty's approval timestamp.
- *     5. Email faculty asking them to APPROVE or REJECT the delivery.
+ *     1. SHA-256 hash recipient email — plaintext is never stored in the DB.
+ *        The plaintext is retrieved from Stripe session metadata at approval time.
+ *     2. NO delivery token is generated here — token is created only when faculty approves.
+ *     3. Set payment_status = 'pending_approval'.
+ *     4. Email faculty asking them to APPROVE or REJECT the delivery.
  *
  * Required delivery_links columns (run once in Supabase SQL editor if missing):
  *   ALTER TABLE delivery_links ADD COLUMN IF NOT EXISTS school_name text;
@@ -27,7 +26,7 @@
  *   change whitespace/key order and break signature verification.
  */
 
-import { randomBytes, createHash } from "crypto";
+import { createHash } from "crypto";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
@@ -134,25 +133,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     [studentMeta.firstName, studentMeta.lastName].filter(Boolean).join(" ") ||
     "Your student";
 
-  // ── d. Generate delivery token ────────────────────────────────────────────
-  // 32 random bytes → 64-char hex string. Never stored in plaintext.
-  const rawToken = randomBytes(32).toString("hex");
-  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
-
-  // Hash the recipient email for privacy in the DB
+  // ── d. Hash the recipient email — plaintext is never stored ─────────────
+  // The hash is used for email-gate verification on the /view/[token] page.
+  // The plaintext is retrieved from Stripe session metadata at approval time.
   const recipientEmailHash = createHash("sha256")
-    .update(school_email)
+    .update(school_email.toLowerCase().trim())
     .digest("hex");
 
-  // NOTE: expires_at is intentionally NOT set here.
-  // The 48-hour clock only starts when the faculty member approves the delivery.
+  // NOTE: No delivery token is generated here.
+  // The token is created only when faculty approves, so we can include it in
+  // the institution email at that moment.
 
   // ── e. Insert delivery_links row (pending approval) ──────────────────────
   const { data: linkRow, error: linkError } = await adminSupabase
     .from("delivery_links")
     .insert({
       letter_id,
-      token_hash: tokenHash,
       recipient_email_hash: recipientEmailHash,
       school_name,
       student_user_id: meta.student_user_id,

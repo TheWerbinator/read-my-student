@@ -6,7 +6,11 @@ import { Resend } from "resend";
 import {
   RequestNotificationEmail,
   FacultyInvitationEmail,
+  InstitutionDeliveryEmail,
+  StudentRejectionEmail,
 } from "@/components/letter-request-email-templates";
+import { randomBytes, createHash } from "crypto";
+import { stripe } from "@/lib/stripe";
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { sanitizeLetterHtml, validateLexicalJson } from "@/lib/sanitize";
 
@@ -283,7 +287,7 @@ export async function sendLetterRequest(
 
   // ── Case B: Professor not registered — send invitation ────────────────────
   const { error: inviteError } = await resend.emails.send({
-    from: "ReadMyStudent <onboarding@resend.dev>",
+    from: "ReadMyStudent <notification@readmystudent.com>",
     to: payload.professorEmail.trim(),
     subject: `${studentFullName} needs your recommendation — it only takes 2 minutes`,
     html: FacultyInvitationEmail({
@@ -500,7 +504,9 @@ export async function approveDelivery(
   // Verify the delivery_link belongs to a letter authored by this faculty
   const { data: link } = await supabaseAdmin
     .from("delivery_links")
-    .select("id, payment_status, letters!inner(faculty_id)")
+    .select(
+      "id, payment_status, school_name, student_user_id, stripe_checkout_session_id, letters!inner(faculty_id)",
+    )
     .eq("id", deliveryLinkId)
     .eq("letters.faculty_id", facultyRow.id)
     .maybeSingle();
@@ -509,14 +515,73 @@ export async function approveDelivery(
   if ((link.payment_status as string) !== "pending_approval")
     return { error: "This delivery is not awaiting approval." };
 
+  // Generate the delivery token now — this is the moment the link becomes live.
+  const rawToken = randomBytes(32).toString("hex");
+  const tokenHash = createHash("sha256").update(rawToken).digest("hex");
   const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
   const { error: updateError } = await supabaseAdmin
     .from("delivery_links")
-    .update({ payment_status: "paid", expires_at: expiresAt })
+    .update({
+      payment_status: "paid",
+      expires_at: expiresAt,
+      token_hash: tokenHash,
+    })
     .eq("id", deliveryLinkId);
 
   if (updateError) return { error: updateError.message };
+
+  const fullLink = link as unknown as {
+    school_name: string | null;
+    student_user_id: string | null;
+    stripe_checkout_session_id: string | null;
+  };
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
+  const viewUrl = `${siteUrl}/view/${rawToken}`;
+
+  // Look up student name for the email subject line.
+  let studentFullName = "Applicant";
+  if (fullLink.student_user_id) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
+      fullLink.student_user_id,
+    );
+    const meta = authUser?.user?.user_metadata ?? {};
+    studentFullName =
+      [meta.firstName, meta.lastName].filter(Boolean).join(" ") || "Applicant";
+  }
+
+  // Retrieve the school email from Stripe session metadata — never stored in DB
+  let recipientEmail: string | null = null;
+  if (fullLink.stripe_checkout_session_id) {
+    try {
+      const session = await stripe.checkout.sessions.retrieve(
+        fullLink.stripe_checkout_session_id,
+      );
+      recipientEmail = session.metadata?.school_email ?? null;
+    } catch (err) {
+      console.error(
+        "[approveDelivery] Failed to retrieve Stripe session:",
+        err,
+      );
+    }
+  }
+
+  if (recipientEmail) {
+    await resend.emails.send({
+      from: "ReadMyStudent <onboarding@resend.dev>",
+      to: recipientEmail,
+      subject: `Recommendation letter available for ${studentFullName}`,
+      html: InstitutionDeliveryEmail({
+        schoolName: fullLink.school_name ?? "your institution",
+        studentFullName,
+        viewUrl,
+        expiresAt,
+      }),
+    });
+  }
+
   return { error: null };
 }
 
@@ -535,14 +600,16 @@ export async function rejectDelivery(
 
   const { data: facultyRow } = await supabaseAdmin
     .from("faculty")
-    .select("id")
+    .select("id, first_name, last_name")
     .eq("user_id", user.id)
     .maybeSingle();
   if (!facultyRow) return { error: "Faculty record not found." };
 
   const { data: link } = await supabaseAdmin
     .from("delivery_links")
-    .select("id, payment_status, letters!inner(faculty_id)")
+    .select(
+      "id, payment_status, school_name, student_user_id, letters!inner(faculty_id)",
+    )
     .eq("id", deliveryLinkId)
     .eq("letters.faculty_id", facultyRow.id)
     .maybeSingle();
@@ -557,5 +624,40 @@ export async function rejectDelivery(
     .eq("id", deliveryLinkId);
 
   if (updateError) return { error: updateError.message };
+
+  // Email the student to let them know the delivery was rejected.
+  const rejLink = link as unknown as {
+    school_name: string | null;
+    student_user_id: string | null;
+  };
+
+  if (rejLink.student_user_id) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
+      rejLink.student_user_id,
+    );
+    const studentEmail = authUser?.user?.email;
+    const meta = authUser?.user?.user_metadata ?? {};
+    const studentFirstName = (meta.firstName as string | undefined) ?? "there";
+    const facultyName =
+      [facultyRow.first_name, facultyRow.last_name].filter(Boolean).join(" ") ||
+      "Your professor";
+
+    if (studentEmail) {
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
+      await resend.emails.send({
+        from: "ReadMyStudent <onboarding@resend.dev>",
+        to: studentEmail,
+        subject: `Your delivery request to ${rejLink.school_name ?? "the institution"} was declined`,
+        html: StudentRejectionEmail({
+          studentFirstName,
+          facultyName,
+          schoolName: rejLink.school_name ?? "the institution",
+          supportUrl: `${siteUrl}/contact`,
+        }),
+      });
+    }
+  }
+
   return { error: null };
 }
