@@ -1,8 +1,8 @@
 ﻿// Plain HTML string email templates - no React/JSX, safe in Next.js server actions.
 
 const HEADER = `
-  <div style="background-color:#103f30;padding:30px;text-align:center;">
-    <img src="https://readmystudent.com/Logo_Official_White.png" alt="ReadMyStudent" style="height:50px;width:auto;">
+  <div style="background-color:#103f30;padding:15px;text-align:center;">
+    <img src="https://readmystudent.com/Logo_Official_White.png" alt="ReadMyStudent" style="height:100px;width:auto;">
   </div>`;
 
 const FOOTER = `
@@ -97,15 +97,14 @@ export function FacultyInvitationEmail(p: FacultyInvitationProps): string {
       ${studentFirst} needs your help &mdash; and only you can provide it.
     </h1>
     <p style="font-size:16px;line-height:1.6;">
-      <strong>${p.studentFullName}</strong>, a student at <strong>${p.studentUniversity}</strong>,
-      has reached out asking you to write a letter of recommendation on their behalf.
+      <strong>${p.studentFullName}</strong> has reached out asking you to write a letter of recommendation on their behalf.
       They took the time to look you up specifically &mdash; because to them, your recommendation carries real weight.
     </p>
     ${p.courseContext ? contextBlock(p.courseContext) : ""}
     ${p.studentNote ? noteBlock(`Here's what ${studentFirst} wrote to you:`, p.studentNote) : ""}
     <p style="font-size:16px;line-height:1.6;">
       A letter of recommendation from you could make the difference between ${studentFirst} getting into their
-      program &mdash; or not. It takes just a few minutes on ReadMyStudent, and your words could genuinely
+      program, or not. It takes just a few minutes on ReadMyStudent, and your words could genuinely
       change the course of their life.
     </p>
     <p style="font-size:16px;line-height:1.6;">

@@ -224,11 +224,49 @@ export async function sendLetterRequest(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
 
   // ── Look up professor in faculty table ────────────────────────────────────
-  const { data: facultyRow } = await supabaseAdmin
+  // Primary: match by email stored on the faculty row (set since registration fix).
+  // Fallback: some faculty registered before email was saved — look them up via
+  //   auth.users by email, then join to the faculty row by user_id.
+  type FacultyLookup = {
+    id: string;
+    first_name: string | null;
+    email: string | null;
+  };
+  let facultyRow: FacultyLookup | null = null;
+
+  const { data: directMatch } = await supabaseAdmin
     .from("faculty")
     .select("id, first_name, email")
     .ilike("email", payload.professorEmail.trim())
     .maybeSingle();
+
+  if (directMatch) {
+    facultyRow = directMatch as unknown as FacultyLookup;
+  } else {
+    // Fallback: find auth user by email, then look up faculty row by user_id
+    const { data: authUserList } = await supabaseAdmin.auth.admin.listUsers({
+      perPage: 1000,
+    });
+    const matchedAuthUser = authUserList?.users?.find(
+      (u) =>
+        u.email?.toLowerCase() === payload.professorEmail.trim().toLowerCase(),
+    );
+    if (matchedAuthUser) {
+      const { data: facultyByUserId } = await supabaseAdmin
+        .from("faculty")
+        .select("id, first_name, email")
+        .eq("user_id", matchedAuthUser.id)
+        .maybeSingle();
+      if (facultyByUserId) {
+        facultyRow = facultyByUserId as unknown as FacultyLookup;
+        // Backfill the email column so future lookups are fast
+        await supabaseAdmin
+          .from("faculty")
+          .update({ email: matchedAuthUser.email })
+          .eq("id", facultyByUserId.id);
+      }
+    }
+  }
 
   // ── Case A: Professor is a registered faculty member ─────────────────────
   if (facultyRow) {
@@ -295,7 +333,7 @@ export async function sendLetterRequest(
       studentUniversity,
       courseContext: payload.courseContext,
       studentNote: payload.studentNote,
-      signupUrl: `${siteUrl}/signup`,
+      signupUrl: `${siteUrl}/signup?role=FACULTY`,
     }),
   });
 

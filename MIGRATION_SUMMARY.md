@@ -3,8 +3,9 @@
 ## ✅ Completed Changes
 
 ### Files Modified
+
 1. **package.json** - Removed bcryptjs & jose, added @supabase/supabase-js & @supabase/ssr
-2. **.env.example** - Added NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+2. **.env.example** - Added NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 3. **prisma/schema.prisma** - Replaced passwordHash with supabaseId field
 4. **src/lib/auth.ts** - Complete rewrite using Supabase sessions
 5. **src/lib/supabase.ts** - NEW: Supabase client initialization
@@ -15,6 +16,7 @@
 10. **prisma/migrations/20260117_migrate_to_supabase_auth/migration.sql** - NEW: Database schema migration
 
 ### Key Improvements
+
 ✨ **Security**: Passwords now managed by Supabase (Argon2 hashing)
 ✨ **Reduced Code**: No custom JWT logic to maintain
 ✨ **Future-Ready**: Easy to add OAuth, MFA, email verification
@@ -37,6 +39,7 @@
 - Session cookies are handled automatically by Supabase
 
 ## 📝 Removed Dependencies
+
 - `bcryptjs` - Password hashing now done by Supabase
 - `jose` - JWT handling now done by Supabase
 
