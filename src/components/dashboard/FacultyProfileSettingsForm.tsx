@@ -44,13 +44,24 @@ type Fields = {
   signOff: string;
 };
 
-function rowToFields(row: FacultyProfileRow | null): Fields {
+export type FacultyAuthDetails = {
+  email: string;
+  firstName: string;
+  lastName: string;
+};
+
+// Names and email live on the auth user, not the faculty row. Phone and
+// sign-off are not persisted yet, so they start from defaults.
+function rowToFields(
+  row: FacultyProfileRow | null,
+  auth: FacultyAuthDetails,
+): Fields {
   return {
     prefix: row?.prefix ?? "",
-    firstName: row?.first_name ?? "",
-    lastName: row?.last_name ?? "",
-    email: row?.email ?? "",
-    phone: row?.phone ?? "",
+    firstName: auth.firstName,
+    lastName: auth.lastName,
+    email: auth.email,
+    phone: "",
     title: row?.title ?? "",
     department: row?.department ?? "",
     organization: row?.institution ?? "",
@@ -59,7 +70,7 @@ function rowToFields(row: FacultyProfileRow | null): Fields {
     state: row?.state ?? "",
     postalCode: row?.postal_code ?? "",
     country: row?.country ?? "",
-    signOff: row?.sign_off ?? "Sincerely,",
+    signOff: "Sincerely,",
   };
 }
 
@@ -144,12 +155,16 @@ function AssetRetentionBanner({
 
 export function FacultyProfileSettingsForm({
   initialProfile,
+  authDetails,
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div"> & {
   initialProfile: FacultyProfileRow | null;
+  authDetails: FacultyAuthDetails;
 }) {
-  const [fields, setFields] = useState<Fields>(rowToFields(initialProfile));
+  const [fields, setFields] = useState<Fields>(
+    rowToFields(initialProfile, authDetails),
+  );
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

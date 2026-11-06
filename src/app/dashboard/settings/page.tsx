@@ -30,7 +30,14 @@ export default async function SettingsPage() {
         <ChangeEmailForm currentEmail={user.email} />
 
         {isFaculty && (
-          <FacultyProfileSettingsForm initialProfile={facultyProfile} />
+          <FacultyProfileSettingsForm
+            initialProfile={facultyProfile}
+            authDetails={{
+              email: user.email ?? "",
+              firstName: (user.user_metadata?.firstName as string) ?? "",
+              lastName: (user.user_metadata?.lastName as string) ?? "",
+            }}
+          />
         )}
       </div>
     </div>
