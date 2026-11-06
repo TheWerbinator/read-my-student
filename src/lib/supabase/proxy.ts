@@ -40,13 +40,9 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // Only the dashboard needs a session. Marketing, signup, /view/[token],
+  // the Stripe webhook and the cron route must stay reachable logged out.
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
