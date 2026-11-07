@@ -4,7 +4,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const key = process.env.SUPABASE_SECRET_KEY ?? "";
 
 // Refuse to touch anything but a local stack.
 if (!/^http:\/\/(127\.0\.0\.1|localhost):54321\/?$/.test(url)) {

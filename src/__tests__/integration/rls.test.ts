@@ -16,7 +16,7 @@
  * Required environment variables (create a `.env.test.local` file):
  *   NEXT_PUBLIC_SUPABASE_URL         = http://127.0.0.1:54321    # local URL
  *   NEXT_PUBLIC_SUPABASE_ANON_KEY    = <from `supabase status`>
- *   SUPABASE_SERVICE_ROLE_KEY        = <from `supabase status`>
+ *   SUPABASE_SECRET_KEY              = <SECRET_KEY from `supabase status`>
  *   TEST_STUDENT_EMAIL               = student-test@example.com
  *   TEST_STUDENT_PASSWORD            = TestPassword1!
  *   TEST_FACULTY_EMAIL               = faculty-test@example.com
@@ -44,7 +44,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY ?? "";
 
 const STUDENT_EMAIL = process.env.TEST_STUDENT_EMAIL ?? "student@test.local";
 const STUDENT_PASSWORD = process.env.TEST_STUDENT_PASSWORD ?? "TestPassword1!";
