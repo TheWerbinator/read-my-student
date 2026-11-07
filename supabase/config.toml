@@ -1,5 +1,17 @@
 project_id = "hzcubrhzoafrxwqrltjz"
 
+# Buckets mirror production (all private). Created on `supabase start`.
+[storage.buckets.letters]
+public = false
+
+[storage.buckets.faculty-logos]
+public = false
+file_size_limit = "1MiB"
+
+[storage.buckets.faculty-signatures]
+public = false
+file_size_limit = "1MiB"
+
 [auth.email.template.confirmation]
 subject = "Confirm your signup"
 content_path = "./supabase/templates/confirmation.html"
