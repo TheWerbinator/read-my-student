@@ -21,7 +21,7 @@
  * Required env vars:
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
- *   CRON_SECRET  (optional but strongly recommended in production)
+ *   CRON_SECRET  (required; every call is rejected while it is unset)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -39,10 +39,10 @@ function unauthorized() {
 
 export async function GET(req: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────────────
+  // Fail closed: without a secret anyone could trigger the deletion sweep.
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${cronSecret}`) return unauthorized();
+  if (!cronSecret || req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+    return unauthorized();
   }
 
   const now = new Date().toISOString();
