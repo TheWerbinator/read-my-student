@@ -35,6 +35,8 @@ const customConfig: Config = {
   // the async config is fully applied.
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    // @react-pdf/hyphenate exports only an "import" condition, which Jest's require-based resolver skips.
+    "^@react-pdf/hyphenate/(.*)$": "<rootDir>/node_modules/@react-pdf/hyphenate/lib/$1.js",
   },
 
   // Coverage is collected from src only, excluding generated / infra files.
@@ -63,11 +65,12 @@ const nextConfig = createJestConfig(customConfig);
  *   @bramus/specificity     — CSS specificity lib (jsdom v28 direct dep)
  *   parse5                  — HTML parser (jsdom v28 direct dep)
  *   tough-cookie            — Cookie jar (jsdom v28 direct dep)
+ *   color-string, color-name - ESM-only since color-string v2 (via @react-pdf 4.9)
  */
 export default async (): Promise<Config> => {
   const config = await nextConfig();
   config.transformIgnorePatterns = [
-    "/node_modules/(?!(@react-pdf|@exodus|@asamuzakjp|@csstools|@bramus|html-encoding-sniffer|whatwg-encoding|parse5|tough-cookie|yoga-layout)/)",
+    "/node_modules/(?!(@react-pdf|@exodus|@asamuzakjp|@csstools|@bramus|html-encoding-sniffer|whatwg-encoding|parse5|tough-cookie|yoga-layout|color-string|color-name)/)",
     "^.+\\.module\\.(css|sass|scss)$",
   ];
   return config;
