@@ -90,16 +90,44 @@ const itOrSkip = SUPABASE_URL && SERVICE_ROLE_KEY ? it : it.skip;
 
 describe("RLS — letters table", () => {
   let studentLetterRowId: string;
+  let otherUserId = "";
 
   beforeAll(async () => {
     if (!SUPABASE_URL) return;
 
-    // Insert a test letter row via the admin client so we have something to query.
-    // Adjust the column names to match your actual schema.
+    // Insert a request and its letter via the admin client so we have something
+    // to query. The letter belongs to a throwaway student, so the seeded test
+    // accounts (npm run seed:local) own no part of it.
     const admin = adminClient();
+    const { data: otherUser } = await admin.auth.admin.createUser({
+      email: `rls-other-${Date.now()}@test.local`,
+      password: STUDENT_PASSWORD,
+      email_confirm: true,
+    });
+    otherUserId = otherUser.user?.id ?? "";
+    const { data: student } = otherUserId
+      ? await admin.from("students").insert({ user_id: otherUserId }).select("id").single()
+      : { data: null };
+    const { data: faculty } = await admin
+      .from("faculty")
+      .select("id")
+      .not("user_id", "is", null)
+      .limit(1)
+      .single();
+    const { data: request } = student && faculty
+      ? await admin
+          .from("letter_requests")
+          .insert({ student_id: student.id, faculty_id: faculty.id, status: "requested" })
+          .select("id")
+          .single()
+      : { data: null };
+
     const { data, error } = await admin
       .from("letters")
       .insert({
+        request_id: request?.id,
+        faculty_id: faculty?.id,
+        student_id: student?.id,
         is_draft: true,
         letter_body_html: "<p>Test letter</p>",
         letter_plain_text: "Test letter",
@@ -118,8 +146,11 @@ describe("RLS — letters table", () => {
   });
 
   afterAll(async () => {
-    if (!studentLetterRowId) return;
-    await adminClient().from("letters").delete().eq("id", studentLetterRowId);
+    // Deleting the student cascades to the request and its letter.
+    if (otherUserId) {
+      await adminClient().from("students").delete().eq("user_id", otherUserId);
+      await adminClient().auth.admin.deleteUser(otherUserId);
+    }
   });
 
   itOrSkip("anonymous users cannot read any letters", async () => {

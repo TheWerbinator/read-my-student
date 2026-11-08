@@ -37,7 +37,7 @@ export function StudentView() {
   const [studentNote, setStudentNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<
-    | { status: "requested" | "invited" }
+    | { status: "requested" }
     | { status: "error"; error: string }
     | null
   >(null);
@@ -116,15 +116,9 @@ export function StudentView() {
           <CardContent className='space-y-4'>
 {result?.status === "requested" && (
               <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
-                ✅ Request sent! Your professor has been notified and will see
-                it in their dashboard.
-              </div>
-            )}
-            {result?.status === "invited" && (
-              <div className='rounded-xl bg-blue-50 p-3 text-sm text-blue-800'>
-                📨 Invitation sent! Your professor doesn&apos;t have an account
-                yet — we&apos;ve emailed them a personal invitation to join and
-                help you.
+                ✅ Request sent! We emailed your professor a link to answer.
+                They do not need an account. If they do not answer within 7
+                days, the request closes.
               </div>
             )}
             {result?.status === "error" && (
@@ -300,6 +294,8 @@ export function StudentView() {
                               className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
                                 req.status === "rejected"
                                   ? "bg-red-100 text-red-700"
+                                  : req.status === "expired"
+                                    ? "bg-gray-100 text-gray-700"
                                   : req.status === "invited"
                                     ? "bg-blue-100 text-blue-700"
                                     : "bg-yellow-100 text-yellow-800"

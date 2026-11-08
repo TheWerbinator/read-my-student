@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { authorizeRequestAccess, isClosedStatus } from "@/lib/request-access";
 import {
   profileFormToDbRow,
   type FacultyProfileRow,
@@ -95,12 +97,15 @@ export async function saveFacultyProfile(
 export async function uploadFacultyAsset(
   formData: FormData,
   assetType: "logo" | "signature",
+  token?: string,
 ): Promise<{
   success: boolean;
   storagePath?: string;
   signedUrl?: string;
   error?: string;
 }> {
+  if (token) return uploadAssetByToken(formData, assetType, token);
+
   const supabase = await createClient();
 
   const {
@@ -148,13 +153,75 @@ export async function uploadFacultyAsset(
 export async function getSignedAssetUrl(
   storagePath: string,
   assetType: "logo" | "signature",
+  token?: string,
 ): Promise<string | null> {
-  const supabase = await createClient();
   const bucket = assetType === "logo" ? BUCKET_LOGOS : BUCKET_SIGNATURES;
+  if (token) {
+    // Link users may only read files under their own faculty folder.
+    const access = await authorizeRequestAccess(null, token);
+    if (!access || !storagePath.startsWith(`${access.facultyId}/`)) return null;
+    const { data } = await adminStorage()
+      .from(bucket)
+      .createSignedUrl(storagePath, 3600);
+    return data?.signedUrl ?? null;
+  }
+  const supabase = await createClient();
   const { data } = await supabase.storage
     .from(bucket)
     .createSignedUrl(storagePath, 3600);
   return data?.signedUrl ?? null;
+}
+
+// ─── Link (no-account) uploads ────────────────────────────────────────────────
+
+const LINK_UPLOAD_TYPES: Record<string, string> = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+};
+
+function adminStorage() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  ).storage;
+}
+
+/**
+ * Upload for a professor answering by emailed link. Files go under the
+ * faculty row id (there is no auth user id). The buckets cap size at 1 MiB.
+ * shortcut: after the professor creates an account, settings cannot preview
+ * these files (storage policies match the auth uid folder); copy them on
+ * signup if that matters.
+ */
+async function uploadAssetByToken(
+  formData: FormData,
+  assetType: "logo" | "signature",
+  token: string,
+): Promise<{ success: boolean; storagePath?: string; signedUrl?: string; error?: string }> {
+  const access = await authorizeRequestAccess(null, token);
+  if (!access) return { success: false, error: "Request not found or access denied." };
+  if (isClosedStatus(access.status))
+    return { success: false, error: "This request is closed." };
+
+  const file = formData.get("file") as File | null;
+  if (!file) return { success: false, error: "No file provided." };
+  const ext = LINK_UPLOAD_TYPES[file.type];
+  if (!ext) return { success: false, error: "Upload a PNG or JPEG image." };
+
+  const storagePath = `${access.facultyId}/${assetType}.${ext}`;
+  const bucket = assetType === "logo" ? BUCKET_LOGOS : BUCKET_SIGNATURES;
+  const storage = adminStorage();
+
+  const { error: uploadError } = await storage
+    .from(bucket)
+    .upload(storagePath, file, { upsert: true, contentType: file.type });
+  if (uploadError) return { success: false, error: uploadError.message };
+
+  const { data: signedData } = await storage
+    .from(bucket)
+    .createSignedUrl(storagePath, 3600);
+  return { success: true, storagePath, signedUrl: signedData?.signedUrl };
 }
 
 /**

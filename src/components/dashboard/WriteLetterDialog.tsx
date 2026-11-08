@@ -41,8 +41,11 @@ export function WriteLetterDialog({
   onSaveProfile,
   onDraftSaved,
   onFinalized,
+  accessToken,
 }: {
   studentName: string;
+  /** Emailed link token. Set on /r/[token], where the professor has no session. */
+  accessToken?: string;
   /** The letter_requests row ID. When provided, drafts go to Supabase.
    *  When absent (mock data), falls back to localStorage. */
   requestId?: string;
@@ -148,7 +151,7 @@ export function WriteLetterDialog({
     const next = !studentPreviewEnabled;
     setStudentPreviewEnabled(next);
     if (letterDbId) {
-      await setPreviewEnabledAction(letterDbId, next);
+      await setPreviewEnabledAction(letterDbId, next, accessToken);
     }
     // If no letterId yet the value will be saved with the next draft save.
   };
@@ -166,7 +169,7 @@ export function WriteLetterDialog({
     setIsUploadingLogo(true);
     const fd = new FormData();
     fd.append("file", file);
-    const result = await uploadFacultyAsset(fd, "logo");
+    const result = await uploadFacultyAsset(fd, "logo", accessToken);
     setIsUploadingLogo(false);
     if (result.success && result.storagePath) {
       setLogoStoragePath(result.storagePath);
@@ -196,7 +199,7 @@ export function WriteLetterDialog({
         letterEditorState,
         logoStoragePath: logoStoragePath ?? null,
         signatureStoragePath: signatureStoragePath ?? null,
-      });
+      }, accessToken);
       if (!silent) setIsSavingDraft(false);
       if (!result.success) {
         setDraftSaveError(result.error ?? "Failed to save draft.");
@@ -235,7 +238,7 @@ export function WriteLetterDialog({
       const res = await fetch(`/api/letters/${letterDbId}/finalize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId }),
+        body: JSON.stringify({ token: accessToken }),
       });
       const data = (await res.json()) as { success?: boolean; error?: string };
       if (!res.ok || !data.success) {
@@ -360,7 +363,7 @@ export function WriteLetterDialog({
         setSignatureUploadError(null);
         const fd = new FormData();
         fd.append("file", signatureFile);
-        void uploadFacultyAsset(fd, "signature").then((res) => {
+        void uploadFacultyAsset(fd, "signature", accessToken).then((res) => {
           setIsUploadingSignature(false);
           if (res.success && res.storagePath) {
             setSignatureStoragePath(res.storagePath);
@@ -467,7 +470,7 @@ export function WriteLetterDialog({
             // Load draft from DB (overrides profile baseline if a draft exists)
             if (requestId) {
               setIsLoadingDraft(true);
-              const draft = await loadDraft(requestId);
+              const draft = await loadDraft(requestId, accessToken);
               setIsLoadingDraft(false);
               if (draft) {
                 if (draft.recommender_snapshot)
@@ -477,13 +480,13 @@ export function WriteLetterDialog({
                 setLetterEditorState(draft.letter_editor_state);
                 if (draft.letterhead_logo_storage_path) {
                   setLogoStoragePath(draft.letterhead_logo_storage_path);
-                  getSignedAssetUrl(draft.letterhead_logo_storage_path, "logo").then(
+                  getSignedAssetUrl(draft.letterhead_logo_storage_path, "logo", accessToken).then(
                     (url) => { if (url) setLogoDataUrl(url); }
                   );
                 }
                 if (draft.signature_image_storage_path) {
                   setSignatureStoragePath(draft.signature_image_storage_path);
-                  getSignedAssetUrl(draft.signature_image_storage_path, "signature").then(
+                  getSignedAssetUrl(draft.signature_image_storage_path, "signature", accessToken).then(
                     (url) => { if (url) setSignatureDataUrl(url); }
                   );
                 }
@@ -771,7 +774,8 @@ export function WriteLetterDialog({
                     </p>
                   </div>
 
-                  {/* ── Save-profile strip ── */}
+                  {/* ── Save-profile strip (account holders only) ── */}
+                  {onSaveProfile && (
                   <div className='flex items-start justify-between rounded-xl border border-dashed border-black/10 bg-slate-50 px-4 py-3'>
                     <p className='text-xs text-gray-500'>
                       Save your details so they autofill on your next letter.
@@ -816,6 +820,7 @@ export function WriteLetterDialog({
                       )}
                     </div>
                   </div>
+                  )}
                 </div>
               )}
 

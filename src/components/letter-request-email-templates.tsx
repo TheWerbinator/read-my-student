@@ -28,16 +28,26 @@ function wrap(body: string): string {
 </body></html>`;
 }
 
+/** Escape user-supplied text so it cannot inject HTML or links into an email. */
+function esc(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function contextBlock(courseContext: string): string {
   return `<div style="background-color:#f9f9f0;border-left:4px solid #eebd32;padding:12px 16px;border-radius:4px;margin:20px 0;">
-    <p style="margin:0;font-size:14px;color:#555;"><strong>Course / Context:</strong> ${courseContext}</p>
+    <p style="margin:0;font-size:14px;color:#555;"><strong>Course / Context:</strong> ${esc(courseContext)}</p>
   </div>`;
 }
 
 function noteBlock(label: string, note: string): string {
   return `<div style="background-color:#f5f5f5;padding:16px;border-radius:6px;margin:20px 0;">
     <p style="margin:0 0 6px 0;font-size:13px;font-weight:bold;color:#103f30;">${label}</p>
-    <p style="margin:0;font-size:14px;line-height:1.6;color:#444;font-style:italic;">&ldquo;${note}&rdquo;</p>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#444;font-style:italic;">&ldquo;${esc(note)}&rdquo;</p>
   </div>`;
 }
 
@@ -51,7 +61,7 @@ function ctaButton(href: string, label: string): string {
   </table>`;
 }
 
-// New Request Notification (faculty already has an account)
+// New request (faculty already has an account). The link works without logging in.
 
 interface RequestNotificationProps {
   facultyFirstName: string;
@@ -59,64 +69,100 @@ interface RequestNotificationProps {
   studentUniversity: string;
   courseContext?: string;
   studentNote?: string;
-  dashboardUrl: string;
+  requestUrl: string;
 }
 
 export function RequestNotificationEmail(p: RequestNotificationProps): string {
+  const student = esc(p.studentFullName);
   const body = `
     <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">You have a new recommendation request</h1>
-    <p style="font-size:16px;line-height:1.6;">Hi ${p.facultyFirstName},</p>
+    <p style="font-size:16px;line-height:1.6;">Hi ${esc(p.facultyFirstName)},</p>
     <p style="font-size:16px;line-height:1.6;">
-      <strong>${p.studentFullName}</strong> from <strong>${p.studentUniversity}</strong>
-      has requested a letter of recommendation from you through ReadMyStudent.
+      <strong>${student}</strong> from <strong>${esc(p.studentUniversity)}</strong>
+      asked you for a letter of recommendation through ReadMyStudent.
     </p>
     ${p.courseContext ? contextBlock(p.courseContext) : ""}
-    ${p.studentNote ? noteBlock(`Personal note from ${p.studentFullName}:`, p.studentNote) : ""}
-    <p style="font-size:16px;line-height:1.6;">Log in to your ReadMyStudent dashboard to review the request and begin drafting your letter.</p>
-    ${ctaButton(p.dashboardUrl, "View Request in Dashboard")}
-    <p style="font-size:13px;color:#999999;">If you believe this request was sent in error, you may decline it from your dashboard.</p>`;
+    ${p.studentNote ? noteBlock(`Personal note from ${student}:`, p.studentNote) : ""}
+    <p style="font-size:16px;line-height:1.6;">Open the request to accept it and write the letter, or to decline it. You do not need to log in. The request also appears in your dashboard.</p>
+    ${ctaButton(p.requestUrl, "Open the request")}
+    <p style="font-size:13px;color:#999999;">If you do not answer within 7 days, the request closes.</p>`;
 
   return wrap(body);
 }
 
-// Faculty Invitation (professor not yet registered)
+// Request to a professor with no account
 
 interface FacultyInvitationProps {
   studentFullName: string;
   studentUniversity: string;
   courseContext?: string;
   studentNote?: string;
-  signupUrl: string;
+  requestUrl: string;
 }
 
 export function FacultyInvitationEmail(p: FacultyInvitationProps): string {
-  const studentFirst = p.studentFullName.split(" ")[0];
+  const student = esc(p.studentFullName);
+  const studentFirst = esc(p.studentFullName.split(" ")[0]);
 
   const body = `
     <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">
-      ${studentFirst} needs your help &mdash; and only you can provide it.
+      ${studentFirst} asked you for a letter of recommendation
     </h1>
     <p style="font-size:16px;line-height:1.6;">
-      <strong>${p.studentFullName}</strong> has reached out asking you to write a letter of recommendation on their behalf.
-      They took the time to look you up specifically &mdash; because to them, your recommendation carries real weight.
+      <strong>${student}</strong> from <strong>${esc(p.studentUniversity)}</strong> listed you as a recommender on ReadMyStudent.
     </p>
     ${p.courseContext ? contextBlock(p.courseContext) : ""}
-    ${p.studentNote ? noteBlock(`Here's what ${studentFirst} wrote to you:`, p.studentNote) : ""}
+    ${p.studentNote ? noteBlock(`What ${studentFirst} wrote to you:`, p.studentNote) : ""}
     <p style="font-size:16px;line-height:1.6;">
-      A letter of recommendation from you could make the difference between ${studentFirst} getting into their
-      program, or not. It takes just a few minutes on ReadMyStudent, and your words could genuinely
-      change the course of their life.
+      The link below opens the request. You can write and sign the letter there, or decline.
+      You do not need an account, and writing the letter is free.
     </p>
-    <p style="font-size:16px;line-height:1.6;">
-      <strong>ReadMyStudent</strong> is a free platform built for faculty to write, manage, and securely deliver
-      recommendation letters. Your account takes less than 2 minutes to set up, and ${studentFirst}'s request
-      will be waiting for you the moment you sign in.
-    </p>
-    ${ctaButton(p.signupUrl, `Help ${studentFirst} &mdash; Create My Free Account`)}
+    ${ctaButton(p.requestUrl, "Open the request")}
     <p style="font-size:13px;color:#999999;line-height:1.5;">
-      You're receiving this because a student listed your email as their professor.
-      If you believe this was sent in error, you can safely ignore it &mdash; no account will be created without your action.
+      You received this because a student entered your email address. If you do not know this student,
+      decline from the link or ignore this email. The request closes after 7 days without an answer.
     </p>`;
+
+  return wrap(body);
+}
+
+// Reminder to the professor (day 3, no answer yet)
+
+interface RequestReminderProps {
+  studentFullName: string;
+  requestUrl: string;
+}
+
+export function RequestReminderEmail(p: RequestReminderProps): string {
+  const student = esc(p.studentFullName);
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">${student} is waiting for your answer</h1>
+    <p style="font-size:16px;line-height:1.6;">
+      ${student} asked you for a letter of recommendation 3 days ago. The request closes in 4 days if you do not answer.
+    </p>
+    <p style="font-size:16px;line-height:1.6;">Open the request to accept or decline. A quick decline lets ${student} ask someone else.</p>
+    ${ctaButton(p.requestUrl, "Open the request")}`;
+
+  return wrap(body);
+}
+
+// Notice to the student (day 7, no answer)
+
+interface RequestExpiredProps {
+  studentFirstName: string;
+  professorEmail: string;
+  dashboardUrl: string;
+}
+
+export function RequestExpiredEmail(p: RequestExpiredProps): string {
+  const body = `
+    <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Your request closed without an answer</h1>
+    <p style="font-size:16px;line-height:1.6;">Hi ${esc(p.studentFirstName)},</p>
+    <p style="font-size:16px;line-height:1.6;">
+      ${esc(p.professorEmail)} did not answer your letter request within 7 days, so the request closed.
+      You can send a new request to the same professor or to someone else.
+    </p>
+    ${ctaButton(p.dashboardUrl, "Go to your dashboard")}`;
 
   return wrap(body);
 }
@@ -180,9 +226,9 @@ interface RequestRejectionProps {
 export function RequestRejectionEmail(p: RequestRejectionProps): string {
   const body = `
     <h1 style="font-family:'Georgia',serif;font-size:28px;color:#103f30;margin-top:0;">Recommendation request declined</h1>
-    <p style="font-size:16px;line-height:1.6;">Hi ${p.studentFirstName},</p>
+    <p style="font-size:16px;line-height:1.6;">Hi ${esc(p.studentFirstName)},</p>
     <p style="font-size:16px;line-height:1.6;">
-      <strong>${p.facultyName}</strong> has declined your request for a letter of recommendation.
+      <strong>${esc(p.facultyName)}</strong> has declined your request for a letter of recommendation.
     </p>
     ${p.reason ? noteBlock("Their message", p.reason) : ""}
     <p style="font-size:16px;line-height:1.6;">

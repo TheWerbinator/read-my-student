@@ -10,8 +10,15 @@ import {
   StudentRejectionEmail,
   RequestRejectionEmail,
 } from "@/components/letter-request-email-templates";
-import { randomBytes, createHash } from "crypto";
+import { randomBytes, createHash, randomUUID } from "crypto";
 import { stripe } from "@/lib/stripe";
+import {
+  authorizeRequestAccess,
+  hashToken,
+  isClosedStatus,
+  requestLinkToken,
+  requestLinkUrl,
+} from "@/lib/request-access";
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { sanitizeLetterHtml, validateLexicalJson } from "@/lib/sanitize";
 
@@ -60,44 +67,28 @@ export type StudentLetterPreview = {
 // ─── Actions ─────────────────────────────────────────────────────────────────
 
 /**
- * Upsert a draft letter for a given request.
- * Requires a UNIQUE constraint on letters(request_id) — add it if missing:
- *   ALTER TABLE letters ADD CONSTRAINT letters_request_id_unique UNIQUE (request_id);
- *
- * Also requires these columns (run migration if not present):
- *   ALTER TABLE letters
- *     ADD COLUMN IF NOT EXISTS recommender_snapshot         jsonb,
- *     ADD COLUMN IF NOT EXISTS letterhead_logo_storage_path text,
- *     ADD COLUMN IF NOT EXISTS signature_image_storage_path text,
- *     ADD COLUMN IF NOT EXISTS letter_plain_text            text;
+ * Upsert a draft letter for a given request (one letter per request).
+ * Access is by faculty session, or by the emailed link token.
+ * The first save marks the request as answered (stops the reminder and expiry).
  */
 export async function saveDraft(
   requestId: string,
   payload: DraftPayload,
+  token?: string,
 ): Promise<{ success: boolean; letterId?: string; error?: string }> {
-  const supabase = await createClient();
+  const access = await authorizeRequestAccess(requestId, token);
+  if (!access)
+    return { success: false, error: "Request not found or access denied." };
+  if (isClosedStatus(access.status))
+    return { success: false, error: "This request is closed." };
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { success: false, error: "Not authenticated." };
-
-  // Resolve faculty row
-  const { data: facultyRow } = await supabase
-    .from("faculty")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
-  if (!facultyRow)
-    return { success: false, error: "Faculty record not found." };
-
-  // Resolve request (gives us student_id + ownership check via RLS)
-  const { data: requestRow } = await supabase
-    .from("letter_requests")
-    .select("student_id")
-    .eq("id", requestId)
-    .single();
-  if (!requestRow) return { success: false, error: "Request not found." };
+  const { data: existing } = await supabaseAdmin
+    .from("letters")
+    .select("is_draft")
+    .eq("request_id", requestId)
+    .maybeSingle();
+  if (existing && !existing.is_draft)
+    return { success: false, error: "This letter has already been finalized." };
 
   // Parse and validate the Lexical editor state string → jsonb
   let editorJson: object | null = null;
@@ -119,13 +110,13 @@ export async function saveDraft(
     ? sanitizeLetterHtml(payload.letterHtml)
     : null;
 
-  const { data: upserted, error } = await supabase
+  const { data: upserted, error } = await supabaseAdmin
     .from("letters")
     .upsert(
       {
         request_id: requestId,
-        faculty_id: facultyRow.id,
-        student_id: requestRow.student_id,
+        faculty_id: access.facultyId,
+        student_id: access.studentId,
         is_draft: true,
         status: "draft",
         recommender_snapshot: payload.recommenderForm,
@@ -142,22 +133,30 @@ export async function saveDraft(
     .single();
 
   if (error) return { success: false, error: error.message };
+
+  if (!access.respondedAt) {
+    await supabaseAdmin
+      .from("letter_requests")
+      .update({ responded_at: new Date().toISOString() })
+      .eq("id", requestId)
+      .is("responded_at", null);
+  }
+
   return { success: true, letterId: upserted.id as string };
 }
 
 /**
  * Load an existing draft for a request.
- * Returns null if no draft exists or the user is not authenticated.
+ * Returns null if no draft exists or access is denied.
  */
-export async function loadDraft(requestId: string): Promise<DraftRow | null> {
-  const supabase = await createClient();
+export async function loadDraft(
+  requestId: string,
+  token?: string,
+): Promise<DraftRow | null> {
+  const access = await authorizeRequestAccess(requestId, token);
+  if (!access) return null;
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("letters")
     .select(
       "id, recommender_snapshot, letter_body_html, letter_plain_text, letter_body_json, letterhead_logo_storage_path, signature_image_storage_path, student_preview_enabled",
@@ -256,14 +255,12 @@ export type SendRequestPayload = {
 
 export type SendRequestResult =
   | { status: "requested"; requestId: string }
-  | { status: "invited"; requestId: string }
   | { status: "error"; error: string };
 
 /**
- * Creates a letter request and sends the appropriate email:
- * - If the professor email matches a faculty row in the DB, creates a
- *   letter_request and sends a "new request" notification.
- * - If the professor is not registered, sends a persuasive invitation email.
+ * Creates a letter request and emails the professor a link to answer it.
+ * The link (/r/<token>) works without an account. A professor who has no
+ * account gets a faculty row keyed by email, which signup later attaches to.
  */
 export async function sendLetterRequest(
   payload: SendRequestPayload,
@@ -275,6 +272,14 @@ export async function sendLetterRequest(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", error: "Not authenticated." };
+
+  const professorEmail = payload.professorEmail.trim().toLowerCase();
+  if (professorEmail === user.email?.toLowerCase()) {
+    return {
+      status: "error",
+      error: "You cannot request a letter from your own email address.",
+    };
+  }
 
   const studentFullName =
     [user.user_metadata?.firstName, user.user_metadata?.lastName]
@@ -290,14 +295,16 @@ export async function sendLetterRequest(
 
   const studentUniversity = studentRow?.university || "their university";
   const studentId = studentRow?.id ?? null;
+  if (!studentId) {
+    return {
+      status: "error",
+      error: "Your student profile could not be found. Please contact support.",
+    };
+  }
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
-
-  // ── Look up professor in faculty table via auth.users ────────────────────
-  // The faculty table has no email/name columns — those live in auth.users
-  // metadata. We find the auth user by email, then confirm they have a faculty
-  // row by user_id.
+  // ── Look up a registered professor via auth.users ────────────────────────
+  // Registered faculty rows have no email or name columns; those live in
+  // auth.users. Find the auth user by email, then their faculty row by user_id.
   type FacultyLookup = {
     id: string;
     first_name: string | null;
@@ -309,8 +316,7 @@ export async function sendLetterRequest(
     perPage: 1000,
   });
   const matchedAuthUser = authUserList?.users?.find(
-    (u) =>
-      u.email?.toLowerCase() === payload.professorEmail.trim().toLowerCase(),
+    (u) => u.email?.toLowerCase() === professorEmail,
   );
   if (matchedAuthUser) {
     const { data: facultyByUserId } = await supabaseAdmin
@@ -328,114 +334,88 @@ export async function sendLetterRequest(
     }
   }
 
-  // ── Case A: Professor is a registered faculty member ─────────────────────
-  if (facultyRow) {
-    if (!studentId) {
-      return {
-        status: "error",
-        error:
-          "Your student profile could not be found. Please contact support.",
-      };
-    }
+  // ── Professor without an account: reuse or create their faculty row ──────
+  const facultyId = facultyRow?.id ?? (await facultyIdForEmail(professorEmail));
+  if (!facultyId) {
+    return { status: "error", error: "Failed to create request." };
+  }
 
-    const { data: requestRow, error: insertError } = await supabaseAdmin
-      .from("letter_requests")
-      .insert({
-        student_id: studentId,
-        faculty_id: facultyRow.id,
-        professor_email: payload.professorEmail.trim(),
-        course_context: payload.courseContext || null,
-        student_note: payload.studentNote || null,
-        status: "requested",
-      })
-      .select("id")
-      .single();
-
-    if (insertError || !requestRow) {
-      return {
-        status: "error",
-        error: insertError?.message ?? "Failed to create request.",
-      };
-    }
-
-    const { error: emailError } = await resend.emails.send({
-      from: "ReadMyStudent <notification@readmystudent.com>",
-      to: facultyRow.email ?? payload.professorEmail,
-      subject: `${studentFullName} has requested a letter of recommendation`,
-      html: RequestNotificationEmail({
-        facultyFirstName: facultyRow.first_name ?? "Professor",
-        studentFullName,
-        studentUniversity,
-        courseContext: payload.courseContext,
-        studentNote: payload.studentNote,
-        dashboardUrl: `${siteUrl}/dashboard`,
-      }),
+  // The id is chosen here so the link token (derived from it) goes in the same insert.
+  const requestId = randomUUID();
+  const { error: insertError } = await supabaseAdmin
+    .from("letter_requests")
+    .insert({
+      id: requestId,
+      student_id: studentId,
+      faculty_id: facultyId,
+      professor_email: professorEmail,
+      course_context: payload.courseContext || null,
+      student_note: payload.studentNote || null,
+      status: "requested",
+      access_token_hash: hashToken(requestLinkToken(requestId)),
     });
-
-    if (emailError) {
-      // Request was created — roll it back then surface the error
-      await supabaseAdmin
-        .from("letter_requests")
-        .delete()
-        .eq("id", requestRow.id);
-      return { status: "error", error: `Email failed: ${emailError.message}` };
-    }
-
-    return { status: "requested", requestId: requestRow.id as string };
+  if (insertError) {
+    return { status: "error", error: insertError.message };
   }
 
-  // ── Case B: Professor not registered — insert request row then invite ──────
-  if (!studentId) {
-    return {
-      status: "error",
-      error: "Your student profile could not be found. Please contact support.",
-    };
-  }
-
-  const { data: inviteRequestRow, error: inviteInsertError } =
-    await supabaseAdmin
-      .from("letter_requests")
-      .insert({
-        student_id: studentId,
-        faculty_id: null,
-        professor_email: payload.professorEmail.trim(),
-        course_context: payload.courseContext || null,
-        student_note: payload.studentNote || null,
-        status: "invited",
-      })
-      .select("id")
-      .single();
-
-  if (inviteInsertError || !inviteRequestRow) {
-    return {
-      status: "error",
-      error: inviteInsertError?.message ?? "Failed to create request.",
-    };
-  }
-
-  const { error: inviteError } = await resend.emails.send({
+  const requestUrl = requestLinkUrl(requestId);
+  const { error: emailError } = await resend.emails.send({
     from: "ReadMyStudent <notification@readmystudent.com>",
-    to: payload.professorEmail.trim(),
-    subject: `${studentFullName} needs your recommendation — it only takes 2 minutes`,
-    html: FacultyInvitationEmail({
-      studentFullName,
-      studentUniversity,
-      courseContext: payload.courseContext,
-      studentNote: payload.studentNote,
-      signupUrl: `${siteUrl}/signup?role=FACULTY`,
-    }),
+    to: professorEmail,
+    subject: `${studentFullName} asked you for a letter of recommendation`,
+    html: facultyRow
+      ? RequestNotificationEmail({
+          facultyFirstName: facultyRow.first_name ?? "Professor",
+          studentFullName,
+          studentUniversity,
+          courseContext: payload.courseContext,
+          studentNote: payload.studentNote,
+          requestUrl,
+        })
+      : FacultyInvitationEmail({
+          studentFullName,
+          studentUniversity,
+          courseContext: payload.courseContext,
+          studentNote: payload.studentNote,
+          requestUrl,
+        }),
   });
 
-  if (inviteError) {
-    // Roll back the inserted row
-    await supabaseAdmin
-      .from("letter_requests")
-      .delete()
-      .eq("id", inviteRequestRow.id);
-    return { status: "error", error: `Email failed: ${inviteError.message}` };
+  if (emailError) {
+    // The professor never got the link, so the request must not exist.
+    await supabaseAdmin.from("letter_requests").delete().eq("id", requestId);
+    return { status: "error", error: `Email failed: ${emailError.message}` };
   }
 
-  return { status: "invited", requestId: inviteRequestRow.id as string };
+  return { status: "requested", requestId };
+}
+
+/** Faculty row for a professor without an account, created on first request. */
+async function facultyIdForEmail(email: string): Promise<string | null> {
+  const find = () =>
+    supabaseAdmin
+      .from("faculty")
+      .select("id")
+      .is("user_id", null)
+      .eq("email", email)
+      .maybeSingle();
+
+  const { data: existing } = await find();
+  if (existing) return existing.id as string;
+
+  const { data: created, error } = await supabaseAdmin
+    .from("faculty")
+    .insert({ email })
+    .select("id")
+    .single();
+  if (created) return created.id as string;
+
+  // Two requests to the same new professor at once: the unique index lets one insert win.
+  if (error?.code === "23505") {
+    const { data: winner } = await find();
+    return (winner?.id as string | undefined) ?? null;
+  }
+  return null;
 }
 
 // ─── Student dashboard queries ────────────────────────────────────────────────
@@ -526,7 +506,7 @@ export async function getPendingRequests(): Promise<PendingRequest[]> {
     .from("letter_requests")
     .select("id, status, created_at, professor_email")
     .eq("student_id", studentRow.id)
-    .in("status", ["requested", "in_progress", "invited", "rejected"])
+    .in("status", ["requested", "in_progress", "invited", "rejected", "expired"])
     .order("created_at", { ascending: false });
 
   if (error || !data) return [];
@@ -558,31 +538,11 @@ export type PendingDelivery = {
 export async function rejectLetterRequest(
   requestId: string,
   reason?: string,
+  token?: string,
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated." };
-
-  // Verify faculty owns this request
-  const { data: facultyRow } = await supabaseAdmin
-    .from("faculty")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!facultyRow) return { error: "Faculty record not found." };
-
-  const { data: requestRow, error: fetchError } = await supabaseAdmin
-    .from("letter_requests")
-    .select("id, student_id, status")
-    .eq("id", requestId)
-    .eq("faculty_id", facultyRow.id)
-    .maybeSingle();
-
-  if (fetchError || !requestRow)
-    return { error: "Request not found or access denied." };
-  if (requestRow.status !== "requested")
+  const access = await authorizeRequestAccess(requestId, token);
+  if (!access) return { error: "Request not found or access denied." };
+  if (access.status !== "requested")
     return { error: "Request is no longer in a rejectable state." };
 
   const { error: updateError } = await supabaseAdmin
@@ -591,11 +551,25 @@ export async function rejectLetterRequest(
     .eq("id", requestId);
   if (updateError) return { error: updateError.message };
 
+  // Name for the student email: account holders from auth, link users by email.
+  let facultyName = access.professorEmail ?? "Your professor";
+  if (!access.viaToken) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const fmeta = user?.user_metadata ?? {};
+    facultyName =
+      [fmeta.firstName, fmeta.lastName].filter(Boolean).join(" ") ||
+      user?.email ||
+      facultyName;
+  }
+
   // Resolve student email and name from auth
   const { data: studentRow } = await supabaseAdmin
     .from("students")
     .select("user_id")
-    .eq("id", requestRow.student_id as string)
+    .eq("id", access.studentId)
     .maybeSingle();
 
   if (studentRow?.user_id) {
@@ -606,12 +580,6 @@ export async function rejectLetterRequest(
     if (studentUser?.email) {
       const smeta = studentUser.user_metadata ?? {};
       const studentFirstName = (smeta.firstName as string | null) ?? "there";
-
-      const fmeta = user.user_metadata ?? {};
-      const facultyName =
-        [fmeta.firstName, fmeta.lastName].filter(Boolean).join(" ") ||
-        user.email ||
-        "Your professor";
 
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
@@ -1039,25 +1007,23 @@ export async function rejectDelivery(
 export async function setStudentPreviewEnabled(
   letterId: string,
   enabled: boolean,
+  token?: string,
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated." };
-
-  const { data: facultyRow } = await supabaseAdmin
-    .from("faculty")
-    .select("id")
-    .eq("user_id", user.id)
+  const { data: letter } = await supabaseAdmin
+    .from("letters")
+    .select("request_id, faculty_id")
+    .eq("id", letterId)
     .maybeSingle();
-  if (!facultyRow) return { error: "Faculty record not found." };
+  if (!letter) return { error: "Letter not found." };
+
+  const access = await authorizeRequestAccess(letter.request_id as string, token);
+  if (!access || access.facultyId !== letter.faculty_id)
+    return { error: "Letter not found or access denied." };
 
   const { error } = await supabaseAdmin
     .from("letters")
     .update({ student_preview_enabled: enabled })
-    .eq("id", letterId)
-    .eq("faculty_id", facultyRow.id);
+    .eq("id", letterId);
 
   return { error: error?.message ?? null };
 }

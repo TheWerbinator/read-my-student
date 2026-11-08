@@ -6,7 +6,11 @@ Items that need the owner, not code. Updated 2026-11-06.
 
 1. Generate a secret and add it as `CRON_SECRET` to the Vercel project, Production environment. The cleanup route now rejects every call while the secret is unset, so the daily retention sweep stops until you add it. Vercel sends the secret as a Bearer token on each cron call (https://vercel.com/docs/cron-jobs/manage-cron-jobs).
 2. Make sure that Vercel has `SUPABASE_SECRET_KEY` (the `sb_secret_...` key) for Production. The code no longer reads `SUPABASE_SERVICE_ROLE_KEY`. Do not deactivate the legacy keys in Supabase until this code is deployed, because the running deployment still uses the old variable. Supabase says the legacy keys keep working until the end of 2026 (https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys).
-3. Make sure that the Stripe webhook endpoint is `https://www.readmystudent.com/api/webhooks/stripe` and that it listens for `checkout.session.completed`. The apex domain answers with a 307 redirect, so do not use `https://readmystudent.com/...`.
+3. Apply the database migrations to production before you deploy the request-link code (Phase 2). The CLI is already linked to production. Production already has the schema of the first two migrations, so mark them as applied first. `migration repair` changes only the history table and runs no SQL (https://supabase.com/docs/guides/deployment/database-migrations). Run these commands in order, and make sure that `migration list` shows only `20261107000000` as missing on the remote before you push:
+   - `npx supabase migration repair --status applied 20261106000000 20261106000001`
+   - `npx supabase migration list`
+   - `npx supabase db push`
+4. Make sure that the Stripe webhook endpoint is `https://www.readmystudent.com/api/webhooks/stripe` and that it listens for `checkout.session.completed`. The apex domain answers with a 307 redirect, so do not use `https://readmystudent.com/...`.
 
 ## Stripe and tax
 

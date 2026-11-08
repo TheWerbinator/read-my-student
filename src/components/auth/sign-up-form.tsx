@@ -61,7 +61,8 @@ export function SignUpForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       role: defaultRole as "STUDENT" | "FACULTY",
-      email: "",
+      // Prefilled from the request page's account prompt.
+      email: searchParams.get("email") ?? "",
       firstName: "",
       lastName: "",
       password: "",

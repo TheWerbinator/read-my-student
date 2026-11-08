@@ -105,17 +105,31 @@ export async function signUpAction(data: RegisterFormValues) {
       }
     } else {
       // FACULTY
-      const { data: newFacultyRow, error: facultyError } = await supabaseAdmin
+      const facultyFields = {
+        user_id: userId,
+        institution: institution,
+        institution_opeid: institutionOpeId,
+        title: title,
+        department: department,
+      };
+
+      // A professor who already answered requests by emailed link has a
+      // faculty row with no account. Attach to it so those letters carry over.
+      const { data: linkFacultyRow } = await supabaseAdmin
         .from("faculty")
-        .insert({
-          user_id: userId,
-          institution: institution,
-          institution_opeid: institutionOpeId,
-          title: title,
-          department: department,
-        })
+        .update(facultyFields)
+        .is("user_id", null)
+        .eq("email", email.trim().toLowerCase())
         .select("id")
-        .single();
+        .maybeSingle();
+
+      const { data: newFacultyRow, error: facultyError } = linkFacultyRow
+        ? { data: linkFacultyRow, error: null }
+        : await supabaseAdmin
+            .from("faculty")
+            .insert(facultyFields)
+            .select("id")
+            .single();
 
       if (facultyError || !newFacultyRow) {
         console.error("Faculty Insert Error:", facultyError);

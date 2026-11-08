@@ -21,8 +21,8 @@ import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextRequest, NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { authorizeRequestAccess, isClosedStatus } from "@/lib/request-access";
 import type { DocumentProps } from "@react-pdf/renderer";
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { LetterDocument } from "@/lib/pdf/letter-template";
@@ -68,47 +68,29 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: letterId } = await params;
-  const body = await req.json().catch(() => ({})) as { requestId?: string; regenerate?: boolean };
+  const body = await req.json().catch(() => ({})) as { regenerate?: boolean; token?: string };
 
-  // ── 1. Authenticate ──────────────────────────────────────────────────────────
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  // ── 2. Verify faculty ownership ──────────────────────────────────────────────
-  const { data: facultyRow } = await supabase
-    .from("faculty")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
-
-  if (!facultyRow) {
-    return NextResponse.json(
-      { error: "No faculty record for this user." },
-      { status: 403 },
-    );
-  }
-
-  // ── 3. Load the draft letter (RLS ensures faculty_id matches) ────────────────
-  const { data: letter, error: letterError } = await supabase
+  // ── 1-3. Load the letter, then check access by faculty session or link token ─
+  const { data: letter, error: letterError } = await adminSupabase
     .from("letters")
     .select(
-      "id, faculty_id, is_draft, recommender_snapshot, letter_plain_text, letterhead_logo_storage_path, signature_image_storage_path",
+      "id, request_id, faculty_id, is_draft, recommender_snapshot, letter_plain_text, letterhead_logo_storage_path, signature_image_storage_path",
     )
     .eq("id", letterId)
-    .eq("faculty_id", facultyRow.id)
     .maybeSingle();
 
-  if (letterError || !letter) {
+  const access = letter
+    ? await authorizeRequestAccess(letter.request_id as string, body.token ?? null)
+    : null;
+
+  if (letterError || !letter || !access || access.facultyId !== letter.faculty_id) {
     return NextResponse.json(
       { error: "Letter not found or access denied." },
       { status: 404 },
     );
+  }
+  if (isClosedStatus(access.status)) {
+    return NextResponse.json({ error: "This request is closed." }, { status: 409 });
   }
 
   if (!letter.is_draft) {
@@ -194,7 +176,7 @@ export async function POST(
     .digest("hex");
 
   // ── 8. Upload PDF to Supabase Storage (`letters` bucket) ─────────────────────
-  const pdfStoragePath = `${facultyRow.id as string}/${letterId}.pdf`;
+  const pdfStoragePath = `${letter.faculty_id as string}/${letterId}.pdf`;
 
   const { error: uploadError } = await adminSupabase.storage
     .from("letters")
@@ -270,12 +252,11 @@ export async function POST(
   }
 
   // ── 11. Advance letter_requests status so student can proceed to payment ─────
-  if (body.requestId) {
-    await adminSupabase
-      .from("letter_requests")
-      .update({ status: "in_progress" })
-      .eq("id", body.requestId);
-  }
+  // Uses the letter's own request, never a client-supplied id.
+  await adminSupabase
+    .from("letter_requests")
+    .update({ status: "in_progress" })
+    .eq("id", letter.request_id as string);
 
   // ── 12. Respond ───────────────────────────────────────────────────────────────
   return NextResponse.json({

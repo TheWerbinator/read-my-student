@@ -4,7 +4,7 @@
  * Daily retention sweep — called by Vercel Cron (see vercel.json at the
  * project root). Protected by a Bearer token matching the CRON_SECRET env var.
  *
- * Two sweeps:
+ * Three sweeps (the third, unanswered letter requests, lives in src/lib/request-sweep.ts):
  *
  *   1. **Letters** — deletes the PDF from the `letters` storage bucket and
  *      removes the DB row for any letter whose `expires_at` has passed
@@ -26,6 +26,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { sweepUnansweredRequests } from "@/lib/request-sweep";
 
 const adminSupabase = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -179,6 +180,9 @@ export async function GET(req: NextRequest) {
       results.signatures_cleared = 0;
     }
   }
+
+  // ── 3. Unanswered letter requests: day-3 reminder, day-7 expiry ──────────────
+  Object.assign(results, await sweepUnansweredRequests(new Date(now)));
 
   return NextResponse.json({ ok: true, ...results });
 }
