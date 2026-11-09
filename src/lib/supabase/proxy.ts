@@ -40,9 +40,12 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  // Only the dashboard needs a session. Marketing, signup, /view/[token],
-  // the Stripe webhook and the cron route must stay reachable logged out.
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Only the dashboard and the admin screen need a session. Marketing, signup,
+  // /view/[token], the Stripe webhook and the cron route must stay reachable
+  // logged out. Admin rights are checked on the page itself (src/lib/admin.ts).
+  const path = request.nextUrl.pathname;
+  const needsSession = ["/dashboard", "/admin"].some((p) => path === p || path.startsWith(`${p}/`));
+  if (!user && needsSession) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

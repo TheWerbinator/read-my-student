@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  *
- * The proxy must only guard /dashboard. Public pages, the Stripe webhook,
+ * The proxy must only guard /dashboard and /admin. Public pages, the Stripe webhook,
  * the cron route and /view/[token] must stay reachable without a session.
  */
 
@@ -24,9 +24,16 @@ describe("proxy (logged out)", () => {
     },
   );
 
-  it("redirects /dashboard to /login", async () => {
-    const res = await visit("/dashboard/settings");
-    expect(res.status).toBe(307);
-    expect(new URL(res.headers.get("location")!).pathname).toBe("/login");
+  it.each(["/dashboard", "/dashboard/settings", "/admin", "/admin/anything"])(
+    "redirects %s to /login",
+    async (path) => {
+      const res = await visit(path);
+      expect(res.status).toBe(307);
+      expect(new URL(res.headers.get("location")!).pathname).toBe("/login");
+    },
+  );
+
+  it("does not guard paths that only share a prefix", async () => {
+    expect((await visit("/administrator")).headers.get("location")).toBeNull();
   });
 });

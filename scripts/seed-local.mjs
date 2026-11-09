@@ -1,4 +1,5 @@
-// Seeds the LOCAL Supabase stack with one student and one faculty account.
+// Seeds the LOCAL Supabase stack with a student, a faculty and an admin account,
+// plus the BRD catalog rows.
 // Run after `npx supabase db reset`:  npm run seed:local
 // The emails and password match the defaults in src/__tests__/integration/rls.test.ts.
 import { createClient } from "@supabase/supabase-js";
@@ -54,7 +55,23 @@ for (const u of users) {
   if (rowError) throw new Error(`${u.table} insert for ${u.email} failed: ${rowError.message}`);
   console.log(`created ${u.email} (${u.meta.role})`);
 }
-console.log(`Password for both accounts: ${PASSWORD}`);
+// An admin for the /admin catalog screen. Admin is a row in public.admins, not a role.
+{
+  const { data, error } = await admin.auth.admin.createUser({
+    email: "admin@test.local",
+    password: PASSWORD,
+    email_confirm: true,
+    user_metadata: { firstName: "Ada", lastName: "Admin" },
+  });
+  if (error) {
+    console.log(`skip admin@test.local: ${error.message}`);
+  } else {
+    const { error: adminError } = await admin.from("admins").insert({ user_id: data.user.id });
+    if (adminError) throw new Error(`admins insert failed: ${adminError.message}`);
+    console.log("created admin@test.local (admin)");
+  }
+}
+console.log(`Password for all accounts: ${PASSWORD}`);
 
 // Catalog rows from BRD v2.0 §3, for local testing only. Production prices are
 // entered in the admin screen. The BRD has no INR amounts, so they stay empty.
