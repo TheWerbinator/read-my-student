@@ -10,7 +10,7 @@ Items that need the owner, not code. Updated 2026-11-09.
    ```sql
    select stripe_checkout_session_id, count(*) from public.delivery_links where stripe_checkout_session_id is not null group by 1 having count(*) > 1;
    ```
-4. Apply the database migrations to production before you deploy the request-link code (Phase 2) and the webhook idempotency code (Phase 0). The CLI is already linked to production. Production already has the schema of the first two migrations, so mark them as applied first. `migration repair` changes only the history table and runs no SQL (https://supabase.com/docs/guides/deployment/database-migrations). Run these commands in order. Before you push, make sure that `migration list` shows only these three as missing on the remote: `20261107000000` (request links), `20261109000000` (the `opened_at` column for the student's Opened stop) and `20261110000000` (the `stripe_events` table and the unique checkout session):
+4. Apply the database migrations to production before you deploy the request-link code (Phase 2) and the webhook idempotency code (Phase 0). The CLI is already linked to production. Production already has the schema of the first two migrations, so mark them as applied first. `migration repair` changes only the history table and runs no SQL (https://supabase.com/docs/guides/deployment/database-migrations). Run these commands in order. Before you push, make sure that `migration list` shows only these four as missing on the remote: `20261107000000` (request links), `20261109000000` (the `opened_at` column for the student's Opened stop), `20261110000000` (the `stripe_events` table and the unique checkout session) and `20261111000000` (the credit ledger: `plan_catalog`, `credit_grants`, `credit_events`, `consume_credit`, and the stage and year columns on `students`). The credits migration adds no catalog rows, so the production catalog stays empty until you enter prices in the admin screen. It also limits which `students` columns a logged-in student can update. No current code updates that table with a student session.
    - `npx supabase migration repair --status applied 20261106000000 20261106000001`
    - `npx supabase migration list`
    - `npx supabase db push`
@@ -25,9 +25,9 @@ Items that need the owner, not code. Updated 2026-11-09.
 
 ## Business decisions
 
-1. Decide BRD DEC-01 to DEC-05 and DEC-09 (leftover HS credits at college start, missed renewals, top-up expiry, stacking of free UG credits, gap years, and DEC-09).
-2. Set the price points in USD and INR for each plan. These go in the admin catalog screen, not in code.
-3. Confirm how the year in school advances. [OPINION] Recommendation: the student declares the year at signup, the year goes up by one at each renewal, and a change outside renewal needs an admin. The price changes by year, so a student who sets their own year at will can pick the cheapest year.
+1. Decide the rest of BRD DEC-05: enrollment interruptions and repeat degrees (for example a second master's). Until then, an admin corrects a student's stage or year by hand.
+2. Fix the PhD bulk price (BRD DEC-09: $259 for 100 credits costs more than 100 single credits at $2.55). This is a catalog value in the admin screen, so no code waits on it.
+3. Enter the INR amount for each catalog item in the admin screen when it is built (Phase 1). The USD amounts come from BRD v2.0 §3. The BRD has no INR amounts.
 4. Decide on professor identity checks beyond the minimum in the plan (domain shown to schools, free-mail warning, self-request block).
 5. Approve the BRD v2.1 edits for "credit on request" (sections 1.2, 5.2, 7.1-7.2, 9, 9.1, UAT-13, UAT-14 and DEC-10).
 6. Collect real testimonials, with written permission from each person, if you want a reviews section again. The placeholder reviews and user counts were removed on 2026-11-08. The old card layout is `src/components/marketing/SocialProof.tsx` in git history before that date.
@@ -61,6 +61,9 @@ Items that need the owner, not code. Updated 2026-11-09.
 | Testing | Local Supabase stack only. No hosted staging project. |
 | Currency | Detect India from the visitor IP and show INR. USD everywhere else. |
 | Admin | A full admin dashboard for owners and admins, with the price catalog first. |
-| Year N | The student's year in school. |
+| Year N | The student's year in school. The student picks it at signup, and it advances by one on each 12-month anniversary of that date. Renewal charges the next year's price. Only an admin changes it otherwise (2026-11-09). |
+| Free UG credits (DEC-04) | The 3 free credits per year in Years 1 to 4 stack on a paid membership (2026-11-09). |
+| Credit expiry (DEC-01, 02, 03) | Each grant gets its end date when it is created. UG paid credits end at the end of Year 5, even after a skipped renewal. Master's Year 1 credits end at the end of Year 2. A top-up follows its stage. HS and PhD credits never expire, and HS credits carry into UG. These are defaults in the catalog, editable in the admin screen (2026-11-09). |
+| PhD pricing | A flat per-credit price and an optional bulk pack, both catalog rows. No tier logic (2026-11-09). |
 | No response | The credit returns after 7 days. The professor gets a reminder on day 3. |
 | Region | Stay in the current Supabase region, `us-west-2`. |
