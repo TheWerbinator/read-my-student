@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-08T00:00:00Z",
+  "title": "Design System: ReadMyStudent",
+  "extensions": {
+    "colorMeta": {
+      "board": { "role": "neutral", "displayName": "Station Board", "canonical": "oklch(22.3% 0.033 160)", "tonalRamp": ["#000f07","#162a20","#33483c","#51675b","#72897c","#94ac9e","#b8d0c2","#dcf6e7"] },
+      "board-deep": { "role": "neutral", "displayName": "Board Deep", "canonical": "oklch(18.0% 0.025 161)", "tonalRamp": ["#030e08","#1a2921","#37463e","#55665d","#76877e","#98aaa0","#bccec4","#e1f4e9"] },
+      "flap": { "role": "neutral", "displayName": "Flap Face", "canonical": "oklch(28.1% 0.047 155)", "tonalRamp": ["#001104","#0f2c1b","#2c4a37","#4b6a56","#6c8b76","#8eae99","#b1d3bc","#d6f9e1"] },
+      "flap-edge": { "role": "neutral", "displayName": "Flap Edge", "canonical": "oklch(16.3% 0.024 158)", "tonalRamp": ["#030e08","#1b2921","#37463d","#56665c","#77877d","#99aaa0","#bdcec3","#e2f4e9"] },
+      "frame": { "role": "neutral", "displayName": "Steel Housing", "canonical": "oklch(28.2% 0.030 163)", "tonalRamp": ["#010f08","#172a21","#33473d","#52675c","#73887d","#95aba0","#b8d0c4","#ddf5e9"] },
+      "flap-ink": { "role": "neutral", "displayName": "Flap White", "canonical": "oklch(96.4% 0.007 97)", "tonalRamp": ["#0c0b08","#262521","#43423e","#62615d","#83827e","#a6a5a0","#cac9c4","#efeeea"] },
+      "flap-dim": { "role": "neutral", "displayName": "Flap Dim", "canonical": "oklch(78.0% 0.028 159)", "tonalRamp": ["#020f07","#192920","#36473d","#54665c","#75887c","#97ab9f","#bbcfc3","#e0f5e8"] },
+      "gold": { "role": "primary", "displayName": "Logo Gold Lamp", "canonical": "oklch(80.2% 0.171 73)", "tonalRamp": ["#2c0000","#4e0200","#712a00","#954c00","#ba6f00","#e09200","#ffb73a","#ffdc67"] },
+      "gold-deep": { "role": "primary", "displayName": "Gold Deep", "canonical": "oklch(73.4% 0.158 71)", "tonalRamp": ["#2d0000","#4f0000","#722900","#964b00","#bb6d00","#e29100","#ffb640","#ffdb6b"] },
+      "gold-hover": { "role": "primary", "displayName": "Gold Hover", "canonical": "#ffb829", "tonalRamp": ["#2c0000","#4e0200","#712a00","#954c00","#ba6f00","#e09200","#ffb73a","#ffdc67"] },
+      "mint": { "role": "tertiary", "displayName": "Arrival Mint", "canonical": "oklch(82.0% 0.117 157)", "tonalRamp": ["#001600","#003409","#005327","#007446","#389766","#5fbb88","#84e0ab","#aaffd0"] },
+      "signal": { "role": "tertiary", "displayName": "Signal Red", "canonical": "oklch(75.8% 0.145 29)", "tonalRamp": ["#330000","#580000","#7d0e09","#a3372d","#ca5b4d","#f27e6f","#ffa392","#ffc8b6"] },
+      "paper": { "role": "neutral", "displayName": "Cool Paper", "canonical": "oklch(98.4% 0.002 197)", "tonalRamp": ["#0a0b0b","#242525","#414242","#606161","#818383","#a3a5a5","#c8c9c9","#edefef"] },
+      "paper-2": { "role": "neutral", "displayName": "Cool Paper Shade", "canonical": "oklch(95.8% 0.004 197)", "tonalRamp": ["#090c0c","#232626","#3f4343","#5f6262","#7f8383","#a2a6a6","#c6caca","#ebefef"] },
+      "sheet-white": { "role": "neutral", "displayName": "Sheet White", "canonical": "#ffffff", "tonalRamp": ["#0b0b0b","#252525","#424242","#616161","#828282","#a5a5a5","#c9c9c9","#eeeeee"] },
+      "ink": { "role": "neutral", "displayName": "Paper Ink", "canonical": "oklch(23.3% 0.023 160)", "tonalRamp": ["#030e08","#1b2921","#38463e","#56655d","#77877e","#99aaa0","#bdcec4","#e2f4e9"] },
+      "ink-2": { "role": "neutral", "displayName": "Paper Ink Secondary", "canonical": "oklch(45.1% 0.025 160)", "tonalRamp": ["#030e08","#1a2921","#37463e","#55665d","#76877d","#98aaa0","#bccec4","#e1f4e9"] },
+      "rule": { "role": "neutral", "displayName": "Rule", "canonical": "oklch(88.1% 0.009 128)", "tonalRamp": ["#0a0c08","#242621","#40433e","#60625d","#81837e","#a3a6a0","#c7cac4","#edf0ea"] },
+      "input-stroke": { "role": "neutral", "displayName": "Input Stroke", "canonical": "oklch(61.5% 0.019 151)", "tonalRamp": ["#090c08","#222721","#3f443e","#5e635d","#7f847e","#a1a7a0","#c5cbc4","#eaf1e9"] },
+      "forest": { "role": "secondary", "displayName": "Logo Forest", "canonical": "oklch(39.3% 0.096 152)", "tonalRamp": ["#001400","#003109","#065027","#307146","#539366","#75b788","#99dcab","#beffcf"] },
+      "forest-ink": { "role": "secondary", "displayName": "Forest Ink", "canonical": "oklch(31.9% 0.073 153)", "tonalRamp": ["#001300","#002f13","#1d4d2f","#3e6d4d","#5f8f6e","#81b390","#a5d8b3","#c9fed8"] },
+      "accent-wash": { "role": "neutral", "displayName": "Accent Wash", "canonical": "oklch(94.5% 0.011 149)", "tonalRamp": ["#080c09","#212722","#3e443f","#5d635e","#7e847f","#a0a7a1","#c4cbc5","#eaf1eb"] },
+      "sealed": { "role": "tertiary", "displayName": "Sealed Ink", "canonical": "oklch(46.9% 0.113 152)", "tonalRamp": ["#001500","#003303","#005222","#1e7341","#469661","#6aba83","#8edfa6","#b3ffca"] },
+      "waiting": { "role": "tertiary", "displayName": "Waiting Ink", "canonical": "oklch(50.8% 0.108 73)", "tonalRamp": ["#230000","#421700","#633600","#855600","#a9772e","#ce9a53","#f4be77","#ffe49c"] },
+      "declined": { "role": "tertiary", "displayName": "Declined Ink", "canonical": "oklch(50.1% 0.178 28)", "tonalRamp": ["#360000","#5c0000","#820000","#a92f26","#d15547","#f97969","#ff9d8c","#ffc3b0"] },
+      "declined-hover": { "role": "tertiary", "displayName": "Declined Hover", "canonical": "#8f1d17", "tonalRamp": ["#360000","#5c0000","#820000","#a92f26","#d15547","#f97969","#ff9d8c","#ffc3b0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline only, in split-flap cells, sized to its column and capped at 4.75rem." },
+      "headline": { "displayName": "Headline", "purpose": "Section headings on the board, uppercase, 2.25rem on phones and 3.75rem from md, with at most one gold phrase." },
+      "title": { "displayName": "Title", "purpose": "Card titles, pass field labels, board strip titles." },
+      "board-row": { "displayName": "Board Row", "purpose": "Text inside board rows and status flaps, tabular numerals." },
+      "button": { "displayName": "Button", "purpose": "Button labels, uppercase; 1rem, 1.125rem, 1.25rem by size." },
+      "body-lead": { "displayName": "Body Lead", "purpose": "The sentence under a section heading." },
+      "body": { "displayName": "Body", "purpose": "Forms, tables, dashboard copy." },
+      "prose": { "displayName": "Long Read", "purpose": "Legal and help pages, capped at 68ch." },
+      "label": { "displayName": "Caption", "purpose": "Field captions on paper and column captions on boards, uppercase." }
+    },
+    "shadows": [
+      { "name": "flap-cell", "value": "inset 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.04), 0 2px 3px rgb(0 0 0 / 0.35)", "purpose": "Every single-character flap cell." },
+      { "name": "board-row", "value": "inset 0 0 0 1px rgb(0 0 0 / 0.25)", "purpose": "Row bands; flat, no hinge." },
+      { "name": "board-frame", "value": "inset 0 0 0 1px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04), 0 2px 0 rgb(0 0 0 / 0.35), 0 30px 60px -30px rgb(0 0 0 / 0.8)", "purpose": "The housing around every board." },
+      { "name": "sheet-on-paper", "value": "0 1px 0 rgb(20 33 26 / 0.04), 0 12px 32px -18px rgb(7 21 14 / 0.35)", "purpose": "Sheets and cards." },
+      { "name": "sheet-on-board", "value": "0 2px 0 rgb(0 0 0 / 0.25), 0 24px 48px -20px rgb(0 0 0 / 0.7)", "purpose": "Sheets laid on the board ground (border goes transparent)." },
+      { "name": "dialog", "value": "0 2px 0 rgb(0 0 0 / 0.2), 0 32px 64px -24px rgb(0 0 0 / 0.6)", "purpose": "Dialogs over a board-deep scrim at 70 percent." },
+      { "name": "button-lip", "value": "0 1px 0 var(--flap-edge)", "purpose": "One-pixel printed edge under filled buttons; gold buttons use var(--gold-deep)." },
+      { "name": "focus-rim", "value": "outline: 2px solid var(--gold); outline-offset: 2px", "purpose": "Global focus-visible treatment." }
+    ],
+    "motion": [
+      { "name": "flap-tick", "value": "55ms", "purpose": "Cascade tick; each cell starts one tick after its left neighbor and turns 3 to 6 times." },
+      { "name": "flap-drop", "value": "90ms cubic-bezier(0.2, 0.7, 0.2, 1)", "purpose": "Top half drops from rotateX(-70deg) on each character change." },
+      { "name": "flap-roll", "value": "300ms linear x1", "purpose": "Hover flip on social flaps: the white icon card turns once to the gold card (top falls, old bottom holds, new bottom lands)." },
+      { "name": "control", "value": "150ms ease-out", "purpose": "Button color, ring, and 1px press transitions." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Cascade, roll, and skeleton pulse all off; final text shown." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Gold Button",
+      "kind": "button",
+      "refersTo": "button-gold",
+      "description": "The one primary action per view, on board or paper.",
+      "html": "<button class=\"ds-btn-gold\">Request a letter</button>",
+      "css": ".ds-btn-gold { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border: 0; border-radius: 2px; background: var(--gold, #ffaa00); color: var(--board-deep, #07150e); box-shadow: 0 1px 0 var(--gold-deep, #e69500); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 1.125rem; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-gold:hover { background: #ffb829; } .ds-btn-gold:active { transform: translateY(1px); } .ds-btn-gold:focus-visible { outline: 2px solid var(--gold, #ffaa00); outline-offset: 2px; }"
+    },
+    {
+      "name": "Forest Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Actions on paper sheets.",
+      "html": "<button class=\"ds-btn-forest\">Write letter</button>",
+      "css": ".ds-btn-forest { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border: 0; border-radius: 2px; background: var(--forest, #0d542b); color: #ffffff; box-shadow: 0 1px 0 var(--flap-edge, #05110a); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 1.125rem; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, transform 150ms ease-out; } .ds-btn-forest:hover { background: var(--forest-ink, #0a3d20); } .ds-btn-forest:active { transform: translateY(1px); } .ds-btn-forest:focus-visible { outline: 2px solid var(--gold, #ffaa00); outline-offset: 2px; }"
+    },
+    {
+      "name": "Paper Outline Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary action on paper.",
+      "html": "<button class=\"ds-btn-outline\">Decline</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border: 0; border-radius: 2px; background: #ffffff; color: var(--forest-ink, #0a3d20); box-shadow: inset 0 0 0 1px rgb(20 33 26 / 0.25); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 1.125rem; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, box-shadow 150ms ease-out; } .ds-btn-outline:hover { background: var(--paper-2, #eef2f2); box-shadow: inset 0 0 0 1px var(--forest, #0d542b); } .ds-btn-outline:active { transform: translateY(1px); } .ds-btn-outline:focus-visible { outline: 2px solid var(--gold, #ffaa00); outline-offset: 2px; }"
+    },
+    {
+      "name": "Board Outline Button",
+      "kind": "button",
+      "refersTo": "button-board",
+      "description": "Secondary action on the board ground.",
+      "html": "<div style=\"background:#0c2016;padding:16px\"><button class=\"ds-btn-board\">I am a professor</button></div>",
+      "css": ".ds-btn-board { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 20px; border: 0; border-radius: 2px; background: transparent; color: var(--flap-ink, #f4f3ee); box-shadow: inset 0 0 0 1px rgb(244 243 238 / 0.4); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 1.125rem; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, box-shadow 150ms ease-out; } .ds-btn-board:hover { background: var(--flap, #13301f); box-shadow: inset 0 0 0 1px rgb(244 243 238 / 0.7); } .ds-btn-board:active { transform: translateY(1px); } .ds-btn-board:focus-visible { outline: 2px solid var(--gold, #ffaa00); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Field on a paper sheet with a caption above.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-caption\">Professor's email</span><input class=\"ds-input\" placeholder=\"name@university.edu\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; max-width: 320px; } .ds-caption { font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.2; color: var(--ink-2, #4a5a51); } .ds-input { height: 44px; padding: 4px 12px; border: 1px solid #7d887f; border-radius: 2px; background: #ffffff; color: var(--ink, #14211a); font-family: var(--font-body), 'Public Sans', sans-serif; font-size: 1rem; outline: none; transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: var(--ink-2, #4a5a51); } .ds-input:focus-visible { border-color: var(--forest, #0d542b); box-shadow: 0 0 0 2px var(--gold, #ffaa00); }"
+    },
+    {
+      "name": "Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Small caps tag on paper.",
+      "html": "<span class=\"ds-badge\">Sealed</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 1px; background: var(--forest, #0d542b); color: #ffffff; font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.875rem; font-weight: 700; line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Paper Sheet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "Cool white sheet for anything read or filled, laid on the board.",
+      "html": "<div style=\"background:#0c2016;padding:24px\"><div class=\"ds-sheet\"><p class=\"ds-sheet-title\">Priya Sharma asked you for a letter</p><p class=\"ds-sheet-body\">Closes in 7 days if there is no answer. No login needed.</p></div></div>",
+      "css": ".ds-sheet { background: #ffffff; color: var(--ink, #14211a); border-radius: 2px; padding: 24px; box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 24px 48px -20px rgb(0 0 0 / 0.7); } .ds-sheet-title { margin: 0; font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 1.875rem; font-weight: 800; line-height: 1; letter-spacing: 0.02em; text-transform: uppercase; } .ds-sheet-body { margin: 16px 0 0; font-family: var(--font-body), 'Public Sans', sans-serif; font-size: 0.875rem; color: var(--ink-2, #4a5a51); }"
+    },
+    {
+      "name": "Split-Flap Text",
+      "kind": "custom",
+      "refersTo": "flap-cell",
+      "description": "One character per flap cell with a hinge line; spaces are blank flaps, a colon is two dots.",
+      "html": "<div style=\"background:#0c2016;padding:16px;font-size:48px\"><span class=\"ds-flap-word\"><span class=\"ds-flap\">T</span><span class=\"ds-flap\">I</span><span class=\"ds-flap\">M</span><span class=\"ds-flap\">E</span><span class=\"ds-flap ds-flap-space\"></span><span class=\"ds-flap\">0</span><span class=\"ds-flap\">9</span><span class=\"ds-flap\"><span class=\"ds-flap-colon\"></span></span><span class=\"ds-flap\">1</span><span class=\"ds-flap\">4</span></span></div>",
+      "css": ".ds-flap-word { display: inline-flex; gap: 0.08em; color: var(--gold, #ffaa00); } .ds-flap { position: relative; display: inline-grid; place-items: center; width: 0.78em; height: 1.14em; padding-top: 0.03em; background: linear-gradient(to bottom, rgb(255 255 255 / 0.035), transparent 48%, rgb(0 0 0 / 0.18) 52%, rgb(0 0 0 / 0.05)), var(--flap, #13301f); color: inherit; border-radius: 2px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.04), 0 2px 3px rgb(0 0 0 / 0.35); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 800; text-transform: uppercase; line-height: 1; } .ds-flap::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--flap-edge, #05110a); box-shadow: 0 1px 0 rgb(255 255 255 / 0.05); } .ds-flap-space { opacity: 0.7; } .ds-flap-colon { position: absolute; inset: 0; } .ds-flap-colon::before, .ds-flap-colon::after { content: ''; position: absolute; left: 50%; width: 0.14em; height: 0.14em; background: currentColor; border-radius: 1px; transform: translate(-50%, -50%); } .ds-flap-colon::before { top: 25%; } .ds-flap-colon::after { top: 75%; }"
+    },
+    {
+      "name": "Departure Board Row",
+      "kind": "custom",
+      "refersTo": "board-frame",
+      "description": "Framed board with hinge-free row bands and a lamp-colored status.",
+      "html": "<div class=\"ds-board-frame\"><div class=\"ds-board-row\"><span class=\"ds-dim\">09:14</span><span>Priya S.</span><span class=\"ds-mint\">Sealed</span></div><div class=\"ds-board-row\"><span class=\"ds-dim\">11:02</span><span>Dev P.</span><span class=\"ds-gold\">Reminded</span></div></div>",
+      "css": ".ds-board-frame { display: grid; gap: 3px; max-width: 480px; background: var(--board-deep, #07150e); border: 6px solid #1b2e25; border-radius: 4px; padding: 8px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04), 0 2px 0 rgb(0 0 0 / 0.35), 0 30px 60px -30px rgb(0 0 0 / 0.8); } .ds-board-row { display: grid; grid-template-columns: 4rem 1fr auto; gap: 16px; align-items: center; padding: 12px 16px; border-radius: 2px; background: linear-gradient(to bottom, rgb(255 255 255 / 0.035), rgb(0 0 0 / 0.1)), var(--flap, #13301f); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.25); color: var(--flap-ink, #f4f3ee); font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 1.25rem; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; font-variant-numeric: tabular-nums; } .ds-dim { color: var(--flap-dim, #a9bdb1); } .ds-mint { color: var(--mint, #7fdba6); } .ds-gold { color: var(--gold, #ffaa00); }"
+    },
+    {
+      "name": "Boarding Pass Nav",
+      "kind": "nav",
+      "refersTo": "sheet",
+      "description": "Navigation as a paper boarding pass with a perforated stub.",
+      "html": "<div style=\"background:#0c2016;padding:16px\"><nav class=\"ds-pass\"><a class=\"ds-pass-item ds-active\" href=\"#\"><span class=\"ds-mark\"></span><span><span class=\"ds-pass-label\">Home</span><span class=\"ds-pass-note\">Letters that leave on time</span></span></a><a class=\"ds-pass-item\" href=\"#\"><span class=\"ds-mark\"></span><span><span class=\"ds-pass-label\">Pricing</span><span class=\"ds-pass-note\">Professors never pay</span></span></a><div class=\"ds-perf\"></div></nav></div>",
+      "css": ".ds-pass { width: 240px; background: #ffffff; border-radius: 2px; padding: 16px 16px 24px; overflow: hidden; box-shadow: 0 2px 0 rgb(0 0 0 / 0.25), 0 24px 48px -20px rgb(0 0 0 / 0.7); } .ds-pass-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 4px; border-bottom: 1px solid var(--rule, #d6d9d3); color: var(--ink, #14211a); text-decoration: none; } .ds-pass-item:hover { color: var(--forest, #0d542b); } .ds-pass-item:focus-visible { outline: 2px solid var(--gold, #ffaa00); outline-offset: 0; } .ds-mark { margin-top: 6px; width: 10px; height: 10px; flex-shrink: 0; border: 1px solid rgb(74 90 81 / 0.5); border-radius: 1px; } .ds-active { color: var(--forest-ink, #0a3d20); } .ds-active .ds-mark { background: var(--gold, #ffaa00); border-color: var(--gold-deep, #e69500); } .ds-pass-label { display: block; font-family: var(--font-board), 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; } .ds-pass-note { display: block; margin-top: 4px; font-family: var(--font-body), 'Public Sans', sans-serif; font-size: 0.75rem; color: var(--ink-2, #4a5a51); } .ds-perf { position: relative; margin: 20px -16px 0; border-top: 2px dashed var(--rule, #d6d9d3); } .ds-perf::before, .ds-perf::after { content: ''; position: absolute; top: -9px; width: 16px; height: 16px; border-radius: 9999px; background: #0c2016; } .ds-perf::before { left: -9px; } .ds-perf::after { right: -9px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Departures Board",
+    "overview": "Every letter request is a departure. The whole product sits on a station board painted in the logo's forest green: a near-black green ground, flap faces one step lighter, a darker steel-green housing around each board. Status words are set in condensed caps inside fixed split-flap cells, and they turn over once when the status changes. The logo's gold is the lit lamp. Everything a person reads or fills in (the letter, the professor's form, legal text, the navigation itself) is a cool white paper sheet laid on the board.\n\nDensity is moderate and tabular. Boards are rows with fixed columns, and paper sheets are form-like, with small spaced caps captions over plain values, the way a boarding pass prints its fields. Navigation is a paper boarding pass: a fixed vertical pass on the left at desktop widths, a sideways pass strip on top below that.\n\nThe world rejects the green-and-gold \"trusted platform\" look of icon-card grids, gradient pills, and AI illustrations. Shading inside a flap is fine; it is what makes a dark rectangle read as a flap.",
+    "keyCharacteristics": [
+      "Forest board ground on every route: marketing, auth, dashboard, the professor page, the school view.",
+      "Split-flap cells in Big Shoulders caps for headlines and status words; Public Sans for every sentence.",
+      "One ink per state, set by the ink law in the board status module.",
+      "Cool white paper sheets with square-cut corners for anything read or filled.",
+      "Gold appears as the primary action, the waiting state, the focus rim, and the one lit phrase in a heading."
+    ],
+    "rules": [
+      { "name": "The Ink Law", "body": "White means moving, gold means waiting on someone, mint means done, red means stopped. One meaning per ink, everywhere. On paper the same four meanings use ink, waiting, sealed, and declined. Status color always comes from the lamp maps, never chosen per screen.", "section": "colors" },
+      { "name": "The Cool Paper Rule", "body": "Paper is cool white: blue at or above red and green, so paper never drifts to cream.", "section": "colors" },
+      { "name": "The One Lit Phrase Rule", "body": "A section heading on the board is flap white with at most one closing phrase lit in gold (\"You see every one.\", \"from one link.\").", "section": "colors" },
+      { "name": "The Caps Are Signage Rule", "body": "Big Shoulders is always uppercase and always short: headings, labels, buttons, status. Any full sentence is Public Sans.", "section": "typography" },
+      { "name": "The Column-Sized Hero Rule", "body": "The hero headline is fitted to its six-column cell and never exceeds 4.75rem, even though section headings run larger caps. The flap cells carry the weight.", "section": "typography" },
+      { "name": "The Hinge Rule", "body": "A hinge line exists only on single-character flap cells, centered on the glyph (Big Shoulders caps get 0.03em top padding to sit on it). Row bands carry the flap color and shading but never a hinge.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put every surface on the board ground, and every letter, form, and long read on a cool white sheet.",
+      "Do take status color from the lamp maps: board inks on the board, paper inks on paper.",
+      "Do set boards inside a board frame with 3px row gaps.",
+      "Do keep hinge lines on single-character flap cells only, with blank flaps for spaces and two-dot colons.",
+      "Do run the flap cascade once on load and on status change, and remove it under reduced motion.",
+      "Do keep one gold action per view and one gold phrase per heading.",
+      "Do keep corners at 2px (1px for badges and tab triggers, 4px for the board frame).",
+      "Do show the 2px focus rim on every focusable element: gold on the board, forest ink on paper."
+    ],
+    "donts": [
+      "Don't draw a hinge across a row band or across mixed text.",
+      "Don't tint paper warm or cream.",
+      "Don't use gold, mint, or red for anything outside its state meaning, the primary action, or the lit heading phrase.",
+      "Don't set sentences in Big Shoulders or set Big Shoulders in lowercase.",
+      "Don't enlarge the hero headline past its column or past 4.75rem.",
+      "Don't build icon-card grids, gradient pills, or AI illustrations.",
+      "Don't round anything into a pill."
+    ]
+  }
+}
