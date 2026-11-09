@@ -4,10 +4,14 @@
  */
 
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
+import Footer from "@/components/marketing/Footer";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { authorizeRequestAccess } from "@/lib/request-access";
+import LogoWhite from "../../../../public/Logo_Official_White.png";
 import { RequestLinkActions } from "./RequestLinkActions";
 
 export const metadata: Metadata = {
@@ -31,19 +35,27 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <main className='min-h-screen bg-[#fbfbf8] px-4 py-10 md:py-16'>
-      <div className='mx-auto max-w-2xl'>
-        <p className='text-sm font-semibold tracking-wide text-green-900'>
-          ReadMyStudent
-        </p>
-        <h1 className='mt-2 font-serif text-3xl font-semibold text-green-900'>
-          {title}
-        </h1>
-        <div className='mt-6 space-y-4 text-green-950/80'>{children}</div>
-      </div>
-    </main>
+    <div className='board on-board flex min-h-screen flex-col'>
+      <header className='bg-board'>
+        <div className='mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3'>
+          <Image src={LogoWhite} alt='ReadMyStudent' className='h-8 w-auto' />
+          <span className='caption text-flap-dim'>Letter request</span>
+        </div>
+      </header>
+      <main className='flex-1 px-4 py-6 md:py-12'>
+        <div className='sheet mx-auto max-w-2xl p-5 md:p-8'>
+          <h1 className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-forest-ink md:text-3xl'>
+            {title}
+          </h1>
+          <div className='mt-5 space-y-4 text-ink'>{children}</div>
+        </div>
+      </main>
+      <Footer compact />
+    </div>
   );
 }
+
+const dtClass = "caption text-ink-2";
 
 export default async function RequestLinkPage({
   params,
@@ -89,6 +101,7 @@ export default async function RequestLinkPage({
   const meta = studentAuth?.user_metadata ?? {};
   const studentName =
     [meta.firstName, meta.lastName].filter(Boolean).join(" ") || "The student";
+  const studentEmail = studentAuth?.email ?? null;
 
   if (access.status === "rejected") {
     return (
@@ -122,20 +135,17 @@ export default async function RequestLinkPage({
           The letter for {studentName} is sealed and signed. {studentName} can
           now send it to their schools. You do not need to do anything else.
         </p>
-        <div className='rounded-xl border border-black/10 bg-white p-5'>
-          <h2 className='font-semibold text-green-900'>
+        <div className='border-t border-rule pt-5'>
+          <h2 className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
             Writing more letters?
           </h2>
-          <p className='mt-1 text-sm'>
+          <p className='mt-2 text-sm text-ink-2'>
             A free account keeps all your requests in one place and fills in
             your details, letterhead, and signature next time.
           </p>
-          <Link
-            href={signupHref}
-            className='mt-4 inline-block rounded-lg bg-green-900 px-4 py-2 text-sm font-semibold text-white hover:bg-[#093820]'
-          >
+          <LinkButton href={signupHref} variant='gold' className='mt-4'>
             Create a free account
-          </Link>
+          </LinkButton>
         </div>
       </Shell>
     );
@@ -146,39 +156,40 @@ export default async function RequestLinkPage({
 
   return (
     <Shell title={`${studentName} asked you for a letter of recommendation`}>
-      <dl className='grid gap-4 rounded-xl border border-black/10 bg-white p-5 sm:grid-cols-2'>
+      <dl className='divide-y divide-rule border-y border-rule'>
+        <div className='py-3'>
+          <dt className={dtClass}>Requested by</dt>
+          <dd className='mt-1'>
+            {studentName}
+            {studentEmail && (
+              <span className='block break-all text-sm text-ink-2'>
+                {studentEmail}
+              </span>
+            )}
+          </dd>
+        </div>
         {university && (
-          <div>
-            <dt className='text-xs font-semibold uppercase tracking-wide text-green-900/70'>
-              University
-            </dt>
-            <dd className='mt-1 text-green-950'>{university}</dd>
+          <div className='py-3'>
+            <dt className={dtClass}>University</dt>
+            <dd className='mt-1'>{university}</dd>
           </div>
         )}
         {program && (
-          <div>
-            <dt className='text-xs font-semibold uppercase tracking-wide text-green-900/70'>
-              Program
-            </dt>
-            <dd className='mt-1 text-green-950'>{program}</dd>
+          <div className='py-3'>
+            <dt className={dtClass}>Program</dt>
+            <dd className='mt-1'>{program}</dd>
           </div>
         )}
         {request?.course_context && (
-          <div className='sm:col-span-2'>
-            <dt className='text-xs font-semibold uppercase tracking-wide text-green-900/70'>
-              Course or context
-            </dt>
-            <dd className='mt-1 text-green-950'>
-              {request.course_context as string}
-            </dd>
+          <div className='py-3'>
+            <dt className={dtClass}>Course or context</dt>
+            <dd className='mt-1'>{request.course_context as string}</dd>
           </div>
         )}
         {request?.student_note && (
-          <div className='sm:col-span-2'>
-            <dt className='text-xs font-semibold uppercase tracking-wide text-green-900/70'>
-              Note from {studentName}
-            </dt>
-            <dd className='mt-1 whitespace-pre-line text-green-950'>
+          <div className='py-3'>
+            <dt className={dtClass}>Note from {studentName}</dt>
+            <dd className='mt-1 whitespace-pre-line'>
               {request.student_note as string}
             </dd>
           </div>
@@ -187,11 +198,15 @@ export default async function RequestLinkPage({
 
       <p>
         Write and sign the letter here. Your draft saves as you go, so you can
-        come back to this link later. After you finalize, the letter is sealed
-        and {studentName} can send it to schools.
+        come back to this link later.
+      </p>
+      <p className='text-sm text-ink-2'>
+        When you finalize, the letter is sealed as a signed PDF and can no
+        longer be edited. {studentName} can then send it to schools, and sees
+        the letter only if you turn on preview.
       </p>
       {!access.respondedAt && (
-        <p className='text-sm'>
+        <p className='text-sm text-ink-2'>
           If you do not start the letter or decline within 7 days, the request
           closes.
         </p>
@@ -201,12 +216,16 @@ export default async function RequestLinkPage({
         token={token}
         requestId={access.requestId}
         studentName={studentName}
+        professorEmail={access.professorEmail}
       />
 
-      <p className='pt-4 text-sm'>
-        Already have an account?{" "}
-        <Link href='/login' className='font-semibold text-green-900 underline'>
-          Log in
+      <p className='border-t border-rule pt-4 text-sm text-ink-2'>
+        You do not need an account. If you already have one, you can{" "}
+        <Link
+          href='/login'
+          className='inline-block py-2 font-semibold text-forest underline'
+        >
+          log in
         </Link>{" "}
         to see this request in your dashboard.
       </p>

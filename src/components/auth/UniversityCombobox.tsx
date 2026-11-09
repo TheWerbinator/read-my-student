@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 
 type University = {
   id: string;
@@ -13,12 +13,14 @@ type University = {
 };
 
 type Props = {
-  countryCode: string; // ISO-2, e.g. "US"
+  countryCode: string; // ISO-2, e.g. "IN"
   value: University | null; // selected university (store object or just id/name)
   onChange: (u: University | null) => void;
   required?: boolean;
   disabled?: boolean;
   label?: string;
+  invalid?: boolean;
+  errorId?: string;
 };
 
 export function UniversityCombobox({
@@ -28,6 +30,8 @@ export function UniversityCombobox({
   required,
   disabled,
   label = "University",
+  invalid,
+  errorId,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -38,9 +42,14 @@ export function UniversityCombobox({
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const uid = useId();
+  const triggerId = `${uid}-trigger`;
+  const listId = `${uid}-list`;
+  const optionId = (id: string) => `${uid}-opt-${id}`;
 
   const safeActiveIndex =
     results.length === 0 ? 0 : Math.min(activeIndex, results.length - 1);
+  const activeItem = results[safeActiveIndex];
 
   // close on outside click
   useEffect(() => {
@@ -89,6 +98,15 @@ export function UniversityCombobox({
     return () => window.clearTimeout(t);
   }, [query, countryCode, open, disabled]);
 
+  // keep the active option in view during arrow-key navigation
+  useEffect(() => {
+    if (!open || !activeItem) return;
+    document
+      .getElementById(optionId(activeItem.id))
+      ?.scrollIntoView({ block: "nearest" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, activeItem]);
+
   function openAndFocus() {
     if (disabled) return;
     setOpen(true);
@@ -99,6 +117,7 @@ export function UniversityCombobox({
     onChange(u);
     setOpen(false);
     setQuery("");
+    document.getElementById(triggerId)?.focus();
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -115,62 +134,80 @@ export function UniversityCombobox({
     } else if (e.key === "Escape") {
       e.preventDefault();
       setOpen(false);
+      document.getElementById(triggerId)?.focus();
     }
   }
 
+  const hasOptions = !loading && !error && results.length > 0;
+
   return (
-    <div
-      ref={wrapRef}
-      className='grid grid-cols-1 gap-4 md:grid-cols-3 md:items-center'
-    >
-      <label className='text-sm font-medium text-gray-800'>
+    <div ref={wrapRef} className='grid gap-2'>
+      <label htmlFor={triggerId} className='caption text-ink-2'>
         {label}
-        {required ? <span className='text-red-600'> *</span> : null}
+        {required ? <span className='text-declined'> *</span> : null}
       </label>
 
-      <div className='relative md:col-span-2'>
+      <div className='relative'>
         <button
+          id={triggerId}
           type='button'
           disabled={disabled}
           onClick={() => (open ? setOpen(false) : openAndFocus())}
           className={[
-            "w-full rounded border border-gray-300 bg-white px-3 py-2 text-left text-sm text-gray-700",
-            "flex items-center justify-between gap-3",
-            disabled
-              ? "cursor-not-allowed bg-gray-50 opacity-60"
-              : "hover:bg-black/2",
+            "flex h-11 w-full items-center justify-between gap-3 rounded-[2px] border bg-white px-3 text-left text-base text-ink",
+            "focus-visible:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+            invalid ? "border-destructive ring-1 ring-destructive" : "border-input",
+            disabled ? "cursor-not-allowed bg-paper-2 opacity-60" : "",
           ].join(" ")}
+          aria-haspopup='listbox'
+          aria-expanded={open && !disabled}
+          aria-controls={open && !disabled ? listId : undefined}
+          aria-describedby={invalid ? errorId : undefined}
         >
-          <span className={value ? "" : "text-gray-400"}>
+          <span className={value ? "" : "text-ink-2"}>
             {value
               ? value.name
               : disabled
                 ? "Select a country first"
                 : "Search and select..."}
           </span>
-          <span className='text-gray-400'>▾</span>
+          <span aria-hidden='true' className='text-ink-2'>▾</span>
         </button>
 
         {open && !disabled && (
-          <div className='absolute z-50 mt-2 w-full rounded-xl border border-black/10 bg-white shadow-xl shadow-black/10'>
+          <div className='absolute z-50 mt-1 w-full rounded-[2px] border border-rule bg-white shadow-lg'>
             <div className='p-2'>
               <input
                 ref={inputRef}
+                role='combobox'
+                aria-expanded={open}
+                aria-controls={listId}
+                aria-autocomplete='list'
+                aria-activedescendant={
+                  hasOptions && activeItem ? optionId(activeItem.id) : undefined
+                }
+                aria-label={`Search ${label.toLowerCase()}`}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder='Type at least 3 letters...'
-                className='w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-900/30'
+                className='h-11 w-full rounded-[2px] border border-input bg-white px-3 text-base text-ink placeholder:text-ink-2/80 focus-visible:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold'
               />
             </div>
 
-            <div className='max-h-72 overflow-auto p-1'>
+            <div
+              id={listId}
+              role='listbox'
+              aria-label={label}
+              aria-busy={loading}
+              className='max-h-72 overflow-auto p-1'
+            >
               {loading ? (
-                <div className='px-3 py-3 text-sm text-gray-500'>Loading…</div>
+                <div role='presentation' className='px-3 py-3 text-sm text-ink-2'>Loading…</div>
               ) : error ? (
-                <div className='px-3 py-3 text-sm text-red-700'>{error}</div>
+                <div role='presentation' className='px-3 py-3 text-sm text-declined'>{error}. Check your connection and try again.</div>
               ) : results.length === 0 ? (
-                <div className='px-3 py-3 text-sm text-gray-500'>
+                <div role='presentation' className='px-3 py-3 text-sm text-ink-2'>
                   No results.
                 </div>
               ) : (
@@ -181,17 +218,21 @@ export function UniversityCombobox({
                   return (
                     <button
                       key={u.id}
+                      id={optionId(u.id)}
                       type='button'
+                      role='option'
+                      tabIndex={-1}
+                      aria-selected={value?.id === u.id}
                       onMouseEnter={() => setActiveIndex(idx)}
                       onClick={() => selectUniversity(u)}
                       className={[
-                        "w-full px-3 py-2 text-left text-sm rounded-lg",
-                        isActive ? "bg-green-900/10" : "hover:bg-black/5",
+                        "min-h-11 w-full rounded-[2px] px-3 py-2 text-left",
+                        isActive ? "bg-paper-2" : "hover:bg-paper-2",
                       ].join(" ")}
                     >
-                      <div className='text-gray-800 font-medium'>{u.name}</div>
-                      <div className='text-xs text-black/50'>
-                        {hint ? hint : "—"} · {u.countryCode}
+                      <div className='font-medium text-ink'>{u.name}</div>
+                      <div className='text-xs text-ink-2'>
+                        {hint ? hint : "-"} · {u.countryCode}
                       </div>
                     </button>
                   );
@@ -199,7 +240,7 @@ export function UniversityCombobox({
               )}
             </div>
 
-            <div className='border-t border-black/10 p-2'>
+            <div className='border-t border-rule p-1'>
               <button
                 type='button'
                 onClick={() => {
@@ -208,7 +249,7 @@ export function UniversityCombobox({
                   setOpen(false);
                   setQuery("");
                 }}
-                className='text-xs font-semibold text-green-900 hover:underline'
+                className='inline-flex min-h-11 items-center px-2 text-sm font-semibold text-forest underline-offset-4 hover:underline'
               >
                 Clear selection
               </button>

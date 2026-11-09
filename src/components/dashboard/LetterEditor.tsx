@@ -24,12 +24,12 @@ function LetterEditorToolbar() {
   const [editor] = useLexicalComposerContext();
 
   return (
-    <div className='flex flex-wrap items-center gap-2 border-b border-black/10 bg-slate-50 px-3 py-2 text-sm text-gray-600'>
+    <div className='flex flex-wrap items-center gap-2 border-b border-rule bg-paper-2 px-3 py-2 text-sm text-ink-2'>
       <Button
         type='button'
         size='sm'
         variant='outline'
-        className='h-8 rounded-lg border-black/10'
+        className='h-11 sm:h-8'
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
       >
         Bold
@@ -38,7 +38,7 @@ function LetterEditorToolbar() {
         type='button'
         size='sm'
         variant='outline'
-        className='h-8 rounded-lg border-black/10'
+        className='h-11 sm:h-8'
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
       >
         Italic
@@ -47,17 +47,17 @@ function LetterEditorToolbar() {
         type='button'
         size='sm'
         variant='outline'
-        className='h-8 rounded-lg border-black/10'
+        className='h-11 sm:h-8'
         onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
       >
         Underline
       </Button>
-      <div className='h-4 w-px bg-black/10' />
+      <div className='h-4 w-px bg-rule' />
       <Button
         type='button'
         size='sm'
         variant='outline'
-        className='h-8 rounded-lg border-black/10'
+        className='h-11 sm:h-8'
         onClick={() =>
           editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
         }
@@ -68,7 +68,7 @@ function LetterEditorToolbar() {
         type='button'
         size='sm'
         variant='outline'
-        className='h-8 rounded-lg border-black/10'
+        className='h-11 sm:h-8'
         onClick={() =>
           editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
         }
@@ -79,7 +79,7 @@ function LetterEditorToolbar() {
         type='button'
         size='sm'
         variant='ghost'
-        className='h-8 rounded-lg text-gray-500'
+        className='h-11 text-ink-2 sm:h-8'
         onClick={() => editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)}
       >
         Clear List
@@ -123,17 +123,17 @@ export function LetterEditor({
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className='relative rounded-xl border border-black/10 bg-white'>
+      <div className='relative border border-input bg-white text-ink focus-within:border-forest focus-within:ring-2 focus-within:ring-gold'>
         <LetterEditorToolbar />
         <RichTextPlugin
           contentEditable={
             <ContentEditable
               id='letter-content'
-              className='min-h-[180px] max-h-[360px] overflow-y-auto rounded-b-xl px-4 py-3 pr-3 text-sm leading-relaxed focus:outline-none'
+              className='min-h-[180px] max-h-[360px] overflow-y-auto px-4 py-3 pr-3 text-sm leading-relaxed focus:outline-none'
             />
           }
           placeholder={
-            <div className='pointer-events-none absolute inset-x-0 mt-3 px-4 text-sm text-gray-400'>
+            <div className='pointer-events-none absolute inset-x-0 mt-3 px-4 text-sm text-ink-2/80'>
               Begin writing the recommendation...
             </div>
           }

@@ -1,16 +1,9 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { CheckCircle2, Clock, FileText, ShieldCheck } from "lucide-react";
+import { Clock, FileText, ShieldCheck, Timer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -21,16 +14,16 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-import { StatsCard } from "@/components/dashboard/StatsCard";
+import {
+  BoardColumns,
+  BoardEmpty,
+  BoardRow,
+  BoardSkeleton,
+  BoardStrip,
+  StatsCard,
+  StatusFlap,
+} from "@/components/dashboard/StatsCard";
 import { WriteLetterDialog } from "@/components/dashboard/WriteLetterDialog";
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import {
@@ -48,6 +41,16 @@ import {
 import { getFacultyProfile, saveFacultyProfile, getSignedAssetUrl } from "@/app/actions/faculty";
 import type { FacultyProfileRow, RecommenderForm } from "@/lib/faculty-profile";
 import { dbRowToProfile } from "@/lib/faculty-profile";
+
+// Five columns on desktop. On phones the row stacks: student and status on line one.
+const ROW_COLS = "md:grid-cols-[7rem_minmax(0,1fr)_minmax(0,1fr)_9rem_auto]";
+const DATE_CELL = "order-3 font-display text-base font-bold tabular-nums tracking-[0.06em] text-flap-dim md:order-none";
+const NAME_CELL = "order-1 min-w-0 break-words font-semibold text-flap-ink md:order-none";
+const STATUS_CELL = "order-2 justify-self-end md:order-none md:justify-self-start";
+const MID_CELL = "order-4 col-span-2 min-w-0 break-words text-sm text-flap-dim md:order-none md:col-span-1";
+const ACTION_CELL = "order-5 col-span-2 flex flex-wrap items-center gap-2 pt-1 md:order-none md:col-span-1 md:justify-end md:pt-0";
+// Row buttons sit on the dark board; 44px tall for touch.
+const BOARD_BTN = "h-11 bg-transparent text-flap-ink ring-flap-ink/40 hover:bg-flap hover:text-flap-ink hover:ring-flap-ink/70";
 
 export function FacultyView() {
   const [pendingDeliveries, setPendingDeliveries] = useState<PendingDelivery[]>(
@@ -199,302 +202,236 @@ export function FacultyView() {
 
   return (
     <>
-      {/* Stats Row */}
-      <div className='grid gap-4 md:grid-cols-3'>
-        <StatsCard
-          title='Pending Approvals'
-          value={loadingDeliveries ? "…" : String(pendingDeliveries.length)}
-          icon={Clock}
-          color='text-amber-600'
-        />
-        <StatsCard
-          title='Incoming Requests'
-          value={loadingRequests ? "…" : String(letterRequests.length)}
-          icon={FileText}
-          color='text-emerald-600'
-        />
-        <StatsCard
-          title='Avg. Response Time'
-          value='—'
-          icon={CheckCircle2}
-          color='text-blue-600'
-        />
+      {/* A notice, not a document: board inks, so paper stays reserved for letters and forms. */}
+      <div className='flex flex-col gap-3 border-y border-flap py-4 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='flex items-start gap-3'>
+          <ShieldCheck className='mt-0.5 size-5 shrink-0 text-mint' aria-hidden='true' />
+          <div>
+            <p className='font-display text-lg font-bold uppercase leading-none tracking-[0.06em] text-flap-ink'>
+              Secure letter workflow
+            </p>
+            <p className='mt-1.5 text-sm text-flap-dim'>
+              Students never see letter contents unless you turn on a preview.
+              Finalized letters are sealed and signed for verification.
+            </p>
+          </div>
+        </div>
+        <Button
+          variant='outline'
+          className={`${BOARD_BTN} shrink-0`}
+          onClick={openVerificationDialog}
+        >
+          Student Preview Settings
+        </Button>
       </div>
 
-      <Card className='rounded-2xl border-black/5 bg-green-900/5'>
-        <CardContent className='flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between'>
-          <div className='flex items-start gap-3'>
-            <div className='mt-0.5 rounded-full bg-white p-2 text-green-900'>
-              <ShieldCheck className='h-5 w-5' />
-            </div>
-            <div>
-              <p className='font-semibold text-green-900'>
-                Secure letter workflow
-              </p>
-              <p className='text-sm text-green-900/70'>
-                Students never see letter contents. Finalized letters are sealed
-                and signed for verification.
-              </p>
-            </div>
+      {/* Incoming requests */}
+      <BoardStrip
+        title='Incoming requests'
+        description='Students requesting a letter of recommendation.'
+        counts={
+          <>
+            <StatsCard
+              title='Incoming'
+              value={loadingRequests ? "--" : String(letterRequests.length)}
+              icon={FileText}
+              lamp='moving'
+            />
+            <StatsCard
+              title='Avg. response time'
+              value={null}
+              note='Shown after your first letter'
+              icon={Timer}
+            />
+          </>
+        }
+      >
+        <div role='table' aria-label='Incoming requests'>
+          <BoardColumns
+            cols={ROW_COLS}
+            labels={["Requested", "Student", "Class / context", "Status", "Action"]}
+          />
+          <div role='rowgroup' className='space-y-1'>
+            {loadingRequests ? (
+              <BoardSkeleton />
+            ) : letterRequests.length === 0 ? (
+              <BoardEmpty title='No requests waiting'>
+                When a student asks you for a letter, it appears here. You can
+                write it or decline it from this row.
+              </BoardEmpty>
+            ) : (
+              letterRequests.map((req) => (
+                <BoardRow key={req.requestId} cols={ROW_COLS}>
+                  <span role='cell' className={DATE_CELL}>
+                    {new Date(req.createdAt).toLocaleDateString()}
+                  </span>
+                  <span role='cell' className={NAME_CELL}>
+                    {req.studentName}
+                  </span>
+                  <span role='cell' className={MID_CELL}>
+                    {req.courseContext ?? "No context given"}
+                  </span>
+                  <span role='cell' className={STATUS_CELL}>
+                    <StatusFlap label='Requested' lamp='moving' />
+                  </span>
+                  <span role='cell' className={ACTION_CELL}>
+                    <WriteLetterDialog
+                      studentName={req.studentName}
+                      requestId={req.requestId}
+                      savedProfile={
+                        facultyProfile
+                          ? dbRowToProfile(
+                              facultyProfile,
+                              authEmail,
+                              authFirstName,
+                              authLastName,
+                            )
+                          : undefined
+                      }
+                      savedLogoUrl={savedLogoUrl}
+                      savedSignatureUrl={savedSignatureUrl}
+                      savedLogoStoragePath={savedLogoStoragePath}
+                      savedSignatureStoragePath={savedSignatureStoragePath}
+                      onSaveProfile={handleSaveProfile}
+                      onDraftSaved={() =>
+                        getFacultyRequests().then(setLetterRequests)
+                      }
+                      onFinalized={() =>
+                        getFacultyRequests().then(setLetterRequests)
+                      }
+                    />
+                    <Button
+                      variant='outline'
+                      className={BOARD_BTN}
+                      onClick={() => openRejectDialog(req.requestId)}
+                    >
+                      Decline
+                    </Button>
+                  </span>
+                </BoardRow>
+              ))
+            )}
           </div>
-          <Button
-            variant='outline'
-            className='mt-2 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10 sm:mt-0'
-            onClick={openVerificationDialog}
-          >
-            Student Preview Settings
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </BoardStrip>
 
       {/* Pending delivery approvals */}
-      <Card className='rounded-2xl border-black/5 shadow-sm'>
-        <CardHeader>
-          <CardTitle className='font-serif text-xl text-green-900'>
-            Pending Delivery Approvals
-          </CardTitle>
-          <CardDescription>
-            Students have paid to send your letter to a school. Review and
-            approve or reject each request. The 48-hour delivery window starts
-            only after you approve.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {actionError && (
-            <p className='mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700'>
-              ❌ {actionError}
-            </p>
-          )}
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead className='text-right'>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loadingDeliveries ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className='py-10 text-center text-sm text-gray-400'
-                  >
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              ) : pendingDeliveries.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className='py-10 text-center text-sm text-gray-400'
-                  >
-                    No pending approvals.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pendingDeliveries.map((d) => (
-                  <TableRow key={d.deliveryLinkId}>
-                    <TableCell className='font-medium'>
-                      {d.studentFullName}
-                    </TableCell>
-                    <TableCell>{d.schoolName}</TableCell>
-                    <TableCell className='text-sm text-gray-500'>
-                      {new Date(d.paidAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <Button
-                          size='sm'
-                          className='rounded-lg bg-green-900 hover:bg-[#093820] text-xs disabled:opacity-50'
-                          disabled={isPending}
-                          onClick={() => handleApprove(d.deliveryLinkId)}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          className='rounded-lg border-red-200 text-red-600 hover:bg-red-50 text-xs disabled:opacity-50'
-                          disabled={isPending}
-                          onClick={() => handleReject(d.deliveryLinkId)}
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <BoardStrip
+        title='Pending delivery approvals'
+        description='Students have paid to send your letter to a school. Review and approve or reject each request. The 48-hour delivery window starts only after you approve.'
+        counts={
+          <StatsCard
+            title='Pending'
+            value={loadingDeliveries ? "--" : String(pendingDeliveries.length)}
+            icon={Clock}
+            lamp={pendingDeliveries.length > 0 ? "waiting" : "moving"}
+          />
+        }
+      >
+        {actionError && (
+          <p role='alert' className='mx-2 mb-3 text-sm text-signal'>
+            {actionError}
+          </p>
+        )}
+        <div role='table' aria-label='Pending delivery approvals'>
+          <BoardColumns
+            cols={ROW_COLS}
+            labels={["Paid on", "Student", "Destination", "Status", "Action"]}
+          />
+          <div role='rowgroup' className='space-y-1'>
+            {loadingDeliveries ? (
+              <BoardSkeleton rows={2} />
+            ) : pendingDeliveries.length === 0 ? (
+              <BoardEmpty title='Nothing to approve'>
+                When a student pays to send your letter to a school, the
+                request waits here for your approval.
+              </BoardEmpty>
+            ) : (
+              pendingDeliveries.map((d) => (
+                <BoardRow key={d.deliveryLinkId} cols={ROW_COLS}>
+                  <span role='cell' className={DATE_CELL}>
+                    {new Date(d.paidAt).toLocaleDateString()}
+                  </span>
+                  <span role='cell' className={NAME_CELL}>
+                    {d.studentFullName}
+                  </span>
+                  <span role='cell' className={MID_CELL}>
+                    {d.schoolName}
+                  </span>
+                  <span role='cell' className={STATUS_CELL}>
+                    <StatusFlap label='To approve' lamp='waiting' />
+                  </span>
+                  <span role='cell' className={ACTION_CELL}>
+                    <Button
+                      variant='gold'
+                      className='h-11'
+                      disabled={isPending}
+                      onClick={() => handleApprove(d.deliveryLinkId)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant='outline'
+                      className={BOARD_BTN}
+                      disabled={isPending}
+                      onClick={() => handleReject(d.deliveryLinkId)}
+                    >
+                      Reject
+                    </Button>
+                  </span>
+                </BoardRow>
+              ))
+            )}
+          </div>
+        </div>
+      </BoardStrip>
 
-      <Card className='rounded-2xl border-black/5 shadow-sm'>
-        <CardHeader>
-          <CardTitle className='font-serif text-xl text-green-900'>
-            Incoming Requests
-          </CardTitle>
-          <CardDescription>
-            Students requesting a letter of recommendation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Class / Context</TableHead>
-                <TableHead>Requested</TableHead>
-                <TableHead className='text-right'>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loadingRequests ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className='py-10 text-center text-sm text-gray-400'
-                  >
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              ) : letterRequests.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className='py-10 text-center text-sm text-gray-400'
-                  >
-                    No pending requests yet.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                letterRequests.map((req) => (
-                  <TableRow key={req.requestId}>
-                    <TableCell className='font-medium'>
-                      {req.studentName}
-                    </TableCell>
-                    <TableCell className='text-sm text-gray-500'>
-                      {req.courseContext ?? "—"}
-                    </TableCell>
-                    <TableCell className='text-sm text-gray-500'>
-                      {new Date(req.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      <div className='flex justify-end gap-2'>
-                        <WriteLetterDialog
-                          studentName={req.studentName}
-                          requestId={req.requestId}
-                          savedProfile={
-                            facultyProfile
-                              ? dbRowToProfile(
-                                  facultyProfile,
-                                  authEmail,
-                                  authFirstName,
-                                  authLastName,
-                                )
-                              : undefined
-                          }
-                          savedLogoUrl={savedLogoUrl}
-                          savedSignatureUrl={savedSignatureUrl}
-                          savedLogoStoragePath={savedLogoStoragePath}
-                          savedSignatureStoragePath={savedSignatureStoragePath}
-                          onSaveProfile={handleSaveProfile}
-                          onDraftSaved={() =>
-                            getFacultyRequests().then(setLetterRequests)
-                          }
-                          onFinalized={() =>
-                            getFacultyRequests().then(setLetterRequests)
-                          }
-                        />
-                        <Button
-                          size='sm'
-                          variant='outline'
-                          className='rounded-lg border-red-200 text-red-600 hover:bg-red-50 text-xs'
-                          onClick={() => openRejectDialog(req.requestId)}
-                        >
-                          Decline
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card className='rounded-2xl border-black/5 shadow-sm'>
-        <CardHeader>
-          <CardTitle className='font-serif text-xl text-green-900'>
-            Finalized Letters
-          </CardTitle>
-          <CardDescription>
-            Sealed recommendations ready for secure delivery.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Finalized</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className='text-right'>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className='py-10 text-center text-sm text-gray-400'
-                >
-                  No finalized letters yet.
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <BoardStrip
+        title='Finalized letters'
+        description='Sealed recommendations ready for secure delivery.'
+      >
+        <BoardEmpty title='No finalized letters yet'>
+          Letters you seal are listed under Student Preview Settings above,
+          where you can choose whether the student sees a preview.
+        </BoardEmpty>
+      </BoardStrip>
 
       {/* Student preview settings dialog */}
       <Dialog
         open={verificationDialogOpen}
         onOpenChange={setVerificationDialogOpen}
       >
-        <DialogContent className='rounded-2xl sm:max-w-md'>
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className='font-serif text-green-900'>
+            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
               Student Preview Settings
             </DialogTitle>
             <DialogDescription>
               Control whether students can see a watermarked preview of their
               letter in their dashboard. Letters are cryptographically sealed at
-              finalization — students never receive an unsecured copy.
+              finalization, so students never receive an unsecured copy.
             </DialogDescription>
           </DialogHeader>
 
           <div className='space-y-3 py-1'>
             {loadingFinalized ? (
-              <p className='py-6 text-center text-sm text-gray-400'>Loading…</p>
+              <p className='py-6 text-center text-sm text-ink-2'>Loading…</p>
             ) : finalizedLetters.length === 0 ? (
-              <p className='py-6 text-center text-sm text-gray-400'>
-                No finalized letters yet.
+              <p className='py-6 text-center text-sm text-ink-2'>
+                No finalized letters yet. Once you seal a letter, you can turn
+                on its student preview here.
               </p>
             ) : (
               finalizedLetters.map((letter) => (
                 <div
                   key={letter.letterId}
-                  className='flex items-center justify-between gap-4 rounded-xl border border-black/5 bg-slate-50 px-4 py-3'
+                  className='flex items-center justify-between gap-4 border border-rule bg-paper-2 px-4 py-3'
                 >
                   <div>
-                    <p className='text-sm font-medium text-gray-800'>
+                    <p className='text-sm font-semibold text-ink'>
                       {letter.studentName}
                     </p>
-                    <p className='text-xs text-gray-500'>
+                    <p className='text-xs text-ink-2'>
                       Finalized{" "}
                       {new Date(letter.finalizedAt).toLocaleDateString()}
                     </p>
@@ -503,20 +440,22 @@ export function FacultyView() {
                     type='button'
                     role='switch'
                     aria-checked={previewToggles[letter.letterId] ?? false}
+                    aria-label={`Student preview for ${letter.studentName}`}
                     onClick={() =>
                       handleTogglePreview(
                         letter.letterId,
                         !(previewToggles[letter.letterId] ?? false),
                       )
                     }
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 ${
+                    // The pseudo-element stretches the hit area to 44px.
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                       (previewToggles[letter.letterId] ?? false)
-                        ? "bg-green-900"
-                        : "bg-gray-200"
+                        ? "bg-forest"
+                        : "bg-ink-2/40"
                     }`}
                   >
                     <span
-                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white ring-0 transition-transform motion-reduce:transition-none ${
                         (previewToggles[letter.letterId] ?? false)
                           ? "translate-x-5"
                           : "translate-x-0"
@@ -532,9 +471,9 @@ export function FacultyView() {
 
       {/* Reject request dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className='rounded-2xl sm:max-w-md'>
+        <DialogContent className='sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className='font-serif text-green-900'>
+            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
               Decline Request
             </DialogTitle>
             <DialogDescription>
@@ -543,29 +482,34 @@ export function FacultyView() {
             </DialogDescription>
           </DialogHeader>
           <div className='space-y-3 py-2'>
-            <Label htmlFor='reject-reason'>Message to student (optional)</Label>
+            <Label htmlFor='reject-reason' className='caption text-ink-2'>
+              Message to student (optional)
+            </Label>
             <Textarea
               id='reject-reason'
               placeholder="e.g. I don't have capacity this semester..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              className='rounded-xl min-h-[100px] border-black/10 focus-visible:ring-green-900'
+              className='min-h-[100px]'
             />
             {rejectError && (
-              <p className='text-sm text-red-600'>❌ {rejectError}</p>
+              <p role='alert' className='text-sm text-declined'>
+                {rejectError}
+              </p>
             )}
           </div>
           <DialogFooter className='gap-2'>
             <Button
               variant='outline'
-              className='rounded-xl'
+              className='h-11'
               onClick={() => setRejectDialogOpen(false)}
               disabled={isRejecting}
             >
               Cancel
             </Button>
             <Button
-              className='rounded-xl bg-red-600 hover:bg-red-700 text-white'
+              variant='destructive'
+              className='h-11'
               onClick={handleRejectRequest}
               disabled={isRejecting}
             >

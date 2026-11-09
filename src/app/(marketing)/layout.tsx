@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
-import SideNavbar from "@/components/marketing/SideNavbar";
-import MobileNavDrawer from "@/components/marketing/MobileNavDrawer";
-import TopBanner from "@/components/marketing/TopBanner";
+import { SiteNav } from "@/components/board/SiteNav";
+import Footer from "@/components/marketing/Footer";
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className='min-h-screen flex flex-col bg-white text-black'>
-      <TopBanner />
-      <MobileNavDrawer />
-      <SideNavbar />
-      <main>{children}</main>
+    <div className='board on-board min-h-screen'>
+      <SiteNav />
+      <div className='lg:pl-68'>
+        <main>{children}</main>
+        <Footer />
+      </div>
     </div>
   );
 }

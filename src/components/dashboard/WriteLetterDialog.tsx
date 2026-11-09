@@ -42,8 +42,11 @@ export function WriteLetterDialog({
   onDraftSaved,
   onFinalized,
   accessToken,
+  defaultEmail,
 }: {
   studentName: string;
+  /** The address the request was sent to; prefills the recommender email. */
+  defaultEmail?: string | null;
   /** Emailed link token. Set on /r/[token], where the professor has no session. */
   accessToken?: string;
   /** The letter_requests row ID. When provided, drafts go to Supabase.
@@ -61,13 +64,17 @@ export function WriteLetterDialog({
   onFinalized?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  console.log("[WriteLetterDialog] isOpen:", isOpen, "requestId:", requestId);
   const [step, setStep] = useState<
     "details" | "letterhead" | "letter" | "preview"
   >("details");
-  const [recommenderForm, setRecommenderForm] = useState<RecommenderForm>(() =>
-    buildRecommenderForm(savedProfile),
-  );
+  const baselineForm = () => {
+    const form = buildRecommenderForm(savedProfile);
+    return { ...form, email: form.email || defaultEmail || "" };
+  };
+  const [recommenderForm, setRecommenderForm] =
+    useState<RecommenderForm>(baselineForm);
+  // Errors show only after the professor tries to continue, never on open.
+  const [showDetailErrors, setShowDetailErrors] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   // Persisted asset URLs loaded from Supabase Storage (autofill from saved profile)
@@ -385,18 +392,13 @@ export function WriteLetterDialog({
     };
   }, [signatureFile]);
 
+  // Only what the letterhead and signature need. The PDF skips blank address lines.
   const requiredDetailsFields: Array<keyof RecommenderForm> = [
     "firstName",
     "lastName",
-    "organization",
     "title",
-    "relationship",
+    "organization",
     "email",
-    "country",
-    "street",
-    "city",
-    "state",
-    "postalCode",
   ];
 
   const missingDetailFields = useMemo(
@@ -426,7 +428,9 @@ export function WriteLetterDialog({
 
   const footerHint =
     step === "details"
-      ? missingDetailsHint
+      ? showDetailErrors
+        ? missingDetailsHint
+        : null
       : step === "letterhead"
         ? (signatureError ??
           (isUploadingSignature
@@ -447,7 +451,6 @@ export function WriteLetterDialog({
       <Dialog
         open={isOpen}
         onOpenChange={async (open) => {
-          console.log("[WriteLetterDialog] onOpenChange attempt:", open);
           if (!open && isDirty) {
             setShowCloseWarning(true);
             return;
@@ -459,9 +462,9 @@ export function WriteLetterDialog({
             setFinalizeError(null);
             setShowFinalizeConfirm(false);
             setLastAutosaved(null);
-            // Apply saved profile as baseline
-            if (savedProfile)
-              setRecommenderForm(buildRecommenderForm(savedProfile));
+            setShowDetailErrors(false);
+            // Apply saved profile (and the request's email) as baseline
+            setRecommenderForm(baselineForm());
             setSignatureDataUrl(savedSignatureUrl ?? null);
             setLogoDataUrl(savedLogoUrl ?? null);
             setLogoStoragePath(savedLogoStoragePath ?? null);
@@ -503,38 +506,33 @@ export function WriteLetterDialog({
         }}
       >
         <DialogTrigger asChild>
-          <Button
-            size='sm'
-            className='rounded-lg bg-green-900 text-white hover:bg-[#093820]'
-          >
+          <Button size='sm' className='h-11 sm:h-9'>
             Write Letter
           </Button>
         </DialogTrigger>
-        <DialogContent className='flex max-h-[90vh] w-[95vw] flex-col rounded-2xl sm:max-w-[860px] bg-white ring-1 ring-black/5 p-0 overflow-hidden p-4'>
+        <DialogContent className='flex max-h-[90dvh] w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-[860px]'>
           {isLoadingDraft && (
             <div className='absolute inset-0 z-[100] flex items-center justify-center bg-white'>
               <div className='flex flex-col items-center gap-2'>
-                <div className='h-8 w-8 animate-spin rounded-full border-4 border-green-900 border-t-transparent' />
-                <p className='text-sm font-medium text-green-900'>
+                <div className='h-8 w-8 animate-spin rounded-full border-4 border-forest border-t-transparent' />
+                <p className='text-sm font-medium text-forest-ink'>
                   Loading draft…
                 </p>
               </div>
             </div>
           )}
-          <DialogHeader>
-            <DialogTitle className='font-serif text-green-900'>
+          <DialogHeader className='gap-1 border-b border-rule px-4 py-4 pr-12 sm:px-6'>
+            <DialogTitle className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-forest-ink'>
               Draft Letter for {studentName}
             </DialogTitle>
             <DialogDescription asChild>
-              <div className='flex justify-between'>
-                <span>
-                  Draft your recommendation. Students will never see the
-                  contents.
+              <div className='flex flex-col gap-1 sm:flex-row sm:justify-between'>
+                <span className='text-ink-2'>
+                  Draft your recommendation. The student sees it only if you
+                  turn on a preview.
                 </span>
-                <div className='flex items-center gap-2 text-green-900/70'>
-                  <span className='text-xs uppercase tracking-[0.2em]'>
-                    Step
-                  </span>
+                <div className='flex items-center gap-2 text-ink-2'>
+                  <span className='caption'>Step</span>
                   <span className='font-semibold'>
                     {step === "details"
                       ? "1"
@@ -549,9 +547,9 @@ export function WriteLetterDialog({
           </DialogHeader>
 
           <div className='flex-1 overflow-y-auto'>
-            <div className='grid gap-4 py-4 px-1'>
+            <div className='grid gap-4 px-4 py-4 sm:px-6'>
               {/* ── Step indicator ── */}
-              <div className='flex items-center justify-between rounded-2xl border border-black/5 bg-slate-50/50 px-4 py-3 text-sm'>
+              <div className='grid grid-cols-3 gap-2'>
                 {(["details", "letterhead", "letter"] as const).map(
                   (s, idx) => {
                     const labels = [
@@ -566,26 +564,26 @@ export function WriteLetterDialog({
                       (s === "letterhead" &&
                         (step === "letter" || step === "preview"));
                     return (
-                      <div key={s} className='flex items-center gap-2'>
+                      <div key={s} className='flex flex-col gap-1.5'>
                         <span
-                          className={`h-2 w-2 rounded-full ${
+                          className={`h-1 ${
                             isActive
-                              ? "bg-green-900"
+                              ? "bg-forest"
                               : isPast
-                                ? "bg-yellow-600/40"
-                                : "bg-green-900/40"
+                                ? "bg-sealed"
+                                : "bg-rule"
                           }`}
                         />
                         <span
-                          className={`font-semibold ${
+                          className={`caption ${
                             isActive
-                              ? "text-green-900"
+                              ? "text-ink"
                               : isPast
-                                ? "text-yellow-600"
-                                : "text-green-900/40"
+                                ? "text-sealed"
+                                : "text-ink-2"
                           }`}
                         >
-                          {labels[idx]}
+                          {idx + 1}. {labels[idx]}
                         </span>
                       </div>
                     );
@@ -595,12 +593,12 @@ export function WriteLetterDialog({
 
               {/* ── Step: Recommender details ── */}
               {step === "details" && (
-                <div className='grid gap-4 rounded-2xl border border-black/5 bg-white p-4'>
+                <div className='grid gap-4'>
                   <div>
-                    <h3 className='text-base font-semibold text-green-900'>
+                    <h3 className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
                       Recommender information
                     </h3>
-                    <p className='text-sm text-green-900/70'>
+                    <p className='text-sm text-ink-2'>
                       Used for letterhead and verification details.
                     </p>
                   </div>
@@ -652,7 +650,6 @@ export function WriteLetterDialog({
                           label: "Relationship",
                           placeholder: "Professor, Advisor, Mentor",
                           field: "relationship",
-                          required: true,
                         },
                         {
                           id: "recommender-email",
@@ -665,7 +662,7 @@ export function WriteLetterDialog({
                         {
                           id: "recommender-phone",
                           label: "Phone",
-                          placeholder: "(555) 555-5555",
+                          placeholder: "Include country code",
                           field: "phone",
                         },
                       ] as Array<{
@@ -680,13 +677,18 @@ export function WriteLetterDialog({
                       <div key={id} className='grid gap-2'>
                         <Label htmlFor={id}>
                           {label}
-                          {required && <span className='ml-0.5 text-red-500'>*</span>}
+                          {required && <span className='ml-0.5 text-declined'>*</span>}
                         </Label>
                         <Input
                           id={id}
                           type={type ?? "text"}
                           placeholder={placeholder}
-                          className={`rounded-xl${required && !recommenderForm[field].trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
+                          required={required}
+                          aria-invalid={
+                            showDetailErrors && required && !recommenderForm[field].trim()
+                              ? true
+                              : undefined
+                          }
                           value={recommenderForm[field]}
                           onChange={(e) =>
                             handleRecommenderChange(field, e.target.value)
@@ -695,13 +697,23 @@ export function WriteLetterDialog({
                       </div>
                     ))}
                   </div>
-                  <div className='grid gap-4 sm:grid-cols-3'>
+                  {/* Optional: the PDF prints only the address lines that are filled in. */}
+                  <details
+                    className='group border-y border-rule py-3'
+                    open={Boolean(
+                      recommenderForm.street || recommenderForm.city || recommenderForm.country,
+                    )}
+                  >
+                    <summary className='flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-display text-base font-bold uppercase tracking-[0.06em] text-forest-ink'>
+                      Add a mailing address to the letterhead
+                      <span className='caption text-ink-2 group-open:hidden'>Optional</span>
+                    </summary>
+                  <div className='mt-3 grid gap-4 sm:grid-cols-3'>
                     <div className='grid gap-2'>
-                      <Label htmlFor='country'>Country<span className='ml-0.5 text-red-500'>*</span></Label>
+                      <Label htmlFor='country'>Country</Label>
                       <Input
                         id='country'
-                        placeholder='United States'
-                        className={`rounded-xl${!recommenderForm.country.trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
+                        placeholder='Country'
                         value={recommenderForm.country}
                         onChange={(e) =>
                           handleRecommenderChange("country", e.target.value)
@@ -709,11 +721,10 @@ export function WriteLetterDialog({
                       />
                     </div>
                     <div className='grid gap-2 sm:col-span-2'>
-                      <Label htmlFor='street'>Street<span className='ml-0.5 text-red-500'>*</span></Label>
+                      <Label htmlFor='street'>Street</Label>
                       <Input
                         id='street'
-                        placeholder='123 University Ave'
-                        className={`rounded-xl${!recommenderForm.street.trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
+                        placeholder='Street and number'
                         value={recommenderForm.street}
                         onChange={(e) =>
                           handleRecommenderChange("street", e.target.value)
@@ -721,11 +732,9 @@ export function WriteLetterDialog({
                       />
                     </div>
                     <div className='grid gap-2'>
-                      <Label htmlFor='city'>City<span className='ml-0.5 text-red-500'>*</span></Label>
+                      <Label htmlFor='city'>City</Label>
                       <Input
                         id='city'
-                        placeholder='City'
-                        className={`rounded-xl${!recommenderForm.city.trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
                         value={recommenderForm.city}
                         onChange={(e) =>
                           handleRecommenderChange("city", e.target.value)
@@ -733,11 +742,9 @@ export function WriteLetterDialog({
                       />
                     </div>
                     <div className='grid gap-2'>
-                      <Label htmlFor='state'>State / Province<span className='ml-0.5 text-red-500'>*</span></Label>
+                      <Label htmlFor='state'>State or province</Label>
                       <Input
                         id='state'
-                        placeholder='State'
-                        className={`rounded-xl${!recommenderForm.state.trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
                         value={recommenderForm.state}
                         onChange={(e) =>
                           handleRecommenderChange("state", e.target.value)
@@ -745,11 +752,9 @@ export function WriteLetterDialog({
                       />
                     </div>
                     <div className='grid gap-2'>
-                      <Label htmlFor='postal'>Postal Code<span className='ml-0.5 text-red-500'>*</span></Label>
+                      <Label htmlFor='postal'>Postal or PIN code</Label>
                       <Input
                         id='postal'
-                        placeholder='Postal code'
-                        className={`rounded-xl${!recommenderForm.postalCode.trim() ? " border-red-300 focus-visible:ring-red-300" : ""}`}
                         value={recommenderForm.postalCode}
                         onChange={(e) =>
                           handleRecommenderChange("postalCode", e.target.value)
@@ -757,35 +762,34 @@ export function WriteLetterDialog({
                       />
                     </div>
                   </div>
+                  </details>
                   {/* ── Sign-off ── */}
                   <div className='grid gap-2'>
                     <Label htmlFor='sign-off'>Sign-off</Label>
                     <Input
                       id='sign-off'
                       placeholder='Sincerely,'
-                      className='rounded-xl'
                       value={recommenderForm.signOff}
                       onChange={(e) =>
                         handleRecommenderChange("signOff", e.target.value)
                       }
                     />
-                    <p className='text-xs text-gray-400'>
+                    <p className='text-xs text-ink-2'>
                       e.g. Sincerely, Best regards, With warm regards
                     </p>
                   </div>
 
                   {/* ── Save-profile strip (account holders only) ── */}
                   {onSaveProfile && (
-                  <div className='flex items-start justify-between rounded-xl border border-dashed border-black/10 bg-slate-50 px-4 py-3'>
-                    <p className='text-xs text-gray-500'>
+                  <div className='flex flex-col gap-3 border-t border-rule pt-4 sm:flex-row sm:items-start sm:justify-between'>
+                    <p className='text-sm text-ink-2'>
                       Save your details so they autofill on your next letter.
                     </p>
-                    <div className='flex flex-col items-end gap-1'>
+                    <div className='flex flex-col gap-1 sm:items-end'>
                       <Button
                         type='button'
                         variant='outline'
-                        size='sm'
-                        className='rounded-xl'
+                        className='h-11'
                         disabled={
                           isSavingProfile ||
                           !isDetailsComplete ||
@@ -814,7 +818,7 @@ export function WriteLetterDialog({
                             : "Save to profile"}
                       </Button>
                       {profileSaveError && (
-                        <p className='mt-1 text-xs font-semibold text-red-600 flex items-center gap-1'>
+                        <p className='mt-1 text-xs font-semibold text-declined flex items-center gap-1'>
                           ❌ {profileSaveError}
                         </p>
                       )}
@@ -826,12 +830,12 @@ export function WriteLetterDialog({
 
               {/* ── Step: Letterhead + signature ── */}
               {step === "letterhead" && (
-                <div className='grid gap-4 rounded-2xl border border-black/5 bg-white p-4'>
+                <div className='grid gap-4'>
                   <div>
-                    <h3 className='text-base font-semibold text-green-900'>
+                    <h3 className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
                       Letterhead + signature
                     </h3>
-                    <p className='text-sm text-green-900/70'>
+                    <p className='text-sm text-ink-2'>
                       Upload a logo (any image format) and a transparent PNG
                       signature.
                     </p>
@@ -839,14 +843,14 @@ export function WriteLetterDialog({
                   <div className='grid gap-4 sm:grid-cols-2'>
                     <div className='grid gap-2'>
                       <Label htmlFor='letterhead-logo'>Letterhead logo</Label>
-                      <div className='flex items-center gap-3 rounded-xl border border-black/10 bg-white px-3 py-2'>
+                      <div className='flex items-center gap-3 border border-input bg-white px-3 py-2'>
                         <label
                           htmlFor='letterhead-logo'
-                          className='cursor-pointer rounded-lg bg-green-900/10 px-3 py-1.5 text-sm font-semibold text-green-900 hover:bg-green-900/20'
+                          className='inline-flex min-h-11 cursor-pointer items-center bg-paper-2 px-3 text-sm font-semibold text-forest-ink ring-1 ring-inset ring-ink/25 hover:ring-forest'
                         >
                           Choose file
                         </label>
-                        <span className='text-sm text-gray-600'>
+                        <span className='min-w-0 truncate text-sm text-ink-2'>
                           {logoFile ? logoFile.name : "No file chosen"}
                         </span>
                         <Input
@@ -859,16 +863,16 @@ export function WriteLetterDialog({
                           }
                         />
                       </div>
-                      <p className='text-xs text-gray-500'>
+                      <p className='text-xs text-ink-2'>
                         {logoFile ? `Selected: ${logoFile.name}` : "Optional"}
                       </p>
                       {isUploadingLogo && (
-                        <span className='text-xs text-blue-600'>
+                        <span className='text-xs text-waiting'>
                           Uploading...
                         </span>
                       )}
                       {logoUploadError && (
-                        <span className='text-xs font-semibold text-red-600 flex items-center gap-1'>
+                        <span className='text-xs font-semibold text-declined flex items-center gap-1'>
                           <X /> {logoUploadError}
                         </span>
                       )}
@@ -876,7 +880,7 @@ export function WriteLetterDialog({
                         !logoUploadError &&
                         logoStoragePath && (
                           <>
-                            <span className='text-xs font-medium text-green-700 flex items-center gap-1'>
+                            <span className='text-xs font-medium text-sealed flex items-center gap-1'>
                               <Check />
                               Uploaded
                             </span>
@@ -885,14 +889,14 @@ export function WriteLetterDialog({
                     </div>
                     <div className='grid gap-2'>
                       <Label htmlFor='signature-upload'>Signature (PNG)</Label>
-                      <div className='flex items-center gap-3 rounded-xl border border-black/10 bg-white px-3 py-2'>
+                      <div className='flex items-center gap-3 border border-input bg-white px-3 py-2'>
                         <label
                           htmlFor='signature-upload'
-                          className='cursor-pointer rounded-lg bg-green-900/10 px-3 py-1.5 text-sm font-semibold text-green-900 hover:bg-green-900/20'
+                          className='inline-flex min-h-11 cursor-pointer items-center bg-paper-2 px-3 text-sm font-semibold text-forest-ink ring-1 ring-inset ring-ink/25 hover:ring-forest'
                         >
                           Choose file
                         </label>
-                        <span className='text-sm text-gray-600'>
+                        <span className='min-w-0 truncate text-sm text-ink-2'>
                           {signatureFile
                             ? signatureFile.name
                             : "No file chosen"}
@@ -907,37 +911,37 @@ export function WriteLetterDialog({
                           }
                         />
                       </div>
-                      <p className='text-xs text-gray-500'>
+                      <p className='text-xs text-ink-2'>
                         {signatureFile
                           ? `Selected: ${signatureFile.name}`
                           : "Required: transparent PNG"}
                       </p>
                       {isUploadingSignature && (
-                        <p className='text-xs text-blue-600'>Uploading...</p>
+                        <p className='text-xs text-waiting'>Uploading...</p>
                       )}
                       {signatureUploadError && (
-                        <p className='text-xs font-semibold text-red-600 flex items-center gap-1'>
+                        <p className='text-xs font-semibold text-declined flex items-center gap-1'>
                           <X /> {signatureUploadError}
                         </p>
                       )}
                       {!isUploadingSignature &&
                         !signatureUploadError &&
                         signatureStoragePath && (
-                          <p className='text-xs font-medium text-green-700 flex items-center gap-1'>
+                          <p className='text-xs font-medium text-sealed flex items-center gap-1'>
                             <Check /> Uploaded - saved to your profile
                           </p>
                         )}
                       {signatureError && (
-                        <p className='text-xs font-semibold text-amber-700'>
+                        <p className='text-xs font-semibold text-declined'>
                           {signatureError}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className='rounded-lg bg-slate-50 p-3 text-xs text-gray-600'>
+                  <div className='bg-paper-2 p-3 text-xs text-ink-2'>
                     If your PNG has a white background, use{" "}
                     <a
-                      className='font-semibold text-green-900 underline'
+                      className='font-semibold text-forest underline'
                       href='https://www.remove.bg/'
                       target='_blank'
                       rel='noreferrer'
@@ -946,7 +950,7 @@ export function WriteLetterDialog({
                     </a>{" "}
                     or create a free transparent signature using{" "}
                     <a
-                      className='font-semibold text-green-900 underline'
+                      className='font-semibold text-forest underline'
                       href='https://www.signwell.com/online-signature/'
                       target='_blank'
                       rel='noreferrer'
@@ -955,52 +959,48 @@ export function WriteLetterDialog({
                     </a>
                     .
                   </div>
-                  <div className='grid gap-3 rounded-lg border border-dashed border-black/10 bg-slate-50 p-4 text-sm text-gray-500'>
-                    <p className='font-semibold text-green-900'>Preview</p>
+                  <div className='grid gap-3 border-t border-rule pt-4 text-sm text-ink-2'>
+                    <p className='caption text-ink-2'>Preview</p>
                     <div className='flex flex-wrap items-end gap-6'>
                       <div className='flex flex-col gap-1'>
-                        <span className='text-[11px] uppercase tracking-wide text-gray-400'>
-                          Logo
-                        </span>
+                        <span className='caption text-ink-2'>Logo</span>
                         {(logoPreviewUrl ?? logoDataUrl) ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={logoPreviewUrl ?? logoDataUrl!}
                             alt='Logo preview'
-                            className='h-12 w-32 rounded border border-black/5 bg-white object-contain p-1'
+                            className='h-12 w-32 border border-rule bg-white object-contain p-1'
                           />
                         ) : (
-                          <div className='flex h-12 w-32 items-center justify-center rounded border border-dashed border-black/10 text-[11px] text-gray-400'>
+                          <div className='flex h-12 w-32 items-center justify-center border border-dashed border-rule text-[11px] text-ink-2'>
                             None
                           </div>
                         )}
                       </div>
                       <div className='flex flex-col gap-1'>
-                        <span className='text-[11px] uppercase tracking-wide text-gray-400'>
-                          Signature
-                        </span>
+                        <span className='caption text-ink-2'>Signature</span>
                         {(signaturePreviewUrl ?? signatureDataUrl) ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={signaturePreviewUrl ?? signatureDataUrl!}
                             alt='Signature preview'
-                            className='h-12 w-40 rounded border border-black/5 bg-white object-contain p-1'
+                            className='h-12 w-40 border border-rule bg-white object-contain p-1'
                           />
                         ) : (
-                          <div className='flex h-12 w-40 items-center justify-center rounded border border-dashed border-black/10 text-[11px] text-gray-400'>
+                          <div className='flex h-12 w-40 items-center justify-center border border-dashed border-rule text-[11px] text-ink-2'>
                             None
                           </div>
                         )}
                       </div>
                     </div>
                     {signatureDataUrl && !signatureFile && (
-                      <p className='text-xs font-medium text-green-700'>
+                      <p className='text-xs font-medium text-sealed'>
                         Using your saved signature. Upload a new PNG above to
                         replace it.
                       </p>
                     )}
                     {logoDataUrl && !logoFile && (
-                      <p className='text-xs font-medium text-green-700'>
+                      <p className='text-xs font-medium text-sealed'>
                         Using your saved logo. Upload a new file above to
                         replace it.
                       </p>
@@ -1024,12 +1024,12 @@ export function WriteLetterDialog({
                     }}
                   />
                   {/* ── Live closing preview ── */}
-                  <div className='mt-4 border-t border-black/10 pt-4'>
-                    <p className='mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400'>
+                  <div className='mt-4 border-t border-rule pt-4'>
+                    <p className='caption mb-3 text-ink-2'>
                       Letter closing preview
                     </p>
-                    <div className='flex flex-col items-start gap-2 text-xs text-gray-500'>
-                      <span className='text-sm text-gray-500'>
+                    <div className='flex flex-col items-start gap-2 text-xs text-ink-2'>
+                      <span className='text-sm text-ink-2'>
                         {recommenderForm.signOff || "Sincerely,"}
                       </span>
                       {(signaturePreviewUrl ?? signatureDataUrl) ? (
@@ -1040,9 +1040,9 @@ export function WriteLetterDialog({
                           className='h-12 w-40 object-contain'
                         />
                       ) : (
-                        <div className='h-12 w-40 rounded-lg border border-dashed border-black/10' />
+                        <div className='h-12 w-40 border border-dashed border-rule' />
                       )}
-                      <div className='text-xs text-gray-600'>
+                      <div className='text-xs text-ink-2'>
                         {[
                           recommenderForm.prefix,
                           recommenderForm.firstName,
@@ -1052,14 +1052,14 @@ export function WriteLetterDialog({
                           .join(" ") || "Your Name"}
                       </div>
                       {recommenderForm.title && (
-                        <div className='text-[11px] text-gray-500'>
+                        <div className='text-[11px] text-ink-2'>
                           {recommenderForm.title}
                         </div>
                       )}
                     </div>
                   </div>
-                  <div className='rounded-lg bg-slate-50 p-3 text-xs text-gray-500 mt-2'>
-                    <span className='font-bold text-green-900'>
+                  <div className='mt-2 bg-paper-2 p-3 text-xs text-ink-2'>
+                    <span className='font-bold text-forest-ink'>
                       Next step:{" "}
                     </span>
                     Review a sealed preview before finalizing.
@@ -1071,17 +1071,17 @@ export function WriteLetterDialog({
               {step === "preview" && (
                 <div className='grid gap-4'>
                   <div>
-                    <h3 className='text-base font-semibold text-green-900'>
+                    <h3 className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
                       Preview
                     </h3>
-                    <p className='text-sm text-green-900/70'>
+                    <p className='text-sm text-ink-2'>
                       This is how the letterhead and signature will appear on
                       the final letter.
                     </p>
                   </div>
-                  <div className='rounded-2xl border border-dashed border-black/10 bg-white p-6'>
-                    <div className='flex min-h-[520px] flex-col gap-6 text-sm text-gray-700'>
-                      <div className='flex items-start justify-between gap-6'>
+                  <div className='border border-rule bg-white p-4 sm:p-6'>
+                    <div className='flex min-h-[520px] flex-col gap-6 text-sm text-ink'>
+                      <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:gap-6'>
                         <div className='flex items-start gap-4'>
                           {(logoPreviewUrl ?? logoDataUrl) ? (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -1091,24 +1091,24 @@ export function WriteLetterDialog({
                               className='h-16 w-28 object-contain'
                             />
                           ) : (
-                            <div className='flex h-16 w-28 items-center justify-center rounded-lg border border-dashed border-black/10 text-[10px] uppercase text-gray-400'>
+                            <div className='flex h-16 w-28 items-center justify-center border border-dashed border-rule text-[10px] uppercase text-ink-2'>
                               Logo
                             </div>
                           )}
                           <div className='space-y-1 flex flex-col'>
-                            <p className='text-sm font-semibold text-green-900'>
+                            <p className='text-sm font-semibold text-forest-ink'>
                               {`${recommenderForm.prefix} ${recommenderForm.firstName} ${recommenderForm.lastName}` ||
                                 "Name"}
                             </p>
-                            <p className='text-sm font-semibold text-green-900'>
+                            <p className='text-sm font-semibold text-forest-ink'>
                               {recommenderForm.title || "Title"}
                             </p>
-                            <p className='text-sm font-semibold text-green-900'>
+                            <p className='text-sm font-semibold text-forest-ink'>
                               {recommenderForm.department || "Department"}
                             </p>
                           </div>
                         </div>
-                        <div className='text-right text-xs text-gray-500'>
+                        <div className='text-xs text-ink-2 sm:text-right'>
                           <p>{recommenderForm.street || "Street address"}</p>
                           <p>
                             {(recommenderForm.city || "City") +
@@ -1120,22 +1120,22 @@ export function WriteLetterDialog({
                           <p>{recommenderForm.country || "Country"}</p>
                         </div>
                       </div>
-                      <div className='border-t border-dashed border-black/10' />
-                      <div className='flex-1 text-sm text-gray-700'>
+                      <div className='border-t border-dashed border-rule' />
+                      <div className='flex-1 text-sm text-ink'>
                         {letterHtml ? (
                           <div
                             className='space-y-3'
                             dangerouslySetInnerHTML={{ __html: letterHtml }}
                           />
                         ) : (
-                          <p className='text-xs text-gray-500'>
+                          <p className='text-xs text-ink-2'>
                             Letter content will render here using your editor
                             text.
                           </p>
                         )}
                       </div>
-                      <div className='flex flex-col items-start gap-2 text-xs text-gray-500'>
-                        <span className='text-sm text-gray-500'>
+                      <div className='flex flex-col items-start gap-2 text-xs text-ink-2'>
+                        <span className='text-sm text-ink-2'>
                           {recommenderForm.signOff || "Sincerely,"}
                         </span>
                         {(signaturePreviewUrl ?? signatureDataUrl) ? (
@@ -1146,9 +1146,9 @@ export function WriteLetterDialog({
                             className='h-12 w-40 object-contain'
                           />
                         ) : (
-                          <div className='h-12 w-40 rounded-lg border border-dashed border-black/10' />
+                          <div className='h-12 w-40 border border-dashed border-rule' />
                         )}
-                        <div className='text-xs text-gray-600'>
+                        <div className='text-xs text-ink-2'>
                           {[
                             recommenderForm.prefix,
                             recommenderForm.firstName,
@@ -1158,7 +1158,7 @@ export function WriteLetterDialog({
                             .join(" ") || "Your Name"}
                         </div>
                         {recommenderForm.title && (
-                          <div className='text-[11px] text-gray-500'>
+                          <div className='text-[11px] text-ink-2'>
                             {recommenderForm.title}
                           </div>
                         )}
@@ -1167,12 +1167,12 @@ export function WriteLetterDialog({
                   </div>
 
                   {/* Student preview toggle */}
-                  <div className='flex items-center justify-between rounded-xl border border-black/5 bg-slate-50 px-4 py-3'>
+                  <div className='flex items-center justify-between gap-3 border-t border-rule pt-4'>
                     <div>
-                      <p className='text-sm font-semibold text-green-900'>
+                      <p className='text-sm font-semibold text-forest-ink'>
                         Allow student preview
                       </p>
-                      <p className='mt-0.5 text-xs text-black/50'>
+                      <p className='mt-0.5 text-xs text-ink-2'>
                         Student can view a watermarked copy in their dashboard.
                       </p>
                     </div>
@@ -1182,8 +1182,8 @@ export function WriteLetterDialog({
                       aria-checked={studentPreviewEnabled}
                       onClick={() => void handleToggleStudentPreview()}
                       className={
-                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none " +
-                        (studentPreviewEnabled ? "bg-green-900" : "bg-black/20")
+                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none " +
+                        (studentPreviewEnabled ? "bg-forest" : "bg-ink-2/40")
                       }
                     >
                       <span
@@ -1199,26 +1199,25 @@ export function WriteLetterDialog({
 
                   {/* ── Finalize confirmation ── */}
                   {showFinalizeConfirm && (
-                    <div ref={finalizeConfirmRef} className='rounded-xl border border-red-200 bg-red-50 p-4'>
-                      <p className='text-sm font-semibold text-red-900'>
+                    <div ref={finalizeConfirmRef} className='border-t-2 border-declined pt-4'>
+                      <p className='text-sm font-semibold text-declined'>
                         Confirm finalization
                       </p>
-                      <p className='mt-1 text-xs text-red-700'>
+                      <p className='mt-1 text-xs text-ink'>
                         This is permanent and cannot be undone. The letter will
                         be sealed, locked, and made available for student
                         delivery.
                       </p>
                       {finalizeError && (
-                        <p className='mt-2 text-xs font-semibold text-red-600'>
+                        <p className='mt-2 text-xs font-semibold text-declined'>
                           ❌ {finalizeError}
                         </p>
                       )}
                       <div className='mt-3 flex gap-2'>
                         <Button
                           type='button'
-                          size='sm'
                           variant='outline'
-                          className='rounded-xl'
+                          className='h-11'
                           onClick={() => {
                             setShowFinalizeConfirm(false);
                             setFinalizeError(null);
@@ -1229,8 +1228,8 @@ export function WriteLetterDialog({
                         </Button>
                         <Button
                           type='button'
-                          size='sm'
-                          className='rounded-xl bg-red-700 text-white hover:bg-red-800'
+                          variant='destructive'
+                          className='h-11'
                           onClick={() => void handleFinalize()}
                           disabled={isFinalizing}
                         >
@@ -1246,13 +1245,13 @@ export function WriteLetterDialog({
             </div>
           </div>
 
-          <DialogFooter className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+          <DialogFooter className='flex flex-col gap-2 border-t border-rule px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
             <div className='flex items-center gap-2'>
               {step !== "details" && (
                 <Button
                   type='button'
                   variant='outline'
-                  className='rounded-xl'
+                  className='h-11'
                   onClick={() =>
                     setStep(
                       step === "preview"
@@ -1271,15 +1270,26 @@ export function WriteLetterDialog({
               {step === "details" && (
                 <div className='flex flex-col items-end gap-1'>
                   {footerHint && (
-                    <span className='text-xs font-semibold text-amber-700'>
+                    <span className='text-xs font-semibold text-waiting'>
                       {footerHint}
                     </span>
                   )}
                   <Button
                     type='button'
-                    className='rounded-xl bg-green-900 hover:bg-[#093820]'
-                    onClick={() => setStep("letterhead")}
-                    disabled={!isDetailsComplete}
+                    className='h-11'
+                    onClick={() => {
+                      if (isDetailsComplete) return setStep("letterhead");
+                      // Show what is missing and take the professor to the first gap.
+                      setShowDetailErrors(true);
+                      const firstMissing = {
+                        firstName: "first-name",
+                        lastName: "last-name",
+                        title: "title",
+                        organization: "organization",
+                        email: "recommender-email",
+                      }[missingDetailFields[0] as string];
+                      if (firstMissing) document.getElementById(firstMissing)?.focus();
+                    }}
                   >
                     Continue to Letterhead
                   </Button>
@@ -1288,13 +1298,13 @@ export function WriteLetterDialog({
               {step === "letterhead" && (
                 <div className='flex flex-col items-end gap-1'>
                   {footerHint && (
-                    <span className='text-xs font-semibold text-amber-700'>
+                    <span className='text-xs font-semibold text-waiting'>
                       {footerHint}
                     </span>
                   )}
                   <Button
                     type='button'
-                    className='rounded-xl bg-green-900 hover:bg-[#093820]'
+                    className='h-11'
                     onClick={() => setStep("letter")}
                     disabled={!isLetterheadReady}
                   >
@@ -1305,13 +1315,13 @@ export function WriteLetterDialog({
               {step === "letter" && (
                 <div className='flex flex-col items-end gap-1'>
                   {footerHint && (
-                    <span className='text-xs font-semibold text-amber-700'>
+                    <span className='text-xs font-semibold text-waiting'>
                       {footerHint}
                     </span>
                   )}
                   <Button
                     type='button'
-                    className='rounded-xl bg-green-900 hover:bg-[#093820]'
+                    className='h-11'
                     onClick={() => setStep("preview")}
                     disabled={!isLetterComplete}
                   >
@@ -1321,7 +1331,7 @@ export function WriteLetterDialog({
               )}
               {step === "preview" && (
                 <>
-                  <div className='flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800'>
+                  <div className='flex items-start gap-2 border-l border-waiting pl-3 text-xs text-ink'>
                     <span className='shrink-0 text-base leading-none'>⚠️</span>
                     <p>
                       <span className='font-bold'>
@@ -1334,11 +1344,7 @@ export function WriteLetterDialog({
                   <div className='flex flex-col items-end gap-1'>
                     <Button
                       variant='outline'
-                      className={`rounded-xl transition-colors ${
-                        draftSaved
-                          ? "border-green-700 bg-green-50 text-green-800 hover:bg-green-100"
-                          : ""
-                      }`}
+                      className={`h-11 ${draftSaved ? "text-sealed" : ""}`}
                       disabled={isSavingDraft}
                       onClick={() => void handleSaveDraft()}
                     >
@@ -1349,20 +1355,20 @@ export function WriteLetterDialog({
                           : "Save Draft"}
                     </Button>
                     {draftSaveError && (
-                      <p className='text-xs font-semibold text-red-600'>
+                      <p className='text-xs font-semibold text-declined'>
                         ❌ {draftSaveError}
                       </p>
                     )}
                     {footerHint ? (
-                      <span className='text-xs font-semibold text-amber-700'>
+                      <span className='text-xs font-semibold text-waiting'>
                         {footerHint}
                       </span>
                     ) : isDirty && requestId ? (
-                      <span className='text-xs text-amber-600'>
+                      <span className='text-xs text-waiting'>
                         ● Unsaved changes
                       </span>
                     ) : lastAutosaved ? (
-                      <span className='text-xs text-green-700'>
+                      <span className='text-xs text-sealed'>
                         Autosaved{" "}
                         {lastAutosaved.toLocaleTimeString([], {
                           hour: "2-digit",
@@ -1372,7 +1378,8 @@ export function WriteLetterDialog({
                     ) : null}
                   </div>
                   <Button
-                    className='rounded-xl bg-green-900 hover:bg-[#093820]'
+                    variant='gold'
+                    className='h-11'
                     disabled={isFinalizing || showFinalizeConfirm}
                     onClick={() => setShowFinalizeConfirm(true)}
                   >
@@ -1387,9 +1394,11 @@ export function WriteLetterDialog({
 
       {/* ── Unsaved-changes guard ── */}
       <Dialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
-        <DialogContent className='rounded-2xl sm:max-w-[400px]'>
+        <DialogContent className='sm:max-w-[400px]'>
           <DialogHeader>
-            <DialogTitle>Discard unsaved changes?</DialogTitle>
+            <DialogTitle className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
+              Discard unsaved changes?
+            </DialogTitle>
             <DialogDescription>
               You have unsaved changes to this draft. If you close now, they
               will be lost.
@@ -1398,13 +1407,14 @@ export function WriteLetterDialog({
           <DialogFooter className='flex gap-2 sm:justify-end'>
             <Button
               variant='outline'
-              className='rounded-xl'
+              className='h-11'
               onClick={() => setShowCloseWarning(false)}
             >
               Keep editing
             </Button>
             <Button
-              className='rounded-xl bg-red-700 text-white hover:bg-red-800'
+              variant='destructive'
+              className='h-11'
               onClick={() => {
                 setShowCloseWarning(false);
                 setIsDirty(false);

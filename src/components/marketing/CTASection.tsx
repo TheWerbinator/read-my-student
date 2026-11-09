@@ -1,52 +1,38 @@
-import { GraduationCap, Users } from "lucide-react";
+import Link from "next/link";
 import { LinkButton } from "../ui/LinkButton";
+import { FlapText } from "../board/FlapText";
 
+/** The close: the fare, then the next departure. */
 export default function CTASection() {
   return (
-    <section className='relative overflow-hidden bg-green-900'>
-      {/* soft vignette */}
-      <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0)_55%)]' />
-      <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[40px_40px]' />
-
-      <div className='relative mx-auto max-w-7xl px-6 py-16 md:py-20 text-center'>
-        <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-white'>
-          Ready to Get Started?
-        </h2>
-
-        <p className='mx-auto mt-4 max-w-2xl text-sm md:text-base leading-relaxed text-white/70'>
-          Join thousands of students and faculty who trust ReadMyStudent for
-          secure, respectful recommendation letters.
-        </p>
-
-        <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-4'>
-          <LinkButton
-            href='/signup?role=student'
-            variant='gold'
-            size='lg'
-            className='min-w-56 justify-center rounded-xl'
-          >
-            <span className='inline-flex items-center gap-2'>
-              <GraduationCap className='h-4 w-4' />
-              Students
-            </span>
-          </LinkButton>
-
-          <LinkButton
-            href='/signup?role=faculty'
-            variant='secondary'
-            size='lg'
-            className='min-w-56 justify-center rounded-xl bg-white/10 text-white hover:bg-white/15 border border-white/20'
-          >
-            <span className='inline-flex items-center gap-2'>
-              <Users className='h-4 w-4' />
-              Faculty
-            </span>
-          </LinkButton>
+    <section aria-labelledby='fare-heading' className='px-5 pb-20 pt-8 md:px-8 md:pb-28'>
+      <div className='mx-auto max-w-6xl'>
+        <div className='grid gap-6 border-y border-flap py-8 md:grid-cols-2 md:gap-10'>
+          <h2 id='fare-heading' className='font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em]'>
+            Professors never pay.
+          </h2>
+          <div>
+            <p className='text-lg leading-relaxed text-flap-ink/90'>
+              Students pay $5 each time they send a sealed letter to a school.{" "}
+              <Link href='/pricing' className='text-flap-ink underline'>
+                See pricing
+              </Link>
+            </p>
+          </div>
         </div>
 
-        <div className='mt-8 text-xs font-semibold text-white/55'>
-          No credit card required • Free 30-day trial for students • Always free
-          for faculty
+        <div className='mt-16 flex flex-col items-start gap-8 md:flex-row md:items-end md:justify-between'>
+          <p className='@container w-full max-w-2xl font-display font-extrabold'>
+            <span className='block text-[min(calc(100cqi/13.3),3.5rem)]'>
+              <FlapText text='Next departure:' />
+              <span className='mt-[0.12em] block'>
+                <FlapText text='your letter' className='text-gold' />
+              </span>
+            </span>
+          </p>
+          <LinkButton href='/signup?role=student' variant='gold' size='lg' className='shrink-0'>
+            Request a letter
+          </LinkButton>
         </div>
       </div>
     </section>

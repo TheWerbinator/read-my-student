@@ -236,11 +236,10 @@ export function LetterPreviewDialog({
   if (!previewEnabled) {
     return (
       <Button
-        size='sm'
-        variant='outline'
+        variant='ghost'
         disabled
         title={`${facultyName} has not enabled preview for this letter.`}
-        className='rounded-lg border-black/10 text-black/30'
+        className='h-11 text-flap-dim hover:bg-transparent'
       >
         <EyeOff className='mr-1.5 h-3.5 w-3.5' />
         Preview
@@ -252,30 +251,32 @@ export function LetterPreviewDialog({
     <Dialog open={open} onOpenChange={(o) => void handleOpen(o)}>
       <DialogTrigger asChild>
         <Button
-          size='sm'
           variant='outline'
-          className='rounded-lg border-green-900/30 text-green-900 hover:bg-green-900/5'
+          className='h-11 bg-transparent text-flap-ink ring-flap-ink/40 hover:bg-flap hover:text-flap-ink hover:ring-flap-ink/70'
         >
-          <Eye className='mr-1.5 h-3.5 w-3.5' />
+          <Eye />
           Preview
         </Button>
       </DialogTrigger>
-      <DialogContent className='flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl sm:max-w-[760px]'>
+      <DialogContent className='flex max-h-[90vh] w-full flex-col overflow-hidden sm:max-w-[760px]'>
         <DialogHeader className='shrink-0'>
-          <DialogTitle className='font-serif text-green-900'>
-            Letter Preview — {facultyName}
+          <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
+            Letter Preview: {facultyName}
           </DialogTitle>
         </DialogHeader>
 
         <div className='flex-1 overflow-y-auto p-1'>
           {(loading || rendering) && (
-            <div className='flex items-center justify-center py-20 text-sm text-gray-400'>
+            <div
+              role='status'
+              className='flex items-center justify-center py-20 text-sm text-ink-2 motion-safe:animate-pulse'
+            >
               {loading ? "Loading preview…" : "Rendering preview…"}
             </div>
           )}
           {error && (
-            <div className='rounded-xl bg-red-50 p-4 text-sm text-red-700'>
-              ❌ {error}
+            <div role='alert' className='border border-declined/40 bg-paper-2 p-4 text-sm text-declined'>
+              {error}
             </div>
           )}
 
@@ -302,7 +303,7 @@ export function LetterPreviewDialog({
           {canvasDataUrl && (
             <div className='flex flex-col gap-3'>
               <div
-                className='rounded-xl border border-black/5 shadow-sm overflow-hidden mx-2 mt-2'
+                className='sheet overflow-hidden mx-2 mt-2'
                 onContextMenu={(e) => e.preventDefault()}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -314,8 +315,8 @@ export function LetterPreviewDialog({
                   draggable={false}
                 />
               </div>
-              <div className='mx-2 mb-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800'>
-                <span className='font-semibold'>Preview only.</span> This is a
+              <div className='mx-2 mb-2 border border-rule bg-paper-2 px-4 py-3 text-xs text-ink-2'>
+                <span className='font-semibold text-ink'>Preview only.</span> This is a
                 watermarked copy for your reference. The official letter is
                 sealed and will be delivered to institutions by your professor
                 via ReadMyStudent.

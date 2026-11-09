@@ -8,95 +8,73 @@ export const metadata = {
 
 export default function AccessibilityPage() {
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* HERO */}
-      <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10'>
-        <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
+    <div className='px-5 py-12 md:px-8 md:py-20'>
+      <div className='mx-auto max-w-4xl'>
+        <header>
+          <h1 className='font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-7xl'>
             Accessibility
-          </div>
-
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
-            Built to be{" "}
-            <span className='italic text-amber-500'>usable and inclusive</span>.
           </h1>
-
-          <p className='mt-5 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
+          <p className='mt-6 max-w-2xl text-lg leading-relaxed text-flap-ink/90'>
             ReadMyStudent is committed to providing an accessible experience for
             all users, including students, faculty, and institutions with
             diverse needs and abilities.
           </p>
-        </div>
-      </section>
+        </header>
 
-      {/* CONTENT */}
-      <section className='mx-auto max-w-7xl px-6 pb-16 md:pb-24'>
-        <div className='max-w-3xl space-y-10'>
-          <Section title='Our commitment'>
-            We strive to design and build ReadMyStudent in a way that is usable
-            by as many people as possible. Accessibility is an ongoing effort,
-            and we aim to incorporate inclusive design principles throughout the
-            platform.
-          </Section>
+        <article className='sheet mt-10 px-5 py-8 sm:px-10 md:mt-14 md:px-14 md:py-12'>
+          <div className='prose-paper break-words text-base text-ink'>
+            <h2 id='our-commitment' className='scroll-mt-6 mt-0!'>
+              Our commitment
+            </h2>
+            <p>
+              We strive to design and build ReadMyStudent in a way that is
+              usable by as many people as possible. Accessibility is an ongoing
+              effort, and we aim to incorporate inclusive design principles
+              throughout the platform.
+            </p>
 
-          <Section title='Standards and guidelines'>
-            We aim to align with the Web Content Accessibility Guidelines (WCAG)
-            2.1 Level AA where reasonably possible. While not every part of the
-            platform may fully conform at all times, accessibility is considered
-            during design and development.
-          </Section>
+            <h2 id='standards-and-guidelines' className='scroll-mt-6'>
+              Standards and guidelines
+            </h2>
+            <p>
+              We aim to align with the Web Content Accessibility Guidelines
+              (WCAG) 2.1 Level AA where reasonably possible. While not every
+              part of the platform may fully conform at all times, accessibility
+              is considered during design and development.
+            </p>
 
-          <Section title='Accessibility features'>
-            Current accessibility considerations include:
-            <ul className='list-disc pl-5 mt-3 space-y-2'>
+            <h2 id='accessibility-features' className='scroll-mt-6'>
+              Accessibility features
+            </h2>
+            <p>Current accessibility considerations include:</p>
+            <ul>
               <li>Semantic HTML and structured content</li>
               <li>Keyboard navigable interfaces</li>
               <li>Readable typography and sufficient color contrast</li>
               <li>Clear labels and instructions for forms</li>
             </ul>
-          </Section>
 
-          <Section title='Known limitations'>
-            As the platform evolves, some areas may not yet fully meet all
-            accessibility standards. We view this as an ongoing process and are
-            committed to making improvements over time.
-          </Section>
+            <h2 id='known-limitations' className='scroll-mt-6'>
+              Known limitations
+            </h2>
+            <p>
+              As the platform evolves, some areas may not yet fully meet all
+              accessibility standards. We view this as an ongoing process and
+              are committed to making improvements over time.
+            </p>
 
-          <Section title='Feedback and assistance'>
-            If you encounter accessibility barriers or need assistance using
-            ReadMyStudent, please contact us through our{" "}
-            <Link
-              href='/contact'
-              className='font-semibold text-green-900 hover:underline'
-            >
-              contact page
-            </Link>
-            . We welcome feedback and will do our best to address issues in a
-            timely manner.
-          </Section>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-/* ---------- UI ---------- */
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <h2 className='font-serif text-2xl font-semibold text-[#0a2e1c]'>
-        {title}
-      </h2>
-      <div className='mt-3 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
-        {children}
+            <h2 id='feedback-and-assistance' className='scroll-mt-6'>
+              Feedback and assistance
+            </h2>
+            <p>
+              If you encounter accessibility barriers or need assistance using
+              ReadMyStudent, please contact us through our{" "}
+              <Link href='/contact'>contact page</Link>. We welcome feedback and
+              will do our best to address issues in a timely manner.
+            </p>
+          </div>
+        </article>
       </div>
-    </section>
+    </div>
   );
 }

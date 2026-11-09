@@ -24,9 +24,11 @@
 import { createHash } from "crypto";
 import { cookies } from "next/headers";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { ShieldCheck, ShieldAlert, Clock, FileText } from "lucide-react";
+import Image from "next/image";
 import type { Metadata } from "next";
 
+import Footer from "@/components/marketing/Footer";
+import LogoWhite from "../../../../public/Logo_Official_White.png";
 import { EmailGateForm } from "./EmailGateForm";
 import { DownloadButton } from "./DownloadButton";
 import { viewCookieName, viewCookieValue } from "./cookie-helpers";
@@ -54,57 +56,60 @@ type InvalidReason = "not-found" | "expired" | "used";
 
 // ─── Error states ─────────────────────────────────────────────────────────────
 
+function ViewHeader({ children }: { children?: React.ReactNode }) {
+  return (
+    <header className='bg-board'>
+      <div className='mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3'>
+        <div className='flex items-center gap-4'>
+          <Image src={LogoWhite} alt='ReadMyStudent' className='h-8 w-auto' />
+          <span className='caption text-flap-dim'>Sealed letter</span>
+        </div>
+        {children}
+      </div>
+    </header>
+  );
+}
+
 function InvalidPage({ reason }: { reason: InvalidReason }) {
-  const content: Record<
-    InvalidReason,
-    { icon: React.ReactNode; title: string; body: string }
-  > = {
+  const content: Record<InvalidReason, { title: string; body: string }> = {
     "not-found": {
-      icon: <ShieldAlert className='h-10 w-10 text-red-400' />,
-      title: "Link not found",
-      body: "This delivery link is invalid or does not exist. If you believe this is an error, please contact the sender.",
+      title: "This link does not work",
+      body: "We could not find a letter for this link.",
     },
     expired: {
-      icon: <Clock className='h-10 w-10 text-amber-400' />,
-      title: "Link has expired",
-      body: "This secure delivery link has passed its 48-hour expiry window and is no longer accessible. Please contact the applicant or institution to arrange a new delivery.",
+      title: "This link has expired",
+      body: "This link works for 48 hours after the professor approved the delivery, and that time has passed.",
     },
     used: {
-      icon: <ShieldAlert className='h-10 w-10 text-red-400' />,
-      title: "Link already used",
-      body: "This is a single-use link and has already been accessed. For security, each delivery link may only be viewed once. Please contact the applicant or ReadMyStudent support if you need assistance.",
+      title: "This link does not work",
+      body: "This link cannot be opened right now.",
     },
   };
 
-  const { icon, title, body } = content[reason];
+  const { title, body } = content[reason];
 
   return (
-    <div className='flex min-h-screen flex-col bg-gray-50'>
-      {/* Header banner */}
-      <div className='bg-green-900 px-6 py-4'>
-        <div className='mx-auto flex max-w-3xl items-center gap-3'>
-          <ShieldCheck className='h-6 w-6 text-amber-300' />
-          <span className='font-semibold tracking-wide text-white'>
-            ReadMyStudent Secure Delivery
-          </span>
-        </div>
-      </div>
-
-      {/* Error card */}
-      <div className='flex flex-1 items-center justify-center px-4 py-16'>
-        <div className='w-full max-w-md rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm'>
-          <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100'>
-            {icon}
-          </div>
-          <h1 className='mb-3 font-serif text-2xl font-bold text-gray-900'>
+    <div className='board on-board flex min-h-screen flex-col'>
+      <ViewHeader />
+      <main className='flex-1 px-4 py-8 md:py-12'>
+        <div className='sheet mx-auto max-w-lg p-5 md:p-8'>
+          <h1 className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-forest-ink md:text-3xl'>
             {title}
           </h1>
-          <p className='text-sm leading-relaxed text-gray-500'>{body}</p>
-          <p className='mt-8 text-xs text-gray-400'>
-            ReadMyStudent &mdash; Secure, Respectful Recommendation Letters
+          <p className='mt-4'>{body}</p>
+          <p className='mt-4 text-sm text-ink-2'>Common reasons:</p>
+          <ul className='mt-1 list-disc space-y-1 pl-5 text-sm text-ink-2'>
+            <li>The link has expired.</li>
+            <li>The link was opened in a different browser session.</li>
+            <li>The link was mistyped or cut off when it was copied.</li>
+          </ul>
+          <p className='mt-4 border-t border-rule pt-4 text-sm'>
+            Next step: ask the student to send a new link. If that does not
+            help, contact ReadMyStudent support.
           </p>
         </div>
-      </div>
+      </main>
+      <Footer compact />
     </div>
   );
 }
@@ -269,70 +274,34 @@ export default async function ViewLetterPage({
 
   // ── 11. Render ────────────────────────────────────────────────────────────
   return (
-    <div className='flex min-h-screen flex-col bg-gray-50'>
-      {/* Header banner */}
-      <div className='bg-green-900 px-6 py-4 shadow-sm'>
-        <div className='mx-auto flex max-w-5xl items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <ShieldCheck className='h-6 w-6 text-amber-300' />
-            <span className='font-semibold tracking-wide text-white'>
-              ReadMyStudent Secure Delivery
-            </span>
-          </div>
-          <span className='flex items-center gap-1.5 rounded-full bg-green-700 px-3 py-1 text-xs font-semibold text-amber-300'>
-            <ShieldCheck className='h-3.5 w-3.5' />
-            Email Verified
-          </span>
-        </div>
-      </div>
+    <div className='board on-board flex min-h-screen flex-col'>
+      <ViewHeader>
+        <span className='caption text-mint'>Email verified</span>
+      </ViewHeader>
 
-      {/* Metadata bar */}
-      <div className='border-b bg-white px-6 py-4 shadow-sm'>
-        <div className='mx-auto grid max-w-5xl gap-4 sm:grid-cols-4'>
-          <div>
-            <p className='text-xs font-medium uppercase tracking-wide text-gray-400'>
-              Applicant
-            </p>
-            <p className='mt-0.5 text-sm font-semibold text-gray-900'>
-              {studentFullName}
-            </p>
-          </div>
-          <div>
-            <p className='text-xs font-medium uppercase tracking-wide text-gray-400'>
-              Written by
-            </p>
-            <p className='mt-0.5 text-sm font-semibold text-gray-900'>
-              {facultyName}
-            </p>
-          </div>
-          <div>
-            <p className='text-xs font-medium uppercase tracking-wide text-gray-400'>
-              Delivered to
-            </p>
-            <p className='mt-0.5 text-sm font-semibold text-gray-900'>
-              {schoolName}
-            </p>
-          </div>
-          <div>
-            <p className='text-xs font-medium uppercase tracking-wide text-gray-400'>
-              Finalized
-            </p>
-            <p className='mt-0.5 text-sm font-semibold text-gray-900'>
-              {finalizedDate}
-            </p>
-          </div>
-        </div>
-      </div>
+      <main className='mx-auto w-full max-w-5xl flex-1 space-y-4 px-4 py-6'>
+        {/* Metadata */}
+        <dl className='sheet grid grid-cols-2 gap-4 p-4 sm:grid-cols-4 md:p-5'>
+          {[
+            ["Applicant", studentFullName],
+            ["Written by", facultyName],
+            ["Delivered to", schoolName],
+            ["Finalized", finalizedDate],
+          ].map(([label, value]) => (
+            <div key={label} className='min-w-0'>
+              <dt className='caption text-ink-2'>{label}</dt>
+              <dd className='mt-1 break-words text-sm font-semibold'>
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
 
-      {/* PDF viewer + controls */}
-      <div className='mx-auto w-full max-w-5xl flex-1 px-4 py-6'>
         {/* Toolbar */}
-        <div className='mb-3 flex items-center justify-between'>
-          <p className='text-sm text-gray-500'>
+        <div className='flex flex-wrap items-center justify-between gap-3'>
+          <p className='text-sm text-ink-2'>
             Recommendation letter for{" "}
-            <span className='font-semibold text-gray-700'>
-              {studentFullName}
-            </span>
+            <span className='font-semibold text-ink'>{studentFullName}</span>
           </p>
           <DownloadButton
             pdfUrl={pdfUrl}
@@ -342,7 +311,7 @@ export default async function ViewLetterPage({
         </div>
 
         {/* Iframe */}
-        <div className='overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm'>
+        <div className='sheet overflow-hidden'>
           <iframe
             src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
             className='h-[80vh] w-full'
@@ -352,32 +321,29 @@ export default async function ViewLetterPage({
 
         {/* Signature / integrity strip */}
         {sig && (
-          <div className='mt-4 flex flex-wrap items-center gap-4 rounded-xl border border-gray-100 bg-white px-5 py-4 shadow-sm'>
-            <div className='flex items-center gap-2 text-green-700'>
-              <ShieldCheck className='h-5 w-5 flex-shrink-0' />
-              <span className='text-sm font-semibold'>
-                Cryptographic integrity verified
-              </span>
-            </div>
-            <div className='ml-auto grid gap-1 text-right text-xs text-gray-400'>
+          <div className='sheet flex flex-wrap items-center gap-4 p-4 md:p-5'>
+            <span className='text-sm font-semibold text-sealed'>
+              Cryptographic integrity verified
+            </span>
+            <div className='grid gap-1 text-xs text-ink-2 sm:ml-auto sm:text-right'>
               <div>
-                <span className='font-medium text-gray-500'>SHA-256: </span>
+                <span className='font-medium text-ink'>SHA-256: </span>
                 <span className='font-mono'>
                   {(sig.pdf_sha256 as string).slice(0, 16)}&hellip;
                 </span>
               </div>
               <div>
-                <span className='font-medium text-gray-500'>Signed: </span>
+                <span className='font-medium text-ink'>Signed: </span>
                 {sig.signed_at
                   ? new Date(sig.signed_at as string).toLocaleDateString(
                       "en-US",
                       { year: "numeric", month: "short", day: "numeric" },
                     )
-                  : "—"}
+                  : "Not given"}
               </div>
               <div>
-                <span className='font-medium text-gray-500'>Key: </span>
-                <span className='font-mono'>
+                <span className='font-medium text-ink'>Key: </span>
+                <span className='font-mono break-all'>
                   {sig.signing_key_id as string}
                 </span>
               </div>
@@ -385,20 +351,19 @@ export default async function ViewLetterPage({
           </div>
         )}
 
-        {/* Single-use notice */}
-        <p className='mt-3 flex items-center gap-1.5 text-xs text-gray-400'>
-          <FileText className='h-3.5 w-3.5 flex-shrink-0' />
-          This secure link has now been consumed and cannot be shared. This
-          letter was sealed and delivered via{" "}
-          <a
-            href='https://readmystudent.com'
-            className='underline hover:text-gray-600'
-          >
+        {/* Access notice */}
+        <p className='text-xs text-ink-2'>
+          This link works for 48 hours after the professor approved it, and only
+          after the recipient confirms their email. This letter was sealed and
+          delivered via{" "}
+          <a href='https://readmystudent.com' className='underline'>
             ReadMyStudent
           </a>
           .
         </p>
-      </div>
+      </main>
+
+      <Footer compact />
     </div>
   );
 }

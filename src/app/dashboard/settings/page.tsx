@@ -16,13 +16,13 @@ export default async function SettingsPage() {
   const facultyProfile = isFaculty ? await getFacultyProfile() : null;
 
   return (
-    <div className='min-h-screen bg-[#fbfbf8] p-6 md:p-10'>
+    <div className='p-6 md:p-10'>
       <div className='mx-auto max-w-2xl space-y-8'>
         <div>
-          <h1 className='font-serif text-3xl font-semibold text-green-900'>
+          <h1 className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-flap-ink md:text-3xl'>
             Account Settings
           </h1>
-          <p className='mt-1 text-green-900/70'>
+          <p className='mt-2 text-flap-dim'>
             Manage your account details and preferences.
           </p>
         </div>

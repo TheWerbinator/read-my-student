@@ -1,524 +1,366 @@
-import Image from "next/image";
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
-
-// Optional: swap with your own image
-import HowItWorksImage from "@/assets/hero/HeroImage_02.png";
-
-import {
-  AlertTriangle,
-  Clock3,
-  ShieldCheck,
-  Lock,
-  Check,
-  GraduationCap,
-  Users,
-  Building2,
-} from "lucide-react";
+import { FlapText } from "@/components/board/FlapText";
+import { DepartureBoard, type DepartureRow } from "@/components/board/DepartureBoard";
+import { lampOnBoard, type Lamp } from "@/components/board/status";
+import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "How It Works",
   description:
-    "See how ReadMyStudent simplifies the recommendation letter process for both students and faculty with secure sharing, deadline tracking, and streamlined communication.",
+    "Follow a letter request from the student's first note to the school's secure link: what you enter, what the professor sees, the reminder and close dates, sealing, and delivery.",
 };
+
+// Illustrative rows: invented names and times, labelled "Sample board" on the page.
+const sampleRows: DepartureRow[] = [
+  { time: "08:40", student: "Ananya K.", professor: "Dr. Mehta", school: "Waterloo", status: "Requested", lamp: "moving" },
+  { time: "08:52", student: "Tom B.", professor: "Prof. Hale", school: "Michigan", status: "Opened", lamp: "moving" },
+  { time: "09:30", student: "Lena W.", professor: "Dr. Brandt", school: "TU Munich", status: "Sealed", lamp: "done" },
+  { time: "10:10", student: "Rohan G.", professor: "Prof. Das", school: "Edinburgh", status: "Reminded", lamp: "waiting" },
+];
+
+type Stop = { when: string; step: string; who: string; detail: string; status: string; lamp: Lamp };
+
+// The real rules: no account for the professor, autosave, seal on finalize, one link per school.
+const stops: Stop[] = [
+  {
+    when: "Day 0",
+    step: "Request",
+    who: "Student",
+    detail: "Enter your professor's email, the course if you want, and a short personal note.",
+    status: "Requested",
+    lamp: "moving",
+  },
+  {
+    when: "Day 0",
+    step: "Open",
+    who: "Professor",
+    detail: "They get an email with one link. It opens a page with your note. No account, no password.",
+    status: "Opened",
+    lamp: "moving",
+  },
+  {
+    when: "Any day",
+    step: "Write",
+    who: "Professor",
+    detail: "Three steps: their details, letterhead and signature, then the letter. The draft saves as they go.",
+    status: "In progress",
+    lamp: "moving",
+  },
+  {
+    when: "Any day",
+    step: "Seal",
+    who: "Professor",
+    detail: "Finalizing turns the letter into a signed PDF. You see it only if they turn on a preview.",
+    status: "Sealed",
+    lamp: "done",
+  },
+  {
+    when: "When ready",
+    step: "Send",
+    who: "Student",
+    detail: "Pick a school and send. Each school gets its own secure link, for $5 per school.",
+    status: "Sent",
+    lamp: "done",
+  },
+  {
+    when: "On opening",
+    step: "Read",
+    who: "School",
+    detail: "The reader confirms an email address, then opens the letter. The first opening is logged.",
+    status: "Logged",
+    lamp: "done",
+  },
+];
+
+const ifQuiet = [
+  {
+    title: "Day 3",
+    body: "No answer yet. We email the professor a reminder with the same link.",
+  },
+  {
+    title: "Day 7",
+    body: "Still nothing. The request closes as expired and shows that way on your dashboard, so you can ask someone else.",
+  },
+  {
+    title: "Decline",
+    body: "A professor can also decline from the same page. You see Declined on your board instead of waiting.",
+  },
+];
+
+const schoolFacts = [
+  {
+    title: "Own link",
+    body: "Every school gets its own secure link, so one school opening a letter tells you nothing about another.",
+  },
+  {
+    title: "Email check",
+    body: "The reader confirms an email address before the letter opens.",
+  },
+  {
+    title: "Opening log",
+    body: "When a school first opens its letter, the time is recorded. The link stays valid for 48 hours after the professor approves the delivery.",
+  },
+  {
+    title: "Signature check",
+    body: "The seal is an HMAC signature over the PDF. If a single byte changes, it no longer matches.",
+  },
+];
+
+const h2 = "font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl";
+const section = "px-5 py-16 md:px-8 md:py-24";
 
 export default function HowItWorksPage() {
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* Hero */}
-      <section className='relative overflow-hidden bg-green-900 lg:pl-24'>
-        <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]' />
-        <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]' />
-
-        <div className='relative mx-auto max-w-7xl px-6 py-10 sm:py-16 md:py-28 lg:py-40'>
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 items-start'>
-            {/* Image panel */}
-            <div className='relative order-2 lg:order-1'>
-              <div className='relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 shadow-[0_30px_90px_rgba(0,0,0,0.25)]'>
-                <div className='absolute inset-0 bg-linear-to-t from-black/30 to-transparent' />
-                <Image
-                  src={HowItWorksImage}
-                  alt='How ReadMyStudent works'
-                  className='h-80 md:h-105 w-full object-cover'
-                  priority
-                />
-              </div>
-
-              <div className='mt-4 flex flex-wrap gap-2'>
-                <Pill
-                  icon={<Lock className='h-4 w-4' />}
-                  text='Encrypted storage'
-                />
-                <Pill
-                  icon={<ShieldCheck className='h-4 w-4' />}
-                  text='Consent-based access'
-                />
-                <Pill
-                  icon={<Clock3 className='h-4 w-4' />}
-                  text='Deadline tracking'
-                />
-              </div>
+    <div>
+      {/* First viewport: flap heading + sample board */}
+      <section className='relative overflow-hidden px-5 pb-16 pt-8 md:px-8 lg:pb-24 lg:pt-16'>
+        <div className='mx-auto grid max-w-6xl items-start gap-12 xl:grid-cols-12 xl:gap-10'>
+          <div className='xl:col-span-6'>
+            <h1 className='@container font-display font-extrabold leading-none'>
+              <span className='flex flex-col gap-[0.12em] text-[min(calc(100cqi/10.7),4.75rem)]'>
+                <FlapText text='Request to' cascadeOnMount />
+                <FlapText text='school in' cascadeOnMount delay={250} />
+                <FlapText text='six stops.' cascadeOnMount delay={500} className='text-gold' />
+              </span>
+            </h1>
+            <p className='mt-8 max-w-xl text-lg leading-relaxed text-flap-ink/90 md:text-xl'>
+              This is the whole trip for a student, a professor, and a school: what each person enters, what they see, and what happens when nobody answers.
+            </p>
+            <div className='mt-8 flex flex-col gap-3 sm:flex-row'>
+              <LinkButton href='/signup?role=student' variant='gold' size='lg'>
+                Request a letter
+              </LinkButton>
+              <LinkButton href='/for-faculty' variant='board' size='lg'>
+                I am a professor
+              </LinkButton>
             </div>
+          </div>
 
-            <div className='relative order-1 lg:order-2'>
-              <div className='inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15'>
-                How It Works
-              </div>
-
-              <h1 className='mt-6 font-serif text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-white'>
-                Recommendation letters are{" "}
-                <span className='italic text-amber-400'>hard</span> —
-                <br className='hidden md:block' /> for reasons nobody designed
-                for.
-              </h1>
-
-              <p className='mt-5 max-w-xl text-sm md:text-base leading-relaxed text-white/70'>
-                Traditional recommendation letters rely on manual trust,
-                scattered portals, and emotional friction. We built
-                ReadMyStudent to preserve integrity, protect privacy, and make
-                the experience human.
-              </p>
-
-              <div className='mt-8 flex flex-col sm:flex-row gap-3'>
-                <LinkButton
-                  href='/signup?role=student'
-                  variant='gold'
-                  size='lg'
-                  className='rounded-xl justify-center'
-                >
-                  Start as a Student
-                </LinkButton>
-
-                <LinkButton
-                  href='/signup?role=faculty'
-                  variant='secondary'
-                  size='lg'
-                  className='rounded-xl bg-white/10 text-white hover:bg-white/15 border border-white/20 justify-center'
-                >
-                  Join as Faculty
-                </LinkButton>
-              </div>
-
-              <div className='mt-6 text-xs font-semibold text-white/55'>
-                Secure by design • Consent-first sharing • Built for academic
-                trust
-              </div>
-            </div>
+          <div className='max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
+            <DepartureBoard title='Letter departures' note='Sample board' rows={sampleRows} mobileRows={3} />
           </div>
         </div>
       </section>
 
-      {/* Problems */}
-      <section className='mx-auto max-w-7xl px-6 py-16 md:py-24 lg:pl-24'>
-        <div className='text-center'>
-          <div className='inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]'>
-            The Problem
-          </div>
-          <h2 className='mt-6 font-serif text-4xl md:text-5xl font-semibold text-green-900'>
-            The traditional process is{" "}
-            <span className='italic text-amber-500'>emotionally</span> and{" "}
-            <span className='italic text-amber-500'>logistically</span> broken.
+      {/* The six stops */}
+      <section aria-labelledby='stops-heading' className={section}>
+        <div className='mx-auto max-w-6xl'>
+          <h2 id='stops-heading' className={cn(h2, "max-w-3xl")}>
+            Six stops. <span className='text-gold'>Each one shows on your board.</span>
           </h2>
-          <p className='mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-green-900'>
-            Students feel vulnerable asking. Faculty are overloaded.
-            Institutions struggle with fraud risk and compliance.
-          </p>
-        </div>
-
-        <div className='mt-14 grid grid-cols-1 lg:grid-cols-2 gap-6'>
-          <ProblemCard
-            icon={<GraduationCap className='h-5 w-5' />}
-            title='For Students: Emotionally hard'
-            subtitle='Asking feels vulnerable'
-            bullets={[
-              "Fear of rejection",
-              "Fear of “lukewarm” letters",
-              "Power imbalance",
-              "Long response times",
-              "Unclear expectations",
-            ]}
-            quotes={[
-              "“Do they even remember me?”",
-              "“Am I bothering them?”",
-              "“What if they say yes but write a bad letter?”",
-            ]}
-            href='/for-students'
-          />
-
-          <ProblemCard
-            icon={<Users className='h-5 w-5' />}
-            title='For Faculty: Time-expensive'
-            subtitle='Most faculty want to help — but are overloaded.'
-            bullets={[
-              "1 strong letter = 30–90 minutes",
-              "Busy seasons = dozens of requests",
-              "Deadlines vary",
-              "Submission portals differ",
-              "Repeated reminders",
-              "Zero compensation",
-            ]}
-            href='/for-faculty'
-          />
+          <ol className='board-frame mt-12 space-y-[3px]'>
+            {stops.map((s) => (
+              <li
+                key={s.step}
+                className='flap-row grid grid-cols-[5.5rem_1fr] gap-x-4 gap-y-1 rounded-[2px] px-3 py-4 md:grid-cols-[7rem_10rem_1fr_9rem] md:items-center md:py-5'
+              >
+                <span className='font-display text-lg font-bold uppercase tracking-[0.06em] text-flap-dim'>{s.when}</span>
+                <span className='font-display text-2xl font-extrabold uppercase leading-none tracking-[0.04em] text-flap-ink md:text-3xl'>
+                  {s.step}
+                </span>
+                <span className='col-start-2 text-base leading-snug text-flap-ink/90 md:col-start-auto'>
+                  <span className='caption mr-2 text-flap-dim'>{s.who}</span>
+                  {s.detail}
+                </span>
+                <span
+                  className={cn(
+                    "col-start-2 font-display text-lg font-bold uppercase tracking-[0.08em] md:col-start-auto md:text-right",
+                    lampOnBoard[s.lamp],
+                  )}
+                >
+                  {s.status}
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* Pain Points */}
-      <section className='bg-white/40 border-y border-black/5 lg:pl-24'>
-        <div className='mx-auto max-w-7xl px-6 py-16 md:py-20'>
-          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-            <MiniListCard
-              icon={<GraduationCap className='h-5 w-5' />}
-              title='Student Pain Points'
-              items={[
-                "Anxiety asking",
-                "Fear of bad letters",
-                "No transparency",
-                "Repeating the process every year",
-                "Losing access after graduation",
-                "Inequity in access",
-                "No central storage",
-                "Deadline tracking nightmare",
-              ]}
-            />
-
-            <MiniListCard
-              icon={<Users className='h-5 w-5' />}
-              title='Faculty Pain Points'
-              items={[
-                "Rewriting similar letters",
-                "Deadline overload",
-                "Portal fatigue",
-                "No central archive",
-                "No way to “approve once, reuse many”",
-                "No secure ownership",
-                "No compensation or recognition",
-              ]}
-            />
-
-            <MiniListCard
-              icon={<Building2 className='h-5 w-5' />}
-              title='Institutional Pain Points'
-              items={[
-                "Fraud risk",
-                "Ghostwritten letters",
-                "Identity verification",
-                "Inconsistent standards",
-                "Compliance headaches",
-              ]}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Structural broken */}
-      <section className='mx-auto max-w-7xl px-6 py-16 md:py-24 lg:pl-24'>
-        <div className='rounded-3xl border border-black/10 bg-[#fbfbf8] shadow-[0_20px_60px_rgba(15,23,42,0.06)] overflow-hidden'>
-          <div className='p-8 md:p-12'>
-            <div className='inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700'>
-              <AlertTriangle className='h-4 w-4' />
-              Why the System Is Broken (Structurally)
-            </div>
-
-            <h3 className='mt-6 font-serif text-3xl md:text-4xl font-semibold text-green-900'>
-              The current model assumes things that are no longer true.
-            </h3>
-
-            <div className='mt-8 grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <AssumptionRow left='Small applicant pools' right='❌' />
-              <AssumptionRow left='Low application volume' right='❌' />
-              <AssumptionRow left='Long faculty availability' right='❌' />
-              <AssumptionRow left='Manual trust' right='❌' />
-            </div>
-
-            <p className='mt-8 text-sm md:text-base text-green-900 leading-relaxed'>
-              Modern application volume and verification needs demand a system
-              that is secure, auditable, and respectful of everyone’s time and
-              emotional load.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Solutions */}
-      <section className='bg-[#0b5315] lg:pl-24'>
-        <div className='mx-auto max-w-7xl px-6 py-16 md:py-24'>
-          <div className='text-center'>
-            <div className='inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15'>
-              Our Approach
-            </div>
-
-            <h2 className='mt-6 font-serif text-4xl md:text-5xl font-semibold text-white'>
-              A better system:{" "}
-              <span className='italic text-amber-400'>secure</span>,{" "}
-              <span className='italic text-amber-400'>consent-first</span>,{" "}
-              <span className='italic text-amber-400'>human</span>.
+      {/* What the student enters */}
+      <section aria-labelledby='enter-heading' className={section}>
+        <div className='mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-12'>
+          <div className='lg:col-span-5'>
+            <h2 id='enter-heading' className={h2}>
+              You fill in <span className='text-gold'>three fields.</span>
             </h2>
-
-            <p className='mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-white/70'>
-              ReadMyStudent modernizes the workflow while preserving academic
-              integrity and confidentiality.
+            <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
+              The professor&apos;s email, the course (optional), and a personal note. Say what you are applying to and when it is due, because the professor reads this note first.
+            </p>
+            <p className='mt-4 max-w-md text-base leading-relaxed text-flap-dim'>
+              One request goes to one professor. Ask three professors and you get three lines on your board.
             </p>
           </div>
 
-          <div className='mt-14 grid grid-cols-1 md:grid-cols-2 gap-6'>
-            <SolutionCard
-              title='Design Principles'
-              items={[
-                "Be student-initiated but faculty-controlled",
-                "Feel human, not bureaucratic",
-                "Preserve academic integrity",
-                "Respect confidentiality by default",
-              ]}
-            />
-            <SolutionCard
-              title='What We Enable'
-              items={[
-                "Store letters securely",
-                "Allow consent-based reuse",
-                "Track deadlines automatically",
-                "Provide verification & encryption",
-                "Reduce duplicate effort",
-              ]}
-            />
+          <figure className='lg:col-span-7'>
+            <div className='sheet relative px-6 py-7 md:px-10 md:py-10'>
+              <span className='caption absolute right-4 top-4 text-ink-2'>Sample</span>
+              <p className='font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em] text-ink md:text-4xl'>
+                New request
+              </p>
+              <div aria-hidden='true' className='mt-6 space-y-5'>
+                <div>
+                  <p className='caption text-ink-2'>Professor&apos;s email</p>
+                  <p className='mt-1.5 border border-rule px-3 py-2.5 text-base text-ink'>professor@university.edu</p>
+                </div>
+                <div>
+                  <p className='caption text-ink-2'>Course / context (optional)</p>
+                  <p className='mt-1.5 border border-rule px-3 py-2.5 text-base text-ink'>CS 344 Algorithms, Fall 2025</p>
+                </div>
+                <div>
+                  <p className='caption text-ink-2'>Personal note</p>
+                  <p className='mt-1.5 border border-rule px-3 py-2.5 text-base leading-relaxed text-ink'>
+                    I am applying to MS programs in Canada and Germany. The first deadline is December 15. Thank you for considering it.
+                  </p>
+                </div>
+                <span className='inline-flex h-11 items-center bg-forest px-5 font-display text-lg font-bold uppercase tracking-[0.06em] text-white'>
+                  Send request
+                </span>
+              </div>
+            </div>
+            <figcaption className='mt-3 text-sm text-flap-dim'>The request form. The values are a sample.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      {/* What the professor sees */}
+      <section aria-labelledby='write-heading' className={section}>
+        <div className='mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-12'>
+          <figure className='order-2 lg:order-1 lg:col-span-7'>
+            <div className='sheet relative px-6 pb-8 pt-9 md:px-10'>
+              <span className='caption absolute right-4 top-4 text-ink-2'>Sample</span>
+              <ol aria-hidden='true' className='grid grid-cols-3 gap-2 text-center'>
+                {["Your details", "Letterhead and signature", "Letter"].map((label, i) => (
+                  <li
+                    key={label}
+                    className={cn(
+                      "border-b-4 pb-2 caption",
+                      i === 2 ? "border-forest text-forest-ink" : "border-rule text-ink-2",
+                    )}
+                  >
+                    {i + 1}. {label}
+                  </li>
+                ))}
+              </ol>
+              <div aria-hidden='true' className='mt-6 space-y-2.5'>
+                <p className='text-sm text-ink'>To the Graduate Admissions Committee,</p>
+                {[100, 95, 98, 90, 60].map((w, i) => (
+                  <span key={i} className='block h-2 rounded-[1px] bg-paper-2' style={{ width: `${w}%` }} />
+                ))}
+              </div>
+              <div className='mt-7 flex flex-wrap items-center justify-between gap-4'>
+                <p className='text-sm font-semibold text-sealed'>Draft saved</p>
+                <span
+                  aria-hidden='true'
+                  className='inline-flex h-11 items-center bg-forest px-5 font-display text-lg font-bold uppercase tracking-[0.06em] text-white'
+                >
+                  Finalize and seal
+                </span>
+              </div>
+            </div>
+            <figcaption className='mt-3 text-sm text-flap-dim'>
+              The writing window a professor sees. The letter text is a placeholder.
+            </figcaption>
+          </figure>
+
+          <div className='order-1 lg:order-2 lg:col-span-5 lg:pl-6'>
+            <h2 id='write-heading' className={h2}>
+              Your professor <span className='text-gold'>never makes an account.</span>
+            </h2>
+            <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
+              The email link opens your note and a writing window. The draft saves on its own, so they can stop and come back from the same link.
+            </p>
+            <p className='mt-4 max-w-md text-base leading-relaxed text-flap-dim'>
+              Finalizing turns the letter into a signed PDF. If anyone changes it afterward, the signature check fails.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* If nobody answers */}
+      <section aria-labelledby='quiet-heading' className={section}>
+        <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
+          <h2 id='quiet-heading' className={cn(h2, "lg:col-span-5")}>
+            If nobody answers, <span className='text-gold'>you still know.</span>
+          </h2>
+          <dl className='divide-y divide-flap lg:col-span-7'>
+            {ifQuiet.map((f) => (
+              <div key={f.title} className='grid gap-1 py-4 first:pt-0 sm:grid-cols-[8rem_1fr] sm:gap-6'>
+                <dt className='font-display text-xl font-bold uppercase tracking-[0.04em] text-flap-ink'>{f.title}</dt>
+                <dd className='text-base leading-relaxed text-flap-ink/85'>{f.body}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* What the school sees */}
+      <section aria-labelledby='school-heading' className={section}>
+        <div className='mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12'>
+          <div className='lg:col-span-6'>
+            <h2 id='school-heading' className={h2}>
+              The school gets <span className='text-gold'>a link, not an attachment.</span>
+            </h2>
+            <dl className='mt-10 divide-y divide-flap'>
+              {schoolFacts.map((f) => (
+                <div key={f.title} className='grid gap-1 py-4 sm:grid-cols-[10rem_1fr] sm:gap-6'>
+                  <dt className='font-display text-xl font-bold uppercase tracking-[0.04em] text-flap-ink'>{f.title}</dt>
+                  <dd className='text-base leading-relaxed text-flap-ink/85'>{f.body}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          <div className='mt-10 grid grid-cols-1 md:grid-cols-3 gap-6'>
-            <FeatureTile
-              icon={<Lock className='h-5 w-5' />}
-              title='Secure storage'
-              body='Encrypted at rest and in transit. Sensitive documents belong behind strong controls.'
-            />
-            <FeatureTile
-              icon={<ShieldCheck className='h-5 w-5' />}
-              title='Consent-based sharing'
-              body='Letters are shared only when a student explicitly approves access.'
-            />
-            <FeatureTile
-              icon={<Clock3 className='h-5 w-5' />}
-              title='Deadline clarity'
-              body='Deadlines and status tracking reduce anxiety and eliminate reminder loops.'
-            />
+          <figure className='lg:col-span-6'>
+            <div className='sheet relative px-7 py-9 md:px-10'>
+              <span className='caption absolute right-4 top-4 text-ink-2'>Sample</span>
+              <p className='font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em] text-ink md:text-4xl'>
+                Confirm your email to open
+              </p>
+              <div aria-hidden='true' className='mt-6'>
+                <p className='caption text-ink-2'>Your email</p>
+                <p className='mt-1.5 border border-rule px-3 py-2.5 text-base text-ink'>admissions@university.edu</p>
+                <span className='mt-5 inline-flex h-11 items-center bg-forest px-5 font-display text-lg font-bold uppercase tracking-[0.06em] text-white'>
+                  Open letter
+                </span>
+              </div>
+              <p className='mt-6 border-t border-dashed border-rule pt-3 text-sm text-ink-2'>
+                This link was sent to one school. The first opening is logged.
+              </p>
+            </div>
+            <figcaption className='mt-3 text-sm text-flap-dim'>The first page a school sees. The address is a sample.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      {/* Close */}
+      <section aria-labelledby='how-close-heading' className='px-5 pb-20 pt-8 md:px-8 md:pb-28'>
+        <div className='mx-auto max-w-6xl'>
+          <div className='flex flex-col items-start gap-8 border-t border-flap pt-12 md:flex-row md:items-end md:justify-between'>
+            <h2 id='how-close-heading' className='@container w-full max-w-2xl font-display font-extrabold'>
+              <span className='block text-[min(calc(100cqi/13.3),3.5rem)]'>
+                <FlapText text='Next departure:' />
+                <span className='mt-[0.12em] block'>
+                  <FlapText text='your letter' className='text-gold' />
+                </span>
+              </span>
+            </h2>
+            <LinkButton href='/signup?role=student' variant='gold' size='lg' className='shrink-0'>
+              Request a letter
+            </LinkButton>
           </div>
-
-          <div className='mt-14 flex flex-col sm:flex-row items-center justify-center gap-3'>
-            <LinkButton
-              href='/signup?role=student'
-              variant='gold'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center'
-            >
-              Start as a Student
-            </LinkButton>
-
-            <LinkButton
-              href='/signup?role=faculty'
-              variant='secondary'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center bg-white/10 text-white hover:bg-white/15 border border-white/20'
-            >
-              Join as Faculty
-            </LinkButton>
-
-            <Link
-              href='/contact'
-              className='text-sm font-semibold text-white/75 hover:text-white transition-colors'
-            >
+          <p className='mt-8 text-sm text-flap-dim'>
+            Professors never pay. Students pay $5 per school.{" "}
+            <Link href='/pricing' className='text-flap-ink underline'>
+              See pricing
+            </Link>
+            <span aria-hidden='true'> · </span>
+            <Link href='/contact' className='text-flap-ink underline'>
               Questions? Contact us
             </Link>
-          </div>
+          </p>
         </div>
       </section>
-    </main>
-  );
-}
-
-/* ---------- UI bits ---------- */
-
-function Pill({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className='inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-semibold text-white/85 border border-white/15'>
-      <span className='text-amber-300'>{icon}</span>
-      {text}
-    </div>
-  );
-}
-
-function ProblemCard({
-  icon,
-  title,
-  subtitle,
-  bullets,
-  quotes,
-  href,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  bullets: string[];
-  quotes?: string[];
-  href?: string;
-}) {
-  const cardClassName = [
-    "group rounded-3xl border border-black/10 bg-white px-8 py-8",
-    "shadow-[0_10px_30px_rgba(15,23,42,0.04)]",
-    "transition-colors duration-300",
-    "hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.20)]",
-    href ? "cursor-pointer" : "",
-  ].join(" ");
-
-  const Card = (
-    <div className={cardClassName}>
-      <div className='flex items-center gap-3'>
-        <div className='h-12 w-12 rounded-2xl bg-amber-50 text-green-900 grid place-items-center border border-black/5'>
-          {icon}
-        </div>
-        <div>
-          <div className='font-serif text-xl font-semibold text-green-900'>
-            {title}
-          </div>
-          <div className='text-sm font-semibold text-amber-600'>{subtitle}</div>
-        </div>
-      </div>
-
-      <ul className='mt-6 space-y-3 text-sm text-green-900'>
-        {bullets.map((b) => (
-          <li key={b} className='flex items-start gap-3'>
-            <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500'>
-              <Check className='h-4 w-4' />
-            </span>
-            <span>{b}</span>
-          </li>
-        ))}
-      </ul>
-
-      {quotes?.length ? (
-        <div className='mt-7 rounded-2xl bg-[#fbfbf8] border border-black/5 px-5 py-4'>
-          <div className='text-xs font-bold text-amber-600 uppercase tracking-wide'>
-            Students often wonder
-          </div>
-          <div className='mt-2 space-y-2 text-sm italic text-green-900'>
-            {quotes.map((q) => (
-              <div key={q}>{q}</div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {href ? (
-        <div className='mt-6 text-sm font-semibold text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity'>
-          Learn more →
-        </div>
-      ) : null}
-    </div>
-  );
-
-  return href ? (
-    <Link href={href} className='block'>
-      {Card}
-    </Link>
-  ) : (
-    Card
-  );
-}
-
-function MiniListCard({
-  icon,
-  title,
-  items,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  items: string[];
-}) {
-  const cardClassName = [
-    "rounded-3xl border border-black/10 bg-white px-7 py-8",
-    "shadow-[0_10px_30px_rgba(15,23,42,0.04)]",
-    "transition-colors duration-300",
-    "hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.20)]",
-  ].join(" ");
-
-  return (
-    <div className={cardClassName}>
-      <div className='flex items-center gap-3'>
-        <div className='h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center border border-black/5'>
-          {icon}
-        </div>
-        <div className='font-serif text-xl font-semibold text-green-900'>
-          {title}
-        </div>
-      </div>
-
-      <ul className='mt-6 space-y-3 text-sm text-green-900'>
-        {items.map((i) => (
-          <li key={i} className='flex items-start gap-3'>
-            <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-500'>
-              <Check className='h-4 w-4' />
-            </span>
-            <span>{i}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function AssumptionRow({ left, right }: { left: string; right: string }) {
-  return (
-    <div className='flex items-center justify-between rounded-2xl bg-white px-5 py-4 border border-black/5'>
-      <span className='font-semibold text-red-600'>{left}</span>
-      <span className='text-lg'>{right}</span>
-    </div>
-  );
-}
-
-function SolutionCard({ title, items }: { title: string; items: string[] }) {
-  const cardClassName = [
-    "rounded-3xl bg-white/10 border border-white/15 px-8 py-8",
-    "transition-colors duration-300",
-    "hover:border-amber-300/60 hover:bg-white/15 hover:shadow-[0_18px_45px_rgba(245,197,66,0.18)]",
-  ].join(" ");
-
-  return (
-    <div className={cardClassName}>
-      <div className='font-serif text-xl font-semibold text-white'>{title}</div>
-      <ul className='mt-6 space-y-3 text-sm text-white/75'>
-        {items.map((i) => (
-          <li key={i} className='flex items-start gap-3'>
-            <span className='mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-300'>
-              <Check className='h-4 w-4' />
-            </span>
-            <span>{i}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function FeatureTile({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  const tileClassName = [
-    "rounded-3xl bg-white/10 border border-white/15 px-7 py-7",
-    "transition-colors duration-300",
-    "hover:border-amber-300/60 hover:bg-white/15 hover:shadow-[0_18px_45px_rgba(245,197,66,0.18)]",
-  ].join(" ");
-
-  return (
-    <div className={tileClassName}>
-      <div className='h-12 w-12 rounded-2xl bg-white/10 text-amber-300 grid place-items-center border border-white/15'>
-        {icon}
-      </div>
-      <div className='mt-5 font-serif text-lg font-semibold text-white'>
-        {title}
-      </div>
-      <p className='mt-2 text-sm leading-relaxed text-white/70'>{body}</p>
     </div>
   );
 }

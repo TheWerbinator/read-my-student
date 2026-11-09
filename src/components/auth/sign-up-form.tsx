@@ -3,21 +3,12 @@
 import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Logo from "../../../public/green_yellow_logo_sized.png";
 
 // Components
 import { CountryCombobox } from "@/components/auth/CountryCombobox";
@@ -37,6 +28,19 @@ type University = {
   homepageUrl?: string;
   ror?: string | null;
 };
+
+const ROLES = [
+  { value: "STUDENT", label: "Student", hint: "Ask for a letter" },
+  { value: "FACULTY", label: "Professor", hint: "Faculty and instructors" },
+] as const;
+
+function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <span id={id} className='text-sm text-declined'>
+      {children}
+    </span>
+  );
+}
 
 export function SignUpForm({
   className,
@@ -59,6 +63,8 @@ export function SignUpForm({
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    // Errors show after a field is blurred or after a submit attempt.
+    mode: "onTouched",
     defaultValues: {
       role: defaultRole as "STUDENT" | "FACULTY",
       // Prefilled from the request page's account prompt.
@@ -79,6 +85,8 @@ export function SignUpForm({
       department: "",
     },
   });
+
+  const errors = form.formState.errors;
 
   // Watchers to trigger UI updates
   const role = form.watch("role");
@@ -120,239 +128,273 @@ export function SignUpForm({
     }
   };
 
+  const invalid = (name: keyof RegisterFormValues) =>
+    errors[name] ? true : undefined;
+  const describedBy = (name: keyof RegisterFormValues) =>
+    errors[name] ? `${name}-error` : undefined;
+
+  const orgError =
+    role === "STUDENT" ? errors.university : errors.institution;
+
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-        <CardHeader className='pb-4'>
-          <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
-            Create account
-          </CardTitle>
-          <CardDescription className='text-green-900/70'>
-            Join ReadMyStudent to get started
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className='space-y-6'>
-          {/* Brand Logo Row */}
-          <div className='flex items-center gap-3 rounded-2xl bg-slate-50/50 p-2 -mx-2 mb-4'>
-            <div className='rounded-xl border border-black/10 bg-white p-2 shadow-sm'>
-              <Image
-                src={Logo}
-                alt='ReadMyStudent logo'
-                className='h-6 w-auto'
-                priority
-              />
-            </div>
-            <div className='min-w-0'>
-              <div className='text-sm font-semibold text-green-900'>
-                ReadMyStudent
-              </div>
-              <div className='text-xs text-black/50'>
-                Secure recommendation letters
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-            {/* Role Selector */}
-            <div>
-              <Label className='mb-2 block text-sm font-semibold text-green-900'>
-                I am a...
-              </Label>
-              <div className='grid grid-cols-2 gap-2'>
-                {(["STUDENT", "FACULTY"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type='button'
-                    onClick={() => form.setValue("role", r)}
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
+      <div className='sheet p-6 md:p-8'>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='space-y-5'
+          noValidate
+        >
+          {/* Role Selector */}
+          <div role='group' aria-labelledby='role-label'>
+            <span id='role-label' className='caption mb-2 block text-ink-2'>
+              I am a...
+            </span>
+            <div className='grid grid-cols-2 gap-2'>
+              {ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type='button'
+                  aria-pressed={role === r.value}
+                  onClick={() => form.setValue("role", r.value)}
+                  className={cn(
+                    "min-h-14 rounded-[2px] border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold",
+                    role === r.value
+                      ? "border-forest bg-forest text-white"
+                      : "border-input bg-white text-ink hover:bg-paper-2",
+                  )}
+                >
+                  <span className='block font-display text-lg font-bold uppercase leading-none tracking-[0.06em]'>
+                    {r.label}
+                  </span>
+                  <span
                     className={cn(
-                      "rounded-2xl border px-4 py-3 text-sm font-semibold transition-all",
-                      role === r
-                        ? "border-green-900 bg-green-900/10 text-green-900"
-                        : "border-black/10 bg-white text-black/60 hover:bg-black/5",
+                      "mt-1 block text-xs",
+                      role === r.value ? "text-white/85" : "text-ink-2",
                     )}
                   >
-                    {r === "STUDENT" ? "Student" : "Faculty"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Name Fields */}
-            <div className='grid grid-cols-2 gap-4'>
-              <div className='grid gap-2'>
-                <Label htmlFor='firstName'>First Name</Label>
-                <Input
-                  {...form.register("firstName")}
-                  placeholder='Jane'
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                />
-                {form.formState.errors.firstName && (
-                  <span className='text-xs text-red-600'>
-                    {form.formState.errors.firstName.message}
+                    {r.hint}
                   </span>
-                )}
-              </div>
-              <div className='grid gap-2'>
-                <Label htmlFor='lastName'>Last Name</Label>
-                <Input
-                  {...form.register("lastName")}
-                  placeholder='Doe'
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                />
-                {form.formState.errors.lastName && (
-                  <span className='text-xs text-red-600'>
-                    {form.formState.errors.lastName.message}
-                  </span>
-                )}
-              </div>
+                </button>
+              ))}
             </div>
-
-            {/* Email */}
-            <div className='grid gap-2'>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                {...form.register("email")}
-                type='email'
-                placeholder={
-                  role === "STUDENT"
-                    ? "you@university.edu"
-                    : "professor@university.edu"
-                }
-                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-              />
-              {form.formState.errors.email && (
-                <span className='text-xs text-red-600'>
-                  {form.formState.errors.email.message}
-                </span>
-              )}
-            </div>
-
-            {/* Location & Institution Logic */}
-            <div className='space-y-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
-              <div className='grid gap-2'>
-                <CountryCombobox
-                  value={countryCode}
-                  onChange={(val: string) => form.setValue("countryCode", val)}
-                />
-                {form.formState.errors.countryCode && (
-                  <span className='text-xs text-red-600'>
-                    Please select a country
-                  </span>
-                )}
-              </div>
-
-              <div className='grid gap-2'>
-                <UniversityCombobox
-                  label={role === "STUDENT" ? "University" : "Institution"}
-                  required
-                  countryCode={countryCode}
-                  value={selectedUniversity} // Pass the Object
-                  onChange={handleUniversityChange} // Use the bridge function
-                  disabled={!countryCode}
-                />
-                {/* Check errors based on role */}
-                {role === "STUDENT" && form.formState.errors.university && (
-                  <span className='text-xs text-red-600'>
-                    University is required
-                  </span>
-                )}
-                {role === "FACULTY" && form.formState.errors.institution && (
-                  <span className='text-xs text-red-600'>
-                    Institution is required
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* DYNAMIC FIELDS: STUDENT */}
-            {role === "STUDENT" && (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
-                <div className='grid gap-2'>
-                  <Label htmlFor='program'>Program / Major</Label>
-                  <Input
-                    {...form.register("program")}
-                    placeholder='e.g. Biology'
-                    className='rounded-xl border-black/15 bg-white px-3 py-5'
-                  />
-                </div>
-                <div className='grid gap-2'>
-                  <Label htmlFor='graduationDate'>Graduation Date</Label>
-                  <Input
-                    {...form.register("graduationDate")}
-                    type='date'
-                    className='rounded-xl border-black/15 bg-white px-3 py-5'
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* DYNAMIC FIELDS: FACULTY */}
-            {role === "FACULTY" && (
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-500'>
-                <div className='grid gap-2'>
-                  <Label htmlFor='title'>Academic Title</Label>
-                  <Input
-                    {...form.register("title")}
-                    placeholder='e.g. Associate Professor'
-                    className='rounded-xl border-black/15 bg-white px-3 py-5'
-                  />
-                </div>
-                <div className='grid gap-2'>
-                  <Label htmlFor='department'>Department</Label>
-                  <Input
-                    {...form.register("department")}
-                    placeholder='e.g. Life Sciences'
-                    className='rounded-xl border-black/15 bg-white px-3 py-5'
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Password */}
-            <div className='grid gap-2'>
-              <Label htmlFor='password'>Password</Label>
-              <Input
-                {...form.register("password")}
-                type='password'
-                placeholder='••••••••'
-                className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-              />
-              {form.formState.errors.password && (
-                <span className='text-xs text-red-600'>
-                  {form.formState.errors.password.message}
-                </span>
-              )}
-            </div>
-
-            {/* Error Message Display */}
-            {serverError && (
-              <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                ❌ {serverError}
-              </div>
-            )}
-
-            {/* Submit */}
-            <Button
-              type='submit'
-              disabled={isPending}
-              className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
-            >
-              {isPending ? "Creating account..." : "Sign up"}
-            </Button>
-          </form>
-
-          <div className='mt-6 text-center text-sm text-black/60'>
-            Already have an account?{" "}
-            <Link
-              href='/login'
-              className='font-semibold text-green-900 hover:underline'
-            >
-              Login
-            </Link>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Name Fields */}
+          <div className='grid gap-5 sm:grid-cols-2 sm:gap-4'>
+            <div className='grid gap-2'>
+              <Label htmlFor='firstName' className='caption text-ink-2'>
+                First name
+              </Label>
+              <Input
+                id='firstName'
+                autoComplete='given-name'
+                {...form.register("firstName")}
+                placeholder='Jane'
+                aria-invalid={invalid("firstName")}
+                aria-describedby={describedBy("firstName")}
+              />
+              {errors.firstName && (
+                <FieldError id='firstName-error'>
+                  Enter your first name (2 letters or more).
+                </FieldError>
+              )}
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='lastName' className='caption text-ink-2'>
+                Last name
+              </Label>
+              <Input
+                id='lastName'
+                autoComplete='family-name'
+                {...form.register("lastName")}
+                placeholder='Doe'
+                aria-invalid={invalid("lastName")}
+                aria-describedby={describedBy("lastName")}
+              />
+              {errors.lastName && (
+                <FieldError id='lastName-error'>
+                  Enter your last name (2 letters or more).
+                </FieldError>
+              )}
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className='grid gap-2'>
+            <Label htmlFor='email' className='caption text-ink-2'>
+              Email
+            </Label>
+            <Input
+              id='email'
+              autoComplete='email'
+              {...form.register("email")}
+              type='email'
+              placeholder={
+                role === "STUDENT"
+                  ? "you@university.edu"
+                  : "professor@university.edu"
+              }
+              aria-invalid={invalid("email")}
+              aria-describedby={describedBy("email")}
+            />
+            {errors.email && (
+              <FieldError id='email-error'>
+                Enter a full email address, like name@school.edu.
+              </FieldError>
+            )}
+          </div>
+
+          {/* Location & Institution Logic */}
+          <div className='space-y-5'>
+            <div className='grid gap-2'>
+              <CountryCombobox
+                value={countryCode}
+                onChange={(val: string) =>
+                  form.setValue("countryCode", val, {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
+                }
+                invalid={!!errors.countryCode}
+                errorId='countryCode-error'
+              />
+              {errors.countryCode && (
+                <FieldError id='countryCode-error'>
+                  Choose your country. We use it to list the schools there.
+                </FieldError>
+              )}
+            </div>
+
+            <div className='grid gap-2'>
+              <UniversityCombobox
+                label={role === "STUDENT" ? "University" : "Institution"}
+                required
+                countryCode={countryCode}
+                value={selectedUniversity} // Pass the Object
+                onChange={handleUniversityChange} // Use the bridge function
+                disabled={!countryCode}
+                invalid={!!orgError}
+                errorId='org-error'
+              />
+              {/* Check errors based on role */}
+              {role === "STUDENT" && errors.university && (
+                <FieldError id='org-error'>
+                  Search for your university and pick it from the list.
+                </FieldError>
+              )}
+              {role === "FACULTY" && errors.institution && (
+                <FieldError id='org-error'>
+                  Search for your institution and pick it from the list.
+                </FieldError>
+              )}
+            </div>
+          </div>
+
+          {/* DYNAMIC FIELDS: STUDENT */}
+          {role === "STUDENT" && (
+            <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='program' className='caption text-ink-2'>
+                  Program / major
+                </Label>
+                <Input
+                  id='program'
+                  {...form.register("program")}
+                  placeholder='e.g. Biology'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <Label htmlFor='graduationDate' className='caption text-ink-2'>
+                  Graduation date
+                </Label>
+                <Input
+                  id='graduationDate'
+                  {...form.register("graduationDate")}
+                  type='date'
+                />
+              </div>
+            </div>
+          )}
+
+          {/* DYNAMIC FIELDS: FACULTY */}
+          {role === "FACULTY" && (
+            <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='title' className='caption text-ink-2'>
+                  Academic title
+                </Label>
+                <Input
+                  id='title'
+                  {...form.register("title")}
+                  placeholder='e.g. Associate Professor'
+                />
+              </div>
+              <div className='grid gap-2'>
+                <Label htmlFor='department' className='caption text-ink-2'>
+                  Department
+                </Label>
+                <Input
+                  id='department'
+                  {...form.register("department")}
+                  placeholder='e.g. Life Sciences'
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Password */}
+          <div className='grid gap-2'>
+            <Label htmlFor='password' className='caption text-ink-2'>
+              Password
+            </Label>
+            <Input
+              id='password'
+              autoComplete='new-password'
+              {...form.register("password")}
+              type='password'
+              placeholder='••••••••'
+              aria-invalid={invalid("password")}
+              aria-describedby={describedBy("password")}
+            />
+            {errors.password ? (
+              <FieldError id='password-error'>
+                Use at least 8 characters.
+              </FieldError>
+            ) : (
+              <span className='text-sm text-ink-2'>At least 8 characters.</span>
+            )}
+          </div>
+
+          {/* Error Message Display */}
+          {serverError && (
+            <div role='alert' className='text-sm text-declined'>
+              {serverError}. Check your details and try again.
+            </div>
+          )}
+
+          {/* Submit */}
+          <Button
+            type='submit'
+            variant='gold'
+            size='lg'
+            disabled={isPending}
+            className='w-full'
+          >
+            {isPending ? "Creating account..." : "Sign up"}
+          </Button>
+        </form>
+
+        <div className='perforation mt-6' />
+        <p className='mt-5 text-sm text-ink-2'>
+          Already have an account?{" "}
+          <Link
+            href='/login'
+            className='font-semibold text-forest underline underline-offset-4'
+          >
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -9,23 +9,15 @@ import {
 } from "@/app/actions/faculty";
 import type { FacultyProfileRow } from "@/lib/faculty-profile";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const PREFIX_OPTIONS = ["", "Dr.", "Prof.", "Mr.", "Ms.", "Mrs.", "Mx."];
 
-// Evaluated once at module load — stable enough for a 30-day expiry warning.
+// Evaluated once at module load, stable enough for a 30-day expiry warning.
 const MODULE_LOAD_TS = Date.now();
 
-const INPUT_CLS =
-  "rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20";
+const CAPTION = "caption text-ink-2";
 
 type Fields = {
   prefix: string;
@@ -93,16 +85,15 @@ function AssetRetentionBanner({
 
   if (daysRemaining <= 0) {
     return (
-      <div className='rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+      <div role='alert' className='border border-declined/40 bg-paper-2 p-3 text-sm text-declined'>
         <p className='font-semibold'>
-          ⚠️ This file has expired and will be removed at the next cleanup.
+          This file has expired and will be removed at the next cleanup.
           Re-upload to continue using it on new letters.
         </p>
         <Button
           type='button'
-          size='sm'
           variant='outline'
-          className='mt-2 rounded-xl border-red-400 text-red-700 hover:bg-red-100'
+          className='mt-2 h-11'
           onClick={onReupload}
         >
           Re-upload now
@@ -112,40 +103,36 @@ function AssetRetentionBanner({
   }
 
   return (
-    <div className='rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800'>
-      <p className='font-semibold'>
-        ⏳ Expires in{" "}
-        <span className='underline'>
-          {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}
-        </span>
-        .
+    <div className='border border-waiting/40 bg-paper-2 p-3 text-sm text-ink'>
+      <p className='font-semibold text-waiting'>
+        Expires in {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}.
       </p>
-      <p className='mt-0.5'>
+      <p className='mt-0.5 text-ink-2'>
         Per our retention policy, raw asset files are kept for one year.
         Re-upload to replace, or confirm to extend for another year.
       </p>
       <div className='mt-2 flex flex-wrap gap-2'>
         <Button
           type='button'
-          size='sm'
           variant='outline'
-          className='rounded-xl border-amber-400 text-amber-900 hover:bg-amber-100'
+          className='h-11'
           onClick={onReupload}
         >
           Re-upload
         </Button>
         <Button
           type='button'
-          size='sm'
           disabled={isConfirming}
-          className='rounded-xl bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60'
+          className='h-11'
           onClick={onConfirm}
         >
           {isConfirming ? "Confirming…" : "Keep existing file"}
         </Button>
       </div>
       {confirmError && (
-        <p className='mt-1 text-xs text-red-600'>{confirmError}</p>
+        <p role='alert' className='mt-1 text-xs text-declined'>
+          {confirmError}
+        </p>
       )}
     </div>
   );
@@ -286,282 +273,251 @@ export function FacultyProfileSettingsForm({
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       {/* ── Personal information ─────────────────────────────────────────── */}
-      <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-        <CardHeader className='pb-4'>
-          <CardTitle className='font-serif text-2xl font-semibold text-green-900'>
+      <div className='sheet space-y-6 p-6'>
+        <div className='space-y-1.5'>
+          <h2 className='font-display text-2xl font-extrabold uppercase leading-none tracking-[0.04em] text-forest-ink'>
             Profile
-          </CardTitle>
-          <CardDescription className='text-green-900/70'>
+          </h2>
+          <p className='text-sm text-ink-2'>
             Your name and contact details as they appear on letters.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
-            {/* Name row */}
-            <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
-              <div className='grid gap-2'>
-                <Label htmlFor='prefix' className='font-medium text-gray-800'>
-                  Prefix
-                </Label>
-                <select
-                  id='prefix'
-                  value={fields.prefix}
-                  onChange={set("prefix")}
-                  className='h-11 w-full rounded-xl border border-black/15 bg-white px-3 text-black focus:border-green-900 focus:outline-none focus:ring-2 focus:ring-green-900/20'
-                >
-                  {PREFIX_OPTIONS.map((p) => (
-                    <option key={p} value={p}>
-                      {p === "" ? "— none —" : p}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className='grid gap-2'>
-                <Label
-                  htmlFor='firstName'
-                  className='font-medium text-gray-800'
-                >
-                  First name
-                </Label>
-                <Input
-                  id='firstName'
-                  value={fields.firstName}
-                  onChange={set("firstName")}
-                  placeholder='Jane'
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div className='grid gap-2'>
-                <Label htmlFor='lastName' className='font-medium text-gray-800'>
-                  Last name
-                </Label>
-                <Input
-                  id='lastName'
-                  value={fields.lastName}
-                  onChange={set("lastName")}
-                  placeholder='Smith'
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
-
-            {/* Institutional info */}
-            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-              <div className='grid gap-2'>
-                <Label htmlFor='title' className='font-medium text-gray-800'>
-                  Academic title
-                </Label>
-                <Input
-                  id='title'
-                  value={fields.title}
-                  onChange={set("title")}
-                  placeholder='e.g. Associate Professor'
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div className='grid gap-2'>
-                <Label
-                  htmlFor='department'
-                  className='font-medium text-gray-800'
-                >
-                  Department
-                </Label>
-                <Input
-                  id='department'
-                  value={fields.department}
-                  onChange={set("department")}
-                  placeholder='e.g. Life Sciences'
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div className='grid gap-2 sm:col-span-2'>
-                <Label
-                  htmlFor='organization'
-                  className='font-medium text-gray-800'
-                >
-                  Institution
-                </Label>
-                <Input
-                  id='organization'
-                  value={fields.organization}
-                  onChange={set("organization")}
-                  placeholder='e.g. State University'
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
-
-            {/* Contact */}
-            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-              <div className='grid gap-2'>
-                <Label htmlFor='email' className='font-medium text-gray-800'>
-                  Letterhead email
-                </Label>
-                <Input
-                  id='email'
-                  type='email'
-                  value={fields.email}
-                  onChange={set("email")}
-                  placeholder='professor@university.edu'
-                  className={INPUT_CLS}
-                />
-                <p className='text-xs text-black/50'>
-                  Shown on letters and used by students to find you.
-                </p>
-              </div>
-              <div className='grid gap-2'>
-                <Label htmlFor='phone' className='font-medium text-gray-800'>
-                  Phone
-                </Label>
-                <Input
-                  id='phone'
-                  type='tel'
-                  value={fields.phone}
-                  onChange={set("phone")}
-                  placeholder='+1 (555) 000-0000'
-                  className={INPUT_CLS}
-                />
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className='rounded-2xl border border-black/5 bg-slate-50 p-4 grid gap-4'>
-              <p className='text-sm font-semibold text-green-900'>
-                Mailing address
-              </p>
-              <div className='grid gap-2'>
-                <Label htmlFor='street' className='font-medium text-gray-800'>
-                  Street
-                </Label>
-                <Input
-                  id='street'
-                  value={fields.street}
-                  onChange={set("street")}
-                  placeholder='123 University Ave'
-                  className={INPUT_CLS}
-                />
-              </div>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='grid gap-2'>
-                  <Label htmlFor='city' className='font-medium text-gray-800'>
-                    City
-                  </Label>
-                  <Input
-                    id='city'
-                    value={fields.city}
-                    onChange={set("city")}
-                    placeholder='Springfield'
-                    className={INPUT_CLS}
-                  />
-                </div>
-                <div className='grid gap-2'>
-                  <Label htmlFor='state' className='font-medium text-gray-800'>
-                    State / Province
-                  </Label>
-                  <Input
-                    id='state'
-                    value={fields.state}
-                    onChange={set("state")}
-                    placeholder='IL'
-                    className={INPUT_CLS}
-                  />
-                </div>
-              </div>
-              <div className='grid grid-cols-2 gap-4'>
-                <div className='grid gap-2'>
-                  <Label
-                    htmlFor='postalCode'
-                    className='font-medium text-gray-800'
-                  >
-                    Postal code
-                  </Label>
-                  <Input
-                    id='postalCode'
-                    value={fields.postalCode}
-                    onChange={set("postalCode")}
-                    placeholder='62701'
-                    className={INPUT_CLS}
-                  />
-                </div>
-                <div className='grid gap-2'>
-                  <Label
-                    htmlFor='country'
-                    className='font-medium text-gray-800'
-                  >
-                    Country
-                  </Label>
-                  <Input
-                    id='country'
-                    value={fields.country}
-                    onChange={set("country")}
-                    placeholder='United States'
-                    className={INPUT_CLS}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Sign-off */}
+        <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
+          {/* Name row */}
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
             <div className='grid gap-2'>
-              <Label htmlFor='signOff' className='font-medium text-gray-800'>
-                Default sign-off
+              <Label htmlFor='prefix' className={CAPTION}>
+                Prefix
+              </Label>
+              <select
+                id='prefix'
+                value={fields.prefix}
+                onChange={set("prefix")}
+                className='h-11 w-full rounded-[2px] border border-input bg-white px-3 text-base text-ink focus-visible:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold'
+              >
+                {PREFIX_OPTIONS.map((p) => (
+                  <option key={p} value={p}>
+                    {p === "" ? "None" : p}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='firstName' className={CAPTION}>
+                First name
               </Label>
               <Input
-                id='signOff'
-                value={fields.signOff}
-                onChange={set("signOff")}
-                placeholder='Sincerely,'
-                className={INPUT_CLS}
+                id='firstName'
+                value={fields.firstName}
+                onChange={set("firstName")}
+                placeholder='Jane'
               />
-              <p className='text-xs text-black/50'>
-                Closing line used at the bottom of letters (e.g.
-                &ldquo;Sincerely,&rdquo; / &ldquo;Best regards,&rdquo;).
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='lastName' className={CAPTION}>
+                Last name
+              </Label>
+              <Input
+                id='lastName'
+                value={fields.lastName}
+                onChange={set("lastName")}
+                placeholder='Smith'
+              />
+            </div>
+          </div>
+
+          {/* Institutional info */}
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <div className='grid gap-2'>
+              <Label htmlFor='title' className={CAPTION}>
+                Academic title
+              </Label>
+              <Input
+                id='title'
+                value={fields.title}
+                onChange={set("title")}
+                placeholder='e.g. Associate Professor'
+              />
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='department' className={CAPTION}>
+                Department
+              </Label>
+              <Input
+                id='department'
+                value={fields.department}
+                onChange={set("department")}
+                placeholder='e.g. Life Sciences'
+              />
+            </div>
+            <div className='grid gap-2 sm:col-span-2'>
+              <Label htmlFor='organization' className={CAPTION}>
+                Institution
+              </Label>
+              <Input
+                id='organization'
+                value={fields.organization}
+                onChange={set("organization")}
+                placeholder='e.g. University of Example'
+              />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+            <div className='grid gap-2'>
+              <Label htmlFor='email' className={CAPTION}>
+                Letterhead email
+              </Label>
+              <Input
+                id='email'
+                type='email'
+                value={fields.email}
+                onChange={set("email")}
+                placeholder='professor@university.edu'
+              />
+              <p className='text-xs text-ink-2'>
+                Shown on letters and used by students to find you.
               </p>
             </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='phone' className={CAPTION}>
+                Phone
+              </Label>
+              <Input
+                id='phone'
+                type='tel'
+                value={fields.phone}
+                onChange={set("phone")}
+                placeholder='Include country code'
+              />
+            </div>
+          </div>
 
-            {success && (
-              <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
-                ✓ Profile saved successfully.
+          {/* Address */}
+          <fieldset className='grid gap-4 border-t border-rule pt-5'>
+            <legend className={cn(CAPTION, "float-left mb-4 w-full")}>
+              Mailing address
+            </legend>
+            <div className='grid gap-2'>
+              <Label htmlFor='street' className={CAPTION}>
+                Street
+              </Label>
+              <Input
+                id='street'
+                value={fields.street}
+                onChange={set("street")}
+                placeholder='Street and number'
+              />
+            </div>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              <div className='grid gap-2'>
+                <Label htmlFor='city' className={CAPTION}>
+                  City
+                </Label>
+                <Input
+                  id='city'
+                  value={fields.city}
+                  onChange={set("city")}
+                />
               </div>
-            )}
-            {error && (
-              <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                ❌ {error}
+              <div className='grid gap-2'>
+                <Label htmlFor='state' className={CAPTION}>
+                  State / province
+                </Label>
+                <Input
+                  id='state'
+                  value={fields.state}
+                  onChange={set("state")}
+                />
               </div>
-            )}
+            </div>
+            <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              <div className='grid gap-2'>
+                <Label htmlFor='postalCode' className={CAPTION}>
+                  Postal code
+                </Label>
+                <Input
+                  id='postalCode'
+                  value={fields.postalCode}
+                  onChange={set("postalCode")}
+                />
+              </div>
+              <div className='grid gap-2'>
+                <Label htmlFor='country' className={CAPTION}>
+                  Country
+                </Label>
+                <Input
+                  id='country'
+                  value={fields.country}
+                  onChange={set("country")}
+                />
+              </div>
+            </div>
+          </fieldset>
 
-            <Button
-              type='submit'
-              disabled={isPending}
-              className='rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 disabled:opacity-60'
+          {/* Sign-off */}
+          <div className='grid gap-2'>
+            <Label htmlFor='signOff' className={CAPTION}>
+              Default sign-off
+            </Label>
+            <Input
+              id='signOff'
+              value={fields.signOff}
+              onChange={set("signOff")}
+              placeholder='Sincerely,'
+            />
+            <p className='text-xs text-ink-2'>
+              Closing line used at the bottom of letters (e.g.
+              &ldquo;Sincerely,&rdquo; / &ldquo;Best regards,&rdquo;).
+            </p>
+          </div>
+
+          {success && (
+            <div
+              role='status'
+              className='border border-sealed/40 bg-paper-2 p-3 text-sm text-sealed'
             >
-              {isPending ? "Saving…" : "Save profile"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              Profile saved.
+            </div>
+          )}
+          {error && (
+            <div
+              role='alert'
+              className='border border-declined/40 bg-paper-2 p-3 text-sm text-declined'
+            >
+              {error}
+            </div>
+          )}
+
+          <Button type='submit' size='lg' disabled={isPending}>
+            {isPending ? "Saving…" : "Save profile"}
+          </Button>
+        </form>
+      </div>
 
       {/* ── Assets ───────────────────────────────────────────────────────── */}
-      <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-        <CardHeader className='pb-4'>
-          <CardTitle className='font-serif text-2xl font-semibold text-green-900'>
+      <div className='sheet space-y-6 p-6'>
+        <div className='space-y-1.5'>
+          <h2 className='font-display text-2xl font-extrabold uppercase leading-none tracking-[0.04em] text-forest-ink'>
             Letterhead assets
-          </CardTitle>
-          <CardDescription className='text-green-900/70'>
+          </h2>
+          <p className='text-sm text-ink-2'>
             Logo and signature image used on your letters. You can also swap
             these per-letter inside the letter editor.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='flex flex-col gap-6'>
+          </p>
+        </div>
+
+        <div className='flex flex-col divide-y divide-rule border-y border-rule'>
           {/* Logo */}
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
-              <div>
-                <p className='text-sm font-semibold text-green-900'>
+          <div className='flex flex-col gap-3 py-4'>
+            <div className='flex items-center justify-between gap-4'>
+              <div className='min-w-0'>
+                <p className='text-sm font-semibold text-ink'>
                   Institution logo
                 </p>
-                <p className='mt-0.5 truncate text-xs text-black/50'>
+                <p className='mt-0.5 truncate text-xs text-ink-2'>
                   {logoName ?? "Not uploaded"}
                 </p>
               </div>
@@ -575,9 +531,8 @@ export function FacultyProfileSettingsForm({
               <Button
                 type='button'
                 variant='outline'
-                size='sm'
                 onClick={() => logoRef.current?.click()}
-                className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
+                className='h-11 shrink-0'
               >
                 {logoName ? "Replace" : "Upload"}
               </Button>
@@ -592,13 +547,13 @@ export function FacultyProfileSettingsForm({
           </div>
 
           {/* Signature */}
-          <div className='flex flex-col gap-2'>
-            <div className='flex items-center justify-between gap-4 rounded-2xl border border-black/5 bg-slate-50 p-4'>
-              <div>
-                <p className='text-sm font-semibold text-green-900'>
+          <div className='flex flex-col gap-3 py-4'>
+            <div className='flex items-center justify-between gap-4'>
+              <div className='min-w-0'>
+                <p className='text-sm font-semibold text-ink'>
                   Signature image
                 </p>
-                <p className='mt-0.5 truncate text-xs text-black/50'>
+                <p className='mt-0.5 truncate text-xs text-ink-2'>
                   {sigName ?? "Not uploaded"}
                 </p>
               </div>
@@ -612,9 +567,8 @@ export function FacultyProfileSettingsForm({
               <Button
                 type='button'
                 variant='outline'
-                size='sm'
                 onClick={() => sigRef.current?.click()}
-                className='shrink-0 rounded-xl border-green-900 text-green-900 hover:bg-green-900/10'
+                className='h-11 shrink-0'
               >
                 {sigName ? "Replace" : "Upload"}
               </Button>
@@ -627,14 +581,17 @@ export function FacultyProfileSettingsForm({
               confirmError={sigConfirmError}
             />
           </div>
+        </div>
 
-          {assetError && (
-            <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-              ❌ {assetError}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {assetError && (
+          <div
+            role='alert'
+            className='border border-declined/40 bg-paper-2 p-3 text-sm text-declined'
+          >
+            {assetError}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

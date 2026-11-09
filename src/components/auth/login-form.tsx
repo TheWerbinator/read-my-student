@@ -3,20 +3,11 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "../../lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Logo from "../../../public/green_yellow_logo_sized.png";
 
 export function LoginForm({
   className,
@@ -26,10 +17,21 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Field errors appear after blur or a submit attempt, never on load.
+  const [touched, setTouched] = useState({ email: false, password: false });
   const router = useRouter();
+
+  const emailError = !email.trim()
+    ? "Enter the email you signed up with."
+    : !/^\S+@\S+\.\S+$/.test(email.trim())
+      ? "This email looks incomplete. Use the form name@school.edu."
+      : null;
+  const passwordError = password ? null : "Enter your password.";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ email: true, password: true });
+    if (emailError || passwordError) return;
     setIsLoading(true);
     setError(null);
 
@@ -49,126 +51,102 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      {/* Restoring the "soft" card look:
-        - rounded-3xl (larger corners)
-        - shadow-xl shadow-black/5 (soft, deep shadow)
-        - border-black/10 (subtle border)
-      */}
-      <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-        <CardHeader className='pb-4'>
-          {/* Restoring the Serif Font and Green Color */}
-          <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
-            Welcome back
-          </CardTitle>
-          <CardDescription className='text-green-900/70'>
-            Log in to continue your recommendation workflow.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className='space-y-6'>
-          {/* Brand Logo Row */}
-          <div className='flex items-center gap-3 rounded-2xl bg-slate-50/50 p-2 -mx-2 mb-4'>
-            <div className='rounded-xl border border-black/10 bg-white p-2 shadow-sm'>
-              <Image
-                src={Logo}
-                alt='ReadMyStudent logo'
-                className='h-6 w-auto'
-                priority
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
+      <div className='sheet p-6 md:p-8'>
+        <form onSubmit={handleLogin} noValidate>
+          <div className='flex flex-col gap-5'>
+            <div className='grid gap-2'>
+              <Label htmlFor='email' className='caption text-ink-2'>
+                Email
+              </Label>
+              <Input
+                id='email'
+                type='email'
+                autoComplete='email'
+                placeholder='you@university.edu'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                aria-invalid={touched.email && !!emailError}
+                aria-describedby={touched.email && emailError ? "email-error" : undefined}
               />
-            </div>
-            <div className='min-w-0'>
-              <div className='text-sm font-semibold text-green-900'>
-                ReadMyStudent
-              </div>
-              <div className='text-xs text-black/50'>
-                Secure recommendation letters
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin}>
-            <div className='flex flex-col gap-6'>
-              <div className='grid gap-2'>
-                <Label htmlFor='email' className='font-medium text-gray-800'>
-                  Email <span className='text-red-600'>*</span>
-                </Label>
-                <Input
-                  id='email'
-                  type='email'
-                  placeholder='you@university.edu'
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                />
-              </div>
-
-              <div className='grid gap-2'>
-                <div className='flex items-center'>
-                  <Label
-                    htmlFor='password'
-                    className='font-medium text-gray-800'
-                  >
-                    Password <span className='text-red-600'>*</span>
-                  </Label>
-                  <Link
-                    href='/forgot-password'
-                    className='ml-auto inline-block text-xs font-semibold text-green-900 hover:underline'
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id='password'
-                  type='password'
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                />
-              </div>
-
-              {error && (
-                <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                  ❌ {error}
-                </div>
+              {touched.email && emailError && (
+                <span id='email-error' className='text-sm text-declined'>
+                  {emailError}
+                </span>
               )}
-
-              <Button
-                type='submit'
-                disabled={isLoading}
-                className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
-              >
-                {isLoading ? "Logging in..." : "Log in"}
-              </Button>
             </div>
 
-            <div className='mt-6 text-center text-sm text-black/60'>
-              Don&apos;t have an account?{" "}
-              <Link
-                href='/signup'
-                className='font-semibold text-green-900 hover:underline'
-              >
-                Create an account
-              </Link>
+            <div className='grid gap-2'>
+              <div className='flex items-center justify-between gap-3'>
+                <Label htmlFor='password' className='caption text-ink-2'>
+                  Password
+                </Label>
+                <Link
+                  href='/forgot-password'
+                  className='inline-flex min-h-11 items-center text-sm font-semibold text-forest underline-offset-4 hover:underline'
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id='password'
+                type='password'
+                autoComplete='current-password'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                aria-invalid={touched.password && !!passwordError}
+                aria-describedby={touched.password && passwordError ? "password-error" : undefined}
+              />
+              {touched.password && passwordError && (
+                <span id='password-error' className='text-sm text-declined'>
+                  {passwordError}
+                </span>
+              )}
             </div>
-          </form>
-        </CardContent>
-      </Card>
 
-      {/* Form Footer Links */}
-      <div className='text-center text-xs text-black/45'>
+            {error && (
+              <div role='alert' className='text-sm text-declined'>
+                {error}. Check your email and password, then try again.
+              </div>
+            )}
+
+            <Button
+              type='submit'
+              variant='gold'
+              size='lg'
+              disabled={isLoading}
+              className='w-full'
+            >
+              {isLoading ? "Logging in..." : "Log in"}
+            </Button>
+          </div>
+        </form>
+
+        <div className='perforation mt-6' />
+        <p className='mt-5 text-sm text-ink-2'>
+          Don&apos;t have an account?{" "}
+          <Link
+            href='/signup'
+            className='font-semibold text-forest underline underline-offset-4'
+          >
+            Create an account
+          </Link>
+        </p>
+      </div>
+
+      <p className='text-sm text-flap-dim'>
         By logging in, you agree to our{" "}
-        <Link className='text-green-900 hover:underline' href='/terms'>
+        <Link className='text-flap-ink underline' href='/terms'>
           Terms
         </Link>{" "}
         and{" "}
-        <Link className='text-green-900 hover:underline' href='/privacy'>
+        <Link className='text-flap-ink underline' href='/privacy'>
           Privacy Policy
         </Link>
         .
-      </div>
+      </p>
     </div>
   );
 }

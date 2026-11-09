@@ -13,10 +13,12 @@ export function RequestLinkActions({
   token,
   requestId,
   studentName,
+  professorEmail,
 }: {
   token: string;
   requestId: string;
   studentName: string;
+  professorEmail?: string | null;
 }) {
   const router = useRouter();
   const [declining, setDeclining] = useState(false);
@@ -43,14 +45,14 @@ export function RequestLinkActions({
           studentName={studentName}
           requestId={requestId}
           accessToken={token}
+          defaultEmail={professorEmail}
           onFinalized={() => router.refresh()}
         />
         {!declining && (
           <Button
             type='button'
             variant='outline'
-            size='sm'
-            className='rounded-lg'
+            className='h-11'
             onClick={() => setDeclining(true)}
           >
             Decline
@@ -59,7 +61,7 @@ export function RequestLinkActions({
       </div>
 
       {declining && (
-        <div className='space-y-3 rounded-xl border border-black/10 bg-white p-4'>
+        <div className='space-y-3 border-t border-rule pt-4'>
           <Label htmlFor='decline-reason'>
             Message to {studentName} (optional)
           </Label>
@@ -71,15 +73,15 @@ export function RequestLinkActions({
             placeholder='For example: I do not know your work well enough to write a strong letter.'
           />
           {error && (
-            <p role='alert' className='text-sm text-red-700'>
+            <p role='alert' className='text-sm text-declined'>
               {error}
             </p>
           )}
           <div className='flex gap-3'>
             <Button
               type='button'
-              size='sm'
-              className='rounded-lg bg-red-700 text-white hover:bg-red-800'
+              variant='destructive'
+              className='h-11'
               disabled={isSubmitting}
               onClick={handleDecline}
             >
@@ -88,8 +90,7 @@ export function RequestLinkActions({
             <Button
               type='button'
               variant='outline'
-              size='sm'
-              className='rounded-lg'
+              className='h-11'
               disabled={isSubmitting}
               onClick={() => setDeclining(false)}
             >

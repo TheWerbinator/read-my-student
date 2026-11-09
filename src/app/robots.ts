@@ -13,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
         "/api",
       ],
     },
-    sitemap: "https://readmystudent.com/sitemap.xml",
+    sitemap: "https://www.readmystudent.com/sitemap.xml",
   };
 }

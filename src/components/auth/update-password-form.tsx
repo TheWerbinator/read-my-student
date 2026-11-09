@@ -3,19 +3,10 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Logo from "../../../public/green_yellow_logo_sized.png";
 
 export function UpdatePasswordForm({
   className,
@@ -24,10 +15,19 @@ export function UpdatePasswordForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [touched, setTouched] = useState(false);
   const router = useRouter();
+
+  const passwordError = !password
+    ? "Enter a new password."
+    : password.length < 8
+      ? "Use at least 8 characters."
+      : null;
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched(true);
+    if (passwordError) return;
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -45,71 +45,50 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-        <CardHeader className='pb-4'>
-          <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
-            Reset Your Password
-          </CardTitle>
-          <CardDescription className='text-green-900/70'>
-            Please enter your new password below.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          {/* Brand Logo Row */}
-          <div className='flex items-center gap-3 rounded-2xl bg-slate-50/50 p-2 -mx-2 mb-4'>
-            <div className='rounded-xl border border-black/10 bg-white p-2 shadow-sm'>
-              <Image
-                src={Logo}
-                alt='ReadMyStudent logo'
-                className='h-6 w-auto'
-                priority
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
+      <div className='sheet p-6 md:p-8'>
+        <form onSubmit={handleForgotPassword} noValidate>
+          <div className='flex flex-col gap-5'>
+            <div className='grid gap-2'>
+              <Label htmlFor='password' className='caption text-ink-2'>
+                New password
+              </Label>
+              <Input
+                id='password'
+                type='password'
+                autoComplete='new-password'
+                placeholder='At least 8 characters'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setTouched(true)}
+                aria-invalid={touched && !!passwordError}
+                aria-describedby={touched && passwordError ? "password-error" : undefined}
               />
-            </div>
-            <div className='min-w-0'>
-              <div className='text-sm font-semibold text-green-900'>
-                ReadMyStudent
-              </div>
-              <div className='text-xs text-black/50'>
-                Secure recommendation letters
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={handleForgotPassword}>
-            <div className='flex flex-col gap-6'>
-              <div className='grid gap-2'>
-                <Label htmlFor='password' className='font-medium text-gray-800'>
-                  New password <span className='text-red-600'>*</span>
-                </Label>
-                <Input
-                  id='password'
-                  type='password'
-                  placeholder='Enter your new password'
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                />
-              </div>
-
-              {error && (
-                <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                  ❌ {error}
-                </div>
+              {touched && passwordError && (
+                <span id='password-error' className='text-sm text-declined'>
+                  {passwordError}
+                </span>
               )}
-
-              <Button
-                type='submit'
-                disabled={isLoading}
-                className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
-              >
-                {isLoading ? "Saving..." : "Save new password"}
-              </Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+
+            {error && (
+              <div role='alert' className='text-sm text-declined'>
+                {error}. Request a new reset link if this one has expired.
+              </div>
+            )}
+
+            <Button
+              type='submit'
+              variant='gold'
+              size='lg'
+              disabled={isLoading}
+              className='w-full'
+            >
+              {isLoading ? "Saving..." : "Save new password"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

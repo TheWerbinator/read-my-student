@@ -1,377 +1,127 @@
 import { LinkButton } from "@/components/ui/LinkButton";
-import PricingPreview from "@/components/marketing/PricingPreview";
-import {
-  Check,
-  ShieldCheck,
-  Lock,
-  Clock3,
-  Star,
-  Users,
-  GraduationCap,
-} from "lucide-react";
 
 export const metadata = {
   title: "Pricing",
   description:
-    "ReadMyStudent is free for both students and faculty. No hidden fees, no paywalls—just a secure platform for managing recommendation letters.",
+    "Requesting a letter is free and professors never pay. Students pay $5 USD each time they send a sealed letter to one school.",
 };
 
-type Tier = {
-  name: string;
-  price: string;
-  caption: string;
-  badge?: string;
-  accent?: "gold" | "light";
-  ctaLabel: string;
-  ctaHref: string;
-  features: string[];
-  footnote?: string;
-};
+const fares = [
+  { who: "Student", what: "Each school you send a letter to", fare: "$5 USD" },
+  { who: "Student", what: "Asking a professor for a letter", fare: "$0" },
+  { who: "Professor", what: "Writing, signing, or declining", fare: "$0" },
+  { who: "School", what: "Opening and downloading the letter", fare: "$0" },
+];
+
+const buys = [
+  {
+    title: "One school",
+    body: "The fare covers one delivery to one school. Sending the same letter to a second school is a second fare.",
+  },
+  {
+    title: "Its own secure link",
+    body: "That school gets a link that belongs to it alone. Nobody else's link opens the letter.",
+  },
+  {
+    title: "An email check",
+    body: "The reader confirms the school email address before the letter opens.",
+  },
+  {
+    title: "A logged opening",
+    body: "The time the school first opens the letter is recorded. Your professor approves each delivery, and the link then stays valid for 48 hours.",
+  },
+];
 
 export default function PricingPage() {
-  const tiers: Tier[] = [
-    {
-      name: "Student — Free",
-      price: "$0",
-      caption: "Start requesting and tracking letters immediately.",
-      badge: "Most popular",
-      accent: "gold",
-      ctaLabel: "Start as a Student →",
-      ctaHref: "/signup?role=student",
-      features: [
-        "Create and send structured requests",
-        "Deadline + status tracking",
-        "Secure document access controls",
-        "Central request history (so you’re not starting from scratch)",
-        "Privacy-first design (consent-based sharing)",
-      ],
-      footnote: "No credit card required.",
-    },
-    {
-      name: "Faculty — Always Free",
-      price: "$0",
-      caption: "Because faculty shouldn’t pay to help students.",
-      accent: "light",
-      ctaLabel: "Join as Faculty →",
-      ctaHref: "/signup?role=faculty",
-      features: [
-        "Centralized request inbox",
-        "Draft/upload letters in one place",
-        "Approval & consent controls",
-        "Deadline visibility (reduce reminder loops)",
-        "Secure archive (no more lost drafts)",
-      ],
-      footnote: "Free forever for faculty.",
-    },
-    {
-      name: "Teams / Institutions",
-      price: "Coming soon",
-      caption:
-        "For departments and schools that need verification + compliance.",
-      accent: "light",
-      ctaLabel: "Contact Sales",
-      ctaHref: "/contact",
-      features: [
-        "Identity verification workflows",
-        "Audit logs & compliance controls",
-        "Institution-level policy settings",
-        "Fraud detection & integrity safeguards",
-        "Admin dashboard & analytics",
-      ],
-      footnote: "Early access available — reach out.",
-    },
-  ];
-
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* HERO */}
-      <section className='relative overflow-hidden bg-green-900'>
-        <div className='absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_55%)]' />
-        <div className='absolute inset-0 opacity-[0.10] bg-[radial-gradient(rgba(255,255,255,0.35)_1px,transparent_1px)] bg-size-[44px_44px]' />
-
-        <div className='relative mx-auto max-w-7xl px-6 py-16 md:py-24 text-center'>
-          <div className='inline-flex items-center rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white/85 border border-white/15'>
-            Pricing
-          </div>
-
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-white'>
-            Simple pricing that respects{" "}
-            <span className='italic text-amber-400'>trust</span>.
+    <>
+      <section className='px-5 pb-12 pt-8 md:px-8 md:pb-16 lg:pt-16'>
+        <div className='mx-auto max-w-6xl'>
+          <h1 className='max-w-4xl font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-7xl'>
+            One fare. <span className='text-gold'>Per school.</span>
           </h1>
-
-          <p className='mt-5 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-white/70'>
-            Students can start free. Faculty are always free. Institutional
-            plans are coming soon for compliance and verification needs.
+          <p className='mt-6 max-w-2xl text-lg leading-relaxed text-flap-ink/90 md:text-xl'>
+            Asking for a letter costs nothing. You pay $5 each time you send a sealed letter to a school. Professors never pay.
           </p>
 
-          <div className='mt-8 flex flex-col sm:flex-row items-center justify-center gap-3'>
-            <LinkButton
-              href='/signup?role=student'
-              variant='gold'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center'
-            >
-              Start for Free
-            </LinkButton>
+          <figure className='board-frame mt-10 lg:max-w-4xl'>
+            <figcaption className='px-2 pb-2 pt-1 font-display text-xl font-extrabold uppercase tracking-[0.08em] text-flap-ink'>
+              Fare sheet
+            </figcaption>
+            <table className='w-full border-separate border-spacing-y-[3px] text-left tabular-nums'>
+              <thead>
+                <tr className='caption text-flap-dim'>
+                  <th scope='col' className='px-2 pb-1 font-semibold'>Who</th>
+                  <th scope='col' className='hidden px-2 pb-1 font-semibold sm:table-cell'>For</th>
+                  <th scope='col' className='px-2 pb-1 text-right font-semibold'>Pays</th>
+                </tr>
+              </thead>
+              <tbody className='font-display uppercase leading-none tracking-[0.06em]'>
+                {fares.map((r) => {
+                  const paid = r.fare !== '$0';
+                  return (
+                    <tr key={r.who + r.what}>
+                      <td className='flap-row rounded-l-[2px] px-2 py-3 align-top text-lg font-bold text-flap-ink sm:align-middle md:text-xl'>
+                        {r.who}
+                        <span className='mt-1 block text-sm font-semibold normal-case tracking-normal text-flap-dim sm:hidden'>
+                          {r.what}
+                        </span>
+                      </td>
+                      <td className='flap-row hidden px-2 py-3 text-base font-semibold normal-case tracking-normal text-flap-ink/90 sm:table-cell'>
+                        {r.what}
+                      </td>
+                      <td
+                        className={`flap-row whitespace-nowrap rounded-r-[2px] px-2 py-3 text-right align-top text-2xl font-extrabold sm:align-middle md:text-3xl ${paid ? 'text-gold' : 'text-mint'}`}
+                      >
+                        {r.fare}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </figure>
 
-            <LinkButton
-              href='/contact'
-              variant='secondary'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center bg-white/10 text-white hover:bg-white/15 border border-white/20'
-            >
-              Questions? Contact us
-            </LinkButton>
-          </div>
-
-          <div className='mt-6 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold text-white/60'>
-            <span className='inline-flex items-center gap-2'>
-              <Lock className='h-4 w-4 text-amber-300' />
-              Encryption by design
-            </span>
-            <span className='inline-flex items-center gap-2'>
-              <ShieldCheck className='h-4 w-4 text-amber-300' />
-              Consent-based access
-            </span>
-            <span className='inline-flex items-center gap-2'>
-              <Clock3 className='h-4 w-4 text-amber-300' />
-              Deadline tracking
-            </span>
-          </div>
+          <p className='mt-5 text-base text-flap-dim'>Yearly plans are coming. Today you pay per school.</p>
         </div>
       </section>
 
-      {/* PRICING CARDS */}
-      {/* <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {tiers.map((t) => (
-            <TierCard key={t.name} tier={t} />
-          ))}
-        </div>
-      </section> */}
-      <PricingPreview />
-
-      {/* COMPARISON */}
-      <section className='bg-white/40 border-y border-black/5 lg:pl-24'>
-        <div className='mx-auto max-w-7xl px-6 py-16 md:py-20'>
-          <div className='text-center'>
-            <div className='inline-flex items-center rounded-full bg-green-100 px-4 py-2 text-xs font-semibold text-[#0b5315]'>
-              Quick comparison
-            </div>
-            <h2 className='mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]'>
-              What you get at a glance
-            </h2>
-            <p className='mt-4 mx-auto max-w-3xl text-sm md:text-base leading-relaxed text-[#0b5315]'>
-              We keep the essentials free so students and faculty can adopt the
-              platform without friction.
-            </p>
-          </div>
-
-          <div className='mt-12 overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-            <div className='grid grid-cols-4 bg-[#fbfbf8] border-b border-black/5 text-sm font-semibold text-amber-600'>
-              <div className='px-6 py-4'>Feature</div>
-              <div className='px-6 py-4'>Student</div>
-              <div className='px-6 py-4'>Faculty</div>
-              <div className='px-6 py-4'>Institution</div>
-            </div>
-
-            <CompareRow feature='Structured requests + deadlines' a b c />
-            <CompareRow feature='Status tracking' a b c />
-            <CompareRow feature='Secure storage + encryption' a b c />
-            <CompareRow feature='Consent-based sharing controls' a b c />
-            <CompareRow feature='Faculty request inbox' a={false} b c />
-            <CompareRow
-              feature='Institution verification + audit logs'
-              a={false}
-              b={false}
-              c
-            />
-          </div>
-
-          <div className='mt-10 flex flex-col sm:flex-row items-center justify-center gap-3'>
-            <LinkButton
-              href='/signup?role=student'
-              variant='gold'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center'
-            >
-              Start as a Student
-            </LinkButton>
-            <LinkButton
-              href='/signup?role=faculty'
-              variant='secondary'
-              size='lg'
-              className='rounded-xl min-w-56 justify-center'
-            >
-              Join as Faculty
-            </LinkButton>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className='mx-auto max-w-7xl px-6 py-16 md:py-24 lg:pl-24'>
-        <div className='text-center'>
-          <div className='inline-flex items-center rounded-full bg-[#e9e9ef] px-4 py-2 text-xs font-semibold text-[#0b5315]'>
-            FAQ
-          </div>
-          <h2 className='mt-6 font-serif text-3xl md:text-4xl font-semibold text-[#0b5315]'>
-            Common questions
+      <section aria-labelledby='buys-heading' className='px-5 py-12 md:px-8 md:py-20'>
+        <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
+          <h2
+            id='buys-heading'
+            className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl lg:col-span-5'
+          >
+            What the $5 <span className='text-gold'>buys.</span>
           </h2>
-        </div>
-
-        <div className='mt-12 grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <FaqCard
-            q='Why is faculty always free?'
-            a='Faculty already donate their time and expertise. ReadMyStudent is built to reduce workload, not add a paywall.'
-          />
-          <FaqCard
-            q='Do students get access to letters?'
-            a='Letters remain confidential by default. Sharing is consent-based and designed to preserve integrity and trust.'
-          />
-          <FaqCard
-            q='When will institutional plans launch?'
-            a='Soon. If you’re a department or school interested in verification + compliance workflows, contact us for early access.'
-          />
-          <FaqCard
-            q='Is my data secure?'
-            a='We design for encryption, access control, and consent-based sharing. Sensitive academic documents deserve strong defaults.'
-          />
+          <div className='sheet px-6 py-3 md:px-10 lg:col-span-7'>
+            <dl className='divide-y divide-rule'>
+              {buys.map((b) => (
+                <div key={b.title} className='grid gap-1 py-5 sm:grid-cols-[11rem_1fr] sm:gap-6'>
+                  <dt className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>{b.title}</dt>
+                  <dd className='text-base leading-relaxed text-ink-2'>{b.body}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
       </section>
-    </main>
-  );
-}
 
-/* ---------------- Components ---------------- */
-
-function TierCard({ tier }: { tier: Tier }) {
-  const isGold = tier.accent === "gold";
-
-  const shell = [
-    "relative rounded-3xl border bg-white px-8 py-8",
-    "shadow-[0_10px_30px_rgba(15,23,42,0.04)]",
-    "transition-colors duration-300",
-    "hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.20)]",
-    isGold ? "border-amber-200" : "border-black/10",
-  ].join(" ");
-
-  return (
-    <div className={shell}>
-      {tier.badge ? (
-        <div className='absolute -top-3 left-6 inline-flex items-center gap-2 rounded-full bg-amber-400 px-3 py-1 text-xs font-extrabold text-[#0b1553] shadow-sm'>
-          <Star className='h-3.5 w-3.5' />
-          {tier.badge}
-        </div>
-      ) : null}
-
-      <div className='flex items-start justify-between gap-4'>
-        <div>
-          <div className='font-serif text-2xl font-semibold text-[#0a154a]'>
-            {tier.name}
-          </div>
-          <div className='mt-1 text-sm text-[#56608b]'>{tier.caption}</div>
-        </div>
-
-        <div className='text-right'>
-          <div className='font-serif text-3xl font-semibold text-[#0a154a]'>
-            {tier.price}
+      <section className='px-5 pb-20 pt-4 md:px-8 md:pb-28'>
+        <div className='mx-auto flex max-w-6xl flex-col items-start gap-6 border-t border-flap pt-10 md:flex-row md:items-center md:justify-between'>
+          <p className='max-w-md font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em]'>
+            Professors owe nothing.
+          </p>
+          <div className='flex flex-col gap-3 sm:flex-row'>
+            <LinkButton href='/signup?role=student' variant='gold' size='lg'>
+              Request a letter
+            </LinkButton>
+            <LinkButton href='/for-faculty' variant='board' size='lg'>
+              I am a professor
+            </LinkButton>
           </div>
         </div>
-      </div>
-
-      <div className='mt-6 h-px bg-black/5' />
-
-      <ul className='mt-6 space-y-3 text-sm text-[#56608b]'>
-        {tier.features.map((f) => (
-          <li key={f} className='flex items-start gap-3'>
-            <span className='mt-0.5 text-amber-500'>
-              <Check className='h-4 w-4' />
-            </span>
-            <span>{f}</span>
-          </li>
-        ))}
-      </ul>
-
-      <div className='mt-8'>
-        <LinkButton
-          href={tier.ctaHref}
-          variant={isGold ? "gold" : "secondary"}
-          size='lg'
-          className={[
-            "rounded-xl w-full justify-center",
-            isGold ? "" : "bg-[#0b1553] text-white hover:opacity-90",
-          ].join(" ")}
-        >
-          {tier.ctaLabel}
-        </LinkButton>
-      </div>
-
-      {tier.footnote ? (
-        <div className='mt-4 text-xs font-semibold text-[#7b84a7]'>
-          {tier.footnote}
-        </div>
-      ) : null}
-
-      <div className='pointer-events-none absolute right-6 bottom-6 opacity-[0.10] text-[#0b1553]'>
-        {tier.name.includes("Student") ? (
-          <GraduationCap className='h-16 w-16' />
-        ) : tier.name.includes("Faculty") ? (
-          <Users className='h-16 w-16' />
-        ) : (
-          <ShieldCheck className='h-16 w-16' />
-        )}
-      </div>
-    </div>
-  );
-}
-
-/** ✅ Moved OUTSIDE CompareRow to avoid "created during render" */
-function CompareCell({ ok }: { ok?: boolean }) {
-  return (
-    <div className='px-6 py-4 text-sm text-[#0b5315]'>
-      {ok ? (
-        <span className='inline-flex items-center gap-2 font-semibold text-[#0b5315]'>
-          <span className='text-amber-500'>
-            <Check className='h-4 w-4' />
-          </span>
-          Included
-        </span>
-      ) : (
-        <span className='text-[#0b5315]'>—</span>
-      )}
-    </div>
-  );
-}
-
-function CompareRow({
-  feature,
-  a,
-  b,
-  c,
-}: {
-  feature: string;
-  a?: boolean;
-  b?: boolean;
-  c?: boolean;
-}) {
-  return (
-    <div className='grid grid-cols-4 border-t border-black/5'>
-      <div className='px-6 py-4 text-sm font-semibold text-[#0b5315]'>
-        {feature}
-      </div>
-      <CompareCell ok={a} />
-      <CompareCell ok={b} />
-      <CompareCell ok={c} />
-    </div>
-  );
-}
-
-function FaqCard({ q, a }: { q: string; a: string }) {
-  return (
-    <div className='rounded-3xl border border-black/10 bg-white px-8 py-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition-colors duration-300 hover:border-amber-300 hover:bg-amber-50/40 hover:shadow-[0_18px_45px_rgba(245,197,66,0.20)]'>
-      <div className='font-serif text-xl font-semibold text-[#0b5315]'>{q}</div>
-      <p className='mt-3 text-sm leading-relaxed text-[#0b5315]'>{a}</p>
-    </div>
+      </section>
+    </>
   );
 }

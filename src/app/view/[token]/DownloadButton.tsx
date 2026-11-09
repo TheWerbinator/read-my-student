@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { logDownload } from "./actions";
 
 export function DownloadButton({
@@ -27,17 +28,16 @@ export function DownloadButton({
   };
 
   return (
-    <button
+    <Button
+      type='button'
+      variant='outline'
+      className='h-11'
       onClick={handleDownload}
       disabled={logging}
-      className='flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:opacity-50'
+      aria-label={`Download PDF of the letter for ${studentFullName}`}
     >
-      {logging ? (
-        <Loader2 className='h-4 w-4 animate-spin' />
-      ) : (
-        <Download className='h-4 w-4' />
-      )}
+      {logging ? <Loader2 className='animate-spin' /> : <Download />}
       Download PDF
-    </button>
+    </Button>
   );
 }

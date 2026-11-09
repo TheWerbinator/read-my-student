@@ -1,8 +1,7 @@
 "use client";
 
-import { LinkButton } from "@/components/ui/LinkButton";
+import Link from "next/link";
 import { contactFormSchema, ContactFormValues } from "@/lib/schemas";
-import { HelpCircle, ShieldCheck, Send } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useTransition } from "react";
@@ -50,219 +49,87 @@ export default function ContactClient() {
     });
   }
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* HERO */}
-      <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
-        <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
-            Contact
-          </div>
-
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
-            We&apos;re here to help —{" "}
-            <span className='italic text-amber-500'>without friction</span>.
+    <section className='px-5 pb-20 pt-8 md:px-8 md:pb-28 lg:pt-16'>
+      <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
+        <div className='lg:col-span-5'>
+          <h1 className='font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-7xl'>
+            Talk to <span className='text-gold'>a person.</span>
           </h1>
-
-          <p className='mt-5 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
-            Most questions are answered in our FAQ. If you still need help, want
-            to report an issue, or have a partnership inquiry, send us a message
-            below.
+          <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
+            Most questions are answered in the{" "}
+            <Link href='/faq' className='text-flap-ink underline'>
+              FAQ
+            </Link>
+            . If yours is not, or you want to report a problem, write to us here.
+          </p>
+          <p className='mt-4 max-w-md text-base text-flap-dim'>
+            We never ask for recommendation letters or confidential materials through this form.
           </p>
         </div>
-      </section>
 
-      {/* FAQ + FORM */}
-      <section className='mx-auto max-w-7xl px-6 py-10 md:py-14 lg:pl-24'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          {/* FAQ */}
-          <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-            <div className='flex items-start gap-3'>
-              <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
-                <HelpCircle className='h-5 w-5' />
-              </div>
-              <div>
-                <h2 className='font-serif text-xl font-semibold text-[#0a2e1c]'>
-                  Check the FAQ first
-                </h2>
-                <p className='mt-2 text-sm text-[#5f7f6f] leading-relaxed'>
-                  Common questions about recommendation links, faculty access,
-                  security, pricing, and workflows are answered there.
-                </p>
-
-                <div className='mt-5'>
-                  <LinkButton href='/faq' variant='green' size='md'>
-                    Go to FAQ →
-                  </LinkButton>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* FORM */}
-          <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-            <div className='flex items-start gap-3 mb-6'>
-              <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
-                <Send className='h-5 w-5' />
-              </div>
-              <div>
-                <h2 className='font-serif text-xl font-semibold text-[#0a2e1c]'>
-                  Send us a message
-                </h2>
-                <p className='mt-1 text-sm text-[#5f7f6f]'>
-                  We usually respond within 1-2 business days.
-                </p>
-              </div>
-            </div>
-
-            {/* <form className='space-y-4'>
-              <input
-                type='text'
-                placeholder='Name (optional)'
-                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
+        <div className='sheet px-6 py-8 md:px-10 md:py-10 lg:col-span-7'>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+              {/* Email Field */}
+              <FormField
+                control={form.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='caption text-ink-2'>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder='' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
-              <input
-                type='email'
-                required
-                placeholder='Email'
-                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
+              {/* Subject Field */}
+              <FormField
+                control={form.control}
+                name='subject'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='caption text-ink-2'>Subject</FormLabel>
+                    <FormControl>
+                      <Input placeholder='' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
-              <textarea
-                rows={4}
-                required
-                placeholder='Message'
-                className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
+              {/* Message Field */}
+              <FormField
+                control={form.control}
+                name='message'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='caption text-ink-2'>Message</FormLabel>
+                    <FormControl>
+                      <Textarea className='min-h-[140px]' placeholder='Message content...' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
 
-              <button
-                type='submit'
-                className='rounded-xl bg-green-900 px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition'
-              >
-                Send message
-              </button>
+              <Button type='submit' disabled={isPending} className='w-full sm:w-auto'>
+                {isPending ? "Sending..." : "Send Message"}
+              </Button>
 
-              <p className='text-xs text-green-900/60'>
-                Please don&apos;t include recommendation letter content or
-                sensitive personal data. By submitting this form, you agree to
-                our{" "}
-                <a
-                  href='/privacy'
-                  className='underline hover:opacity-80 transition'
-                >
+              <p className='border-t border-dashed border-rule pt-4 text-sm text-ink-2'>
+                Please do not include recommendation letter content or sensitive personal data. By submitting this form, you agree to our{" "}
+                <a href='/privacy' className='text-forest underline'>
                   Privacy Policy
                 </a>
                 .
               </p>
-            </form> */}
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className='space-y-6'
-              >
-                {/* Email Field */}
-                <FormField
-                  control={form.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input
-                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
-                          placeholder=''
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Subject Field */}
-                <FormField
-                  control={form.control}
-                  name='subject'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Subject</FormLabel>
-                      <FormControl>
-                        <Input
-                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm'
-                          placeholder=''
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Message Field */}
-                <FormField
-                  control={form.control}
-                  name='message'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Message</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          className='w-full rounded-xl border border-green-900/15 px-4 py-2 text-sm min-h-[120px]'
-                          placeholder='Message content...'
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type='submit'
-                  disabled={isPending}
-                  className='rounded-xl bg-green-900 px-6 py-3 text-sm font-semibold text-white hover:opacity-95 transition w-1/2'
-                >
-                  {isPending ? "Sending..." : "Send Message"}
-                </Button>
-
-                <p className='text-xs text-green-900/60'>
-                  Please don&apos;t include recommendation letter content or
-                  sensitive personal data. By submitting this form, you agree to
-                  our{" "}
-                  <a
-                    href='/privacy'
-                    className='underline hover:opacity-80 transition'
-                  >
-                    Privacy Policy
-                  </a>
-                  .
-                </p>
-              </form>
-            </Form>
-          </div>
+            </form>
+          </Form>
         </div>
-      </section>
-
-      {/* SECURITY NOTE */}
-      <section className='mx-auto max-w-7xl px-6 pb-16 md:pb-24 lg:pl-24'>
-        <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-          <div className='flex items-start gap-3'>
-            <div className='h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
-              <ShieldCheck className='h-5 w-5' />
-            </div>
-            <div>
-              <h2 className='font-serif text-xl font-semibold text-[#0a2e1c]'>
-                Privacy & security note
-              </h2>
-              <p className='mt-2 text-sm text-[#5f7f6f]'>
-                We never ask for recommendation letters or confidential
-                materials through this form.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

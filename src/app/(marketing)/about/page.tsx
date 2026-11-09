@@ -1,249 +1,84 @@
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
-import { ShieldCheck, Lock, HeartHandshake, Sparkles } from "lucide-react";
 
 export const metadata = {
   title: "About",
   description:
-    "ReadMyStudent is a secure, consent-first platform for recommendation letters—built to reduce faculty burden and student stress while preserving academic integrity.",
+    "ReadMyStudent is owned and operated by YS2PC Research Group LLC, an American company. It exists so a student's letter reaches the school on time.",
 };
 
 export default function AboutPage() {
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* HERO */}
-      <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
-        <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
-            About ReadMyStudent
-          </div>
-
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
-            Recommendation letters should feel{" "}
-            <span className='italic text-amber-500'>human</span> — not like a
-            scramble.
+    <>
+      <section className='px-5 pb-12 pt-8 md:px-8 lg:pt-16'>
+        <div className='mx-auto max-w-6xl'>
+          <h1 className='max-w-4xl font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-7xl'>
+            A letter should not be <span className='text-gold'>the late part.</span>
           </h1>
+        </div>
+      </section>
 
-          <p className='mt-5 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
-            ReadMyStudent is a secure recommendation letter platform built to
-            reduce stress for students and overload for faculty—without
-            compromising confidentiality or trust.
+      <section className='px-5 py-8 md:px-8 md:py-12'>
+        <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
+          <div className='space-y-5 text-lg leading-relaxed text-flap-ink/90 lg:col-span-6'>
+            <p>
+              Most students have the grades and the essays done well before a deadline. The letter is the piece they cannot control. It sits with a professor who is busy, and the professor often faces another portal and another password just to write it.
+            </p>
+            <p>
+              ReadMyStudent removes that wait. The student asks once. The professor answers from an emailed link, with no account, and seals the letter. The student then sends it to each school from one place.
+            </p>
+            <p>
+              The student is the customer. Professors pay nothing and owe the student nothing, because a professor who finds it easy answers sooner.
+            </p>
+          </div>
+
+          <aside aria-label='Who runs ReadMyStudent' className='lg:col-span-5 lg:col-start-8'>
+            <div className='sheet px-6 py-7 md:px-9 md:py-9'>
+              <p className='caption text-ink-2'>Owner and operator</p>
+              <p className='mt-2 font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em] text-ink md:text-4xl'>
+                YS2PC Research Group LLC
+              </p>
+              <p className='mt-4 text-base leading-relaxed text-ink-2'>
+                An American company. ReadMyStudent serves students everywhere, from high school through a PhD, and sends letters to schools in the US and abroad.
+              </p>
+              <dl className='mt-6 divide-y divide-rule border-t border-rule text-base'>
+                <div className='py-3'>
+                  <dt className='caption text-ink-2'>Questions</dt>
+                  <dd className='mt-1'>
+                    <Link href='/contact' className='text-forest underline'>
+                      Use the contact form
+                    </Link>
+                  </dd>
+                </div>
+                <div className='py-3'>
+                  <dt className='caption text-ink-2'>Student data and FERPA</dt>
+                  <dd className='mt-1'>
+                    <Link href='/ferpa' className='text-forest underline'>
+                      FERPA and US schools
+                    </Link>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section className='px-5 pb-20 pt-10 md:px-8 md:pb-28'>
+        <div className='mx-auto flex max-w-6xl flex-col items-start gap-6 border-t border-flap pt-10 md:flex-row md:items-center md:justify-between'>
+          <p className='font-display text-3xl font-extrabold uppercase leading-none tracking-[0.02em]'>
+            Next departure: your letter
           </p>
-
-          <div className='mt-8 flex flex-col sm:flex-row gap-3'>
-            <LinkButton
-              href='/signup?role=student'
-              variant='gold'
-              size='lg'
-              className='rounded-xl justify-center'
-            >
-              Start as a Student
+          <div className='flex flex-col gap-3 sm:flex-row'>
+            <LinkButton href='/signup?role=student' variant='gold' size='lg'>
+              Request a letter
             </LinkButton>
-            <LinkButton
-              href='/signup?role=faculty'
-              variant='green'
-              size='lg'
-              className='rounded-xl justify-center'
-            >
-              Join as Faculty
+            <LinkButton href='/how-it-works' variant='board' size='lg'>
+              How it works
             </LinkButton>
           </div>
-
-          <div className='mt-6 text-xs font-semibold text-green-900/60'>
-            Consent-first • Secure by design • Built for academic trust
-          </div>
         </div>
       </section>
-
-      {/* STORY */}
-      <section className='mx-auto max-w-7xl px-6 py-10 md:py-14 lg:pl-24'>
-        <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 items-start'>
-          <div className='lg:col-span-7'>
-            <h2 className='font-serif text-2xl md:text-3xl font-semibold text-[#0a2e1c]'>
-              Why we built this
-            </h2>
-
-            <div className='mt-4 space-y-4 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
-              <p>
-                Recommendation letters sit at the intersection of trust,
-                opportunity, and anxiety. Students are asking for support in a
-                high-stakes moment, and faculty are trying to help while
-                juggling dozens of competing demands.
-              </p>
-              <p>
-                The current workflow wasn’t designed for today’s application
-                volume: scattered portals, repeated reminders, mismatched
-                deadlines, and sensitive files traveling through inboxes.
-              </p>
-              <p>
-                ReadMyStudent exists to make the process calmer and more
-                reliable—while preserving integrity and confidentiality.
-              </p>
-            </div>
-
-            <div className='mt-7 rounded-2xl border border-green-900/10 bg-white px-6 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-              <div className='text-xs font-bold uppercase tracking-wide text-amber-600'>
-                Our guiding principle
-              </div>
-              <div className='mt-2 text-sm md:text-base font-semibold text-[#0a2e1c]'>
-                Every recommendation link should be uniquely generated and
-                single-use—so access is clear, controlled, and auditable.
-              </div>
-              <div className='mt-2 text-sm text-[#5f7f6f]'>
-                This closes link sharing, replay submissions, and accidental
-                misuse—without adding complexity for faculty.
-              </div>
-            </div>
-          </div>
-
-          <div className='lg:col-span-5'>
-            <div className='rounded-3xl border border-green-900/10 bg-white p-7 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-              <div className='text-xs font-semibold tracking-wide text-black/45'>
-                WHAT WE OPTIMIZE FOR
-              </div>
-
-              <ul className='mt-4 space-y-4'>
-                <ValueRow
-                  icon={<HeartHandshake className='h-5 w-5' />}
-                  title='Human experience'
-                  body='Reduce anxiety for students and reduce repetitive work for faculty.'
-                />
-                <ValueRow
-                  icon={<ShieldCheck className='h-5 w-5' />}
-                  title='Trust and integrity'
-                  body='Consent-first sharing with clear ownership and auditability.'
-                />
-                <ValueRow
-                  icon={<Lock className='h-5 w-5' />}
-                  title='Security by default'
-                  body='Sensitive letters belong behind strong controls, not email threads.'
-                />
-                <ValueRow
-                  icon={<Sparkles className='h-5 w-5' />}
-                  title='Practical workflows'
-                  body='Simple flows that work in real application seasons.'
-                />
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SIMPLE FAQ / CLARITY */}
-      <section className='mx-auto max-w-7xl px-6 py-10 md:py-14 lg:pl-24'>
-        <div className='rounded-3xl border border-green-900/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)]'>
-          <h2 className='font-serif text-2xl md:text-3xl font-semibold text-[#0a2e1c]'>
-            A few quick clarifications
-          </h2>
-
-          <div className='mt-6 grid grid-cols-1 md:grid-cols-2 gap-6'>
-            <QA
-              q='Is it free for faculty?'
-              a='Yes. Faculty access is free. The goal is to reduce workload and friction, not add a new burden.'
-            />
-            <QA
-              q='Who controls access to letters?'
-              a='Students control who receives a link. Faculty control the letter content and can set sharing/approval rules.'
-            />
-            <QA
-              q='Why single-use links?'
-              a='Single-use links prevent forwarding, replay submissions, and ambiguity. It’s the simplest way to keep trust intact.'
-            />
-            <QA
-              q='What’s the main benefit?'
-              a='A calmer workflow: fewer reminders, fewer portal headaches, clearer deadlines, and safer sharing.'
-            />
-          </div>
-
-          <div className='mt-8 flex flex-col sm:flex-row items-center gap-3'>
-            <LinkButton
-              href='/how-it-works'
-              variant='secondary'
-              size='md'
-              className='rounded-xl bg-[#eaf3ee] border border-green-900/10 hover:bg-[#dff0e6]'
-            >
-              See how it works
-            </LinkButton>
-
-            <Link
-              href='/contact'
-              className='text-sm font-semibold text-green-900/75 hover:text-green-900 transition-colors'
-            >
-              Have questions? Contact us →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER CTA */}
-      <section className='mx-auto max-w-7xl px-6 pb-16 md:pb-24 lg:pl-24'>
-        <div className='rounded-3xl border border-amber-200 bg-[#fff7e6] px-7 py-8'>
-          <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-6'>
-            <div>
-              <div className='text-xs font-bold uppercase tracking-wide text-amber-700'>
-                Ready when you are
-              </div>
-              <div className='mt-2 font-serif text-2xl md:text-3xl font-semibold text-[#0a2e1c]'>
-                Start free, and upgrade only if you need more links.
-              </div>
-            </div>
-
-            <div className='flex flex-col md:w-1/2 sm:flex-row gap-3'>
-              <LinkButton
-                href='/signup?role=student'
-                variant='gold'
-                size='lg'
-                className='rounded-xl justify-center'
-              >
-                Start as a Student
-              </LinkButton>
-              <LinkButton
-                href='/signup?role=faculty'
-                variant='green'
-                size='lg'
-                className='rounded-xl justify-center'
-              >
-                Join as Faculty
-              </LinkButton>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-/* ---------- UI bits ---------- */
-
-function ValueRow({
-  icon,
-  title,
-  body,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-}) {
-  return (
-    <li className='flex items-start gap-3'>
-      <div className='mt-0.5 h-11 w-11 rounded-2xl bg-green-900/10 text-green-900 grid place-items-center border border-green-900/10'>
-        {icon}
-      </div>
-      <div>
-        <div className='text-sm font-semibold text-[#0a2e1c]'>{title}</div>
-        <div className='mt-1 text-sm text-[#5f7f6f] leading-relaxed'>
-          {body}
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function QA({ q, a }: { q: string; a: string }) {
-  return (
-    <div className='rounded-2xl border border-black/5 bg-[#fbfbf8] px-5 py-4'>
-      <div className='text-sm font-semibold text-[#0a2e1c]'>{q}</div>
-      <div className='mt-2 text-sm text-[#5f7f6f] leading-relaxed'>{a}</div>
-    </div>
+    </>
   );
 }

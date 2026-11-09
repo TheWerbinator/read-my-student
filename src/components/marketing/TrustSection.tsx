@@ -1,145 +1,86 @@
-import {
-  Lock,
-  Shield,
-  Users,
-  Clock3,
-  Eye,
-  FileX2,
-  Download,
-  TriangleAlert,
-} from "lucide-react";
+import Link from "next/link";
 
-type TrustCard = {
-  title: string;
-  body: string;
-  icon: React.ReactNode;
-  iconBg: string; // tailwind class
-  iconColor: string; // tailwind class
-};
+const facts = [
+  {
+    title: "Sealed and signed",
+    body: "When the professor finalizes, the letter becomes a PDF with a signature that shows if a single byte changes.",
+  },
+  {
+    title: "Confidential",
+    body: "The student does not see the letter unless the professor turns on a preview.",
+  },
+  {
+    title: "One school, one link",
+    body: "Each school gets its own secure link. The reader confirms an email address before the letter opens.",
+  },
+  {
+    title: "Opening logged",
+    body: "When a school first opens its letter, the time is recorded.",
+  },
+];
 
+/** What a school receives: the sealed letter, drawn as paper, with the facts that make it trustworthy. */
 export default function TrustSection() {
-  const cards: TrustCard[] = [
-    {
-      title: "Data Encrypted",
-      body: "All data is encrypted at rest and in transit. Server-side encryption for all uploaded PDFs and sensitive fields.",
-      icon: <Lock className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-    {
-      title: "Access Controlled",
-      body: "Role-based access ensures students, faculty, and admins only see what they're authorized to see.",
-      icon: <Shield className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-    {
-      title: "Consent Built-in",
-      body: "Every shareable link is tied to a student consent record. Nothing is shared without explicit permission.",
-      icon: <Users className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-    {
-      title: "Share Once, Control the Time",
-      body: "Create permission-based links with full control over when access begins and ends.",
-      icon: <Clock3 className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-    {
-      title: "View Tracking & Audit",
-      body: "Every link view is logged (IP, timestamp, user agent). See exactly where and when your letters were accessed.",
-      icon: <Eye className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-    {
-      title: "Revoke Anytime",
-      body: "Faculty can withdraw an RL anytime. Students can revoke shared links instantly if needed.",
-      icon: <FileX2 className='h-5 w-5' />,
-      iconBg: "bg-amber-50",
-      iconColor: "text-green-900",
-    },
-  ];
-
   return (
-    <section className='bg-[#dcd9d34c] lg:pl-24'>
-      <div className='mx-auto max-w-7xl px-6 py-16 md:py-24'>
-        {/* badge */}
-        <div className='flex justify-center'>
-          <span className='inline-flex items-center rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700'>
-            Trust &amp; Security
-          </span>
-        </div>
-
-        {/* heading */}
-        <div className='mx-auto mt-6 max-w-3xl text-center'>
-          <h2 className='font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900'>
-            Built for{" "}
-            <span className='italic text-amber-500'>Privacy First</span>
-          </h2>
-          <p className='mt-4 text-sm md:text-base leading-relaxed text-green-900'>
-            Security and compliance aren&apos;t afterthoughts—they&apos;re
-            first-class requirements baked into every feature.
-          </p>
-        </div>
-
-        {/* cards */}
-        <div className='mt-14 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'>
-          {cards.map((c) => (
-            <div
-              key={c.title}
-              className='rounded-2xl border border-black/10 bg-white px-7 py-8 shadow-[0_10px_30px_rgba(15,23,42,0.04)] transition-all duration-300 ease-out hover:border-amber-300 hover:shadow-[0_20px_50px_rgba(245,197,66,0.18)]'
-            >
-              {/* icon tile */}
-              <div
-                className={[
-                  "h-12 w-12 rounded-2xl grid place-items-center border border-black/5",
-                  c.iconBg,
-                  c.iconColor,
-                ].join(" ")}
-              >
-                {c.icon}
-              </div>
-
-              <h3 className='mt-6 font-serif text-xl font-semibold text-green-900'>
-                {c.title}
-              </h3>
-
-              <p className='mt-3 text-sm leading-relaxed text-green-900'>
-                {c.body}
+    <section aria-labelledby='sealed-heading' className='px-5 py-16 md:px-8 md:py-24'>
+      <div className='mx-auto grid max-w-6xl gap-12 lg:grid-cols-12 lg:items-start'>
+        <figure className='order-2 lg:order-1 lg:col-span-6'>
+          <div className='sheet relative overflow-hidden px-7 pb-8 pt-9 md:px-10'>
+            <span className='caption absolute right-4 top-4 text-ink-2'>Sample</span>
+            <div className='border-b-2 border-forest pb-3'>
+              <p className='font-display text-xl font-extrabold uppercase tracking-[0.06em] text-forest-ink'>
+                Dr. Alan Reyes
               </p>
+              <p className='text-sm text-ink-2'>Professor of Computer Science</p>
             </div>
-          ))}
-        </div>
-
-        {/* bottom compliance bar */}
-        <div className='mt-12'>
-          <div className='rounded-2xl bg-green-900 px-6 py-5 shadow-[0_20px_60px_rgba(11,21,83,0.25)]'>
-            <div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
-              <div className='font-serif text-lg font-semibold text-white/95'>
-                Privacy &amp; Compliance:
-              </div>
-
-              <div className='flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-semibold text-white/85'>
-                <span className='inline-flex items-center gap-2'>
-                  <Shield className='h-4 w-4 text-amber-400' />
-                  Encyrpted Data
-                </span>
-
-                <span className='inline-flex items-center gap-2'>
-                  <Download className='h-4 w-4 text-amber-400' />
-                  Download Your Data
-                </span>
-
-                <span className='inline-flex items-center gap-2'>
-                  <TriangleAlert className='h-4 w-4 text-amber-400' />
-                  Delete Account Anytime
-                </span>
+            <div aria-hidden='true' className='mt-6 space-y-2.5'>
+              <p className='text-sm text-ink'>To the Graduate Admissions Committee,</p>
+              {[100, 96, 92, 98, 64].map((w, i) => (
+                <span key={i} className='block h-2 rounded-[1px] bg-paper-2' style={{ width: `${w}%` }} />
+              ))}
+              <span className='block h-3' />
+              {[94, 99, 88, 52].map((w, i) => (
+                <span key={`b${i}`} className='block h-2 rounded-[1px] bg-paper-2' style={{ width: `${w}%` }} />
+              ))}
+            </div>
+            <div className='mt-8 flex items-end justify-between gap-6'>
+              <div>
+                <p className='font-[cursive] text-3xl leading-none text-forest-ink' aria-hidden='true'>
+                  A. Reyes
+                </p>
+                <p className='mt-2 border-t border-ink/40 pt-1 text-xs text-ink-2'>Signature</p>
               </div>
             </div>
           </div>
+          <figcaption className='mt-3 text-sm text-flap-dim'>
+            A sealed letter, as a sample. The text is hidden here because letters are confidential.
+          </figcaption>
+        </figure>
+
+        <div className='order-1 lg:order-2 lg:col-span-6 lg:pl-6'>
+          <h2
+            id='sealed-heading'
+            className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
+          >
+            Schools get a letter <span className='text-gold'>they can trust.</span>
+          </h2>
+          <dl className='mt-10 divide-y divide-flap'>
+            {facts.map((f) => (
+              <div key={f.title} className='grid gap-1 py-4 sm:grid-cols-[12rem_1fr] sm:gap-6'>
+                <dt className='font-display text-xl font-bold uppercase tracking-[0.04em] text-flap-ink'>{f.title}</dt>
+                <dd className='text-base leading-relaxed text-flap-ink/85'>{f.body}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className='mt-6 text-sm text-flap-dim'>
+            <Link href='/security' className='text-flap-ink underline'>
+              How we protect letters
+            </Link>
+            <span aria-hidden='true'> · </span>
+            <Link href='/ferpa' className='text-flap-ink underline'>
+              FERPA and US schools
+            </Link>
+          </p>
         </div>
       </div>
     </section>

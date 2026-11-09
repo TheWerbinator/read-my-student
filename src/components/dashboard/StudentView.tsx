@@ -8,28 +8,27 @@ import {
 } from "@/app/actions/letters";
 import type { FinishedLetter, PendingRequest } from "@/app/actions/letters";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { requestStatus } from "@/components/board/status";
 import { SendToSchoolDialog } from "@/components/dashboard/SendToSchoolDialog";
 import { LetterPreviewDialog } from "@/components/dashboard/LetterPreviewDialog";
+import {
+  BoardColumns,
+  BoardEmpty,
+  BoardRow,
+  BoardSkeleton,
+  BoardStrip,
+  StatusFlap,
+} from "@/components/dashboard/StatsCard";
+
+// Column templates. On phones the row stacks: professor and status on line one.
+const READY_COLS = "md:grid-cols-[7rem_minmax(0,1fr)_9rem_auto]";
+const PENDING_COLS = "md:grid-cols-[7rem_minmax(0,1fr)_9rem]";
+const DATE_CELL = "order-3 font-display text-base font-bold tabular-nums tracking-[0.06em] text-flap-dim md:order-none";
 
 export function StudentView() {
   const [profEmail, setProfEmail] = useState("");
@@ -53,7 +52,7 @@ export function StudentView() {
     if (paymentStatus === "success") {
       toast.success("Payment successful! Your professor has been notified and your delivery link has been generated.");
     } else if (paymentStatus === "cancelled") {
-      toast.info("Payment cancelled — no charge was made.");
+      toast.info("Payment cancelled. No charge was made.");
     }
     if (paymentStatus) {
       params.delete("payment");
@@ -101,216 +100,190 @@ export function StudentView() {
   };
 
   return (
-    <div className='grid gap-6 grid-cols-1 md:grid-cols-12'>
+    <div className='grid grid-cols-1 gap-6 xl:grid-cols-12'>
       {/* LEFT COL: Request Form */}
-      <div className='md:col-span-4'>
-        <Card className='rounded-2xl border-black/5 shadow-lg shadow-black/5'>
-          <CardHeader>
-            <CardTitle className='text-xl font-serif text-green-900'>
+      <div className='max-w-xl xl:col-span-4 xl:max-w-none'>
+        <div className='sheet space-y-5 p-6'>
+          <div className='space-y-1'>
+            <h2 className='font-display text-xl font-extrabold uppercase leading-none tracking-[0.04em] text-forest-ink'>
               Request a Letter
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className='text-sm text-ink-2'>
               Ask a professor for a recommendation.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-{result?.status === "requested" && (
-              <div className='rounded-xl bg-green-50 p-3 text-sm text-green-800'>
-                ✅ Request sent! We emailed your professor a link to answer.
-                They do not need an account. If they do not answer within 7
-                days, the request closes.
-              </div>
-            )}
-            {result?.status === "error" && (
-              <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                ❌ {(result as { status: "error"; error: string }).error}
-              </div>
-            )}
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className='space-y-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='prof-email'>Professor&apos;s Email</Label>
-                <Input
-                  id='prof-email'
-                  type='email'
-                  required
-                  placeholder='professor@university.edu'
-                  value={profEmail}
-                  onChange={(e) => setProfEmail(e.target.value)}
-                  className='rounded-xl border-black/10 focus-visible:ring-green-900'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='course'>Course / Context (Optional)</Label>
-                <Input
-                  id='course'
-                  placeholder='e.g. BIO 101, Fall 2023'
-                  value={courseContext}
-                  onChange={(e) => setCourseContext(e.target.value)}
-                  className='rounded-xl border-black/10 focus-visible:ring-green-900'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='message'>Personal Note</Label>
-                <Textarea
-                  id='message'
-                  placeholder="Hi Professor, I'm applying to med school..."
-                  value={studentNote}
-                  onChange={(e) => setStudentNote(e.target.value)}
-                  className='rounded-xl border-black/10 min-h-[100px] focus-visible:ring-green-900'
-                />
-              </div>
-              <Button
-                type='submit'
-                disabled={isLoading}
-                className='w-full rounded-xl bg-green-900 hover:bg-[#093820] disabled:opacity-60'
-              >
-                {isLoading ? "Sending…" : "Send Request"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          {result?.status === "requested" && (
+            <div
+              role='status'
+              className='border border-sealed/40 bg-paper-2 p-3 text-sm text-sealed'
+            >
+              Request sent. We emailed your professor a link to answer.
+              They do not need an account. If they do not answer within 7
+              days, the request closes.
+            </div>
+          )}
+          {result?.status === "error" && (
+            <div
+              role='alert'
+              className='border border-declined/40 bg-paper-2 p-3 text-sm text-declined'
+            >
+              {(result as { status: "error"; error: string }).error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='prof-email' className='caption text-ink-2'>
+                Professor&apos;s email
+              </Label>
+              <Input
+                id='prof-email'
+                type='email'
+                required
+                placeholder='professor@university.edu'
+                value={profEmail}
+                onChange={(e) => setProfEmail(e.target.value)}
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='course' className='caption text-ink-2'>
+                Course / context (optional)
+              </Label>
+              <Input
+                id='course'
+                placeholder='e.g. BIO 101, Fall 2023'
+                value={courseContext}
+                onChange={(e) => setCourseContext(e.target.value)}
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='message' className='caption text-ink-2'>
+                Personal note
+              </Label>
+              <Textarea
+                id='message'
+                placeholder="Hi Professor, I'm applying to graduate programs this year..."
+                value={studentNote}
+                onChange={(e) => setStudentNote(e.target.value)}
+                className='min-h-[100px]'
+              />
+            </div>
+            <Button
+              type='submit'
+              variant='gold'
+              size='lg'
+              disabled={isLoading}
+              className='w-full'
+            >
+              {isLoading ? "Sending…" : "Send Request"}
+            </Button>
+          </form>
+        </div>
       </div>
 
       {/* RIGHT COL: Status Tabs */}
-      <div className='md:col-span-8'>
+      <div className='min-w-0 xl:col-span-8'>
         <Tabs defaultValue='completed' className='w-full'>
-          <TabsList className='grid w-full grid-cols-2 rounded-xl bg-green-900/5 p-1'>
-            <TabsTrigger
-              value='completed'
-              className='rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm'
-            >
-              Ready to Send
-            </TabsTrigger>
-            <TabsTrigger
-              value='pending'
-              className='rounded-lg data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm'
-            >
-              Pending
-            </TabsTrigger>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='completed'>Ready to Send</TabsTrigger>
+            <TabsTrigger value='pending'>Pending</TabsTrigger>
           </TabsList>
 
           {/* COMPLETED REQUESTS (Ready to send to schools) */}
-          <TabsContent value='completed' className='mt-4 space-y-4'>
-            <Card className='rounded-2xl border-black/5'>
-              <CardContent className='p-0'>
-                <Table>
-                  <TableHeader>
-                    <TableRow className='hover:bg-transparent'>
-                      <TableHead>Professor</TableHead>
-                      <TableHead>Date Signed</TableHead>
-                      <TableHead className='text-right'>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dataLoading ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className='py-10 text-center text-sm text-gray-400'
+          <TabsContent value='completed' className='mt-4'>
+            <BoardStrip title='Ready to send'>
+              <div role='table' aria-label='Letters ready to send'>
+                <BoardColumns
+                  cols={READY_COLS}
+                  labels={["Date signed", "Professor", "Status", "Action"]}
+                />
+                <div role='rowgroup' className='space-y-1'>
+                  {dataLoading ? (
+                    <BoardSkeleton />
+                  ) : finishedLetters.length === 0 ? (
+                    <BoardEmpty title='No letters ready yet'>
+                      A letter shows up here once a professor seals it. If you
+                      have not asked anyone yet, send a request with the form.
+                    </BoardEmpty>
+                  ) : (
+                    finishedLetters.map((letter) => (
+                      <BoardRow key={letter.letterId} cols={READY_COLS}>
+                        <span role='cell' className={DATE_CELL}>
+                          {new Date(letter.finalizedAt).toLocaleDateString()}
+                        </span>
+                        <span
+                          role='cell'
+                          className='order-1 min-w-0 break-words font-semibold text-flap-ink md:order-none'
                         >
-                          Loading…
-                        </TableCell>
-                      </TableRow>
-                    ) : finishedLetters.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className='py-10 text-center text-sm text-gray-400'
+                          {letter.facultyName}
+                        </span>
+                        <span role='cell' className='order-2 justify-self-end md:order-none md:justify-self-start'>
+                          <StatusFlap label='Sealed' lamp='done' />
+                        </span>
+                        <span
+                          role='cell'
+                          className='order-4 col-span-2 flex flex-wrap items-center gap-2 pt-1 md:order-none md:col-span-1 md:justify-end md:pt-0'
                         >
-                          No letters ready to send yet.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      finishedLetters.map((letter) => (
-                        <TableRow key={letter.letterId}>
-                          <TableCell className='font-medium'>
-                            {letter.facultyName}
-                          </TableCell>
-                          <TableCell className='text-sm text-gray-500'>
-                            {new Date(letter.finalizedAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className='text-right'>
-                            <div className='flex items-center justify-end gap-2'>
-                              <LetterPreviewDialog
-                                letterId={letter.letterId}
-                                facultyName={letter.facultyName}
-                                previewEnabled={letter.studentPreviewEnabled}
-                              />
-                              <SendToSchoolDialog letterId={letter.letterId} />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                          <LetterPreviewDialog
+                            letterId={letter.letterId}
+                            facultyName={letter.facultyName}
+                            previewEnabled={letter.studentPreviewEnabled}
+                          />
+                          <SendToSchoolDialog letterId={letter.letterId} />
+                        </span>
+                      </BoardRow>
+                    ))
+                  )}
+                </div>
+              </div>
+            </BoardStrip>
           </TabsContent>
 
           {/* PENDING REQUESTS */}
           <TabsContent value='pending' className='mt-4'>
-            <Card className='rounded-2xl border-black/5'>
-              <CardContent className='p-0'>
-                <Table>
-                  <TableHeader>
-                    <TableRow className='hover:bg-transparent'>
-                      <TableHead>Professor</TableHead>
-                      <TableHead>Sent On</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dataLoading ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className='py-10 text-center text-sm text-gray-400'
-                        >
-                          Loading…
-                        </TableCell>
-                      </TableRow>
-                    ) : pendingRequests.length === 0 ? (
-                      <TableRow>
-                        <TableCell
-                          colSpan={3}
-                          className='py-10 text-center text-sm text-gray-400'
-                        >
-                          No pending requests yet.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      pendingRequests.map((req) => (
-                        <TableRow key={req.requestId}>
-                          <TableCell className='text-sm text-gray-700'>
-                            {req.facultyEmail}
-                          </TableCell>
-                          <TableCell className='text-sm text-gray-500'>
+            <BoardStrip title='Pending requests'>
+              <div role='table' aria-label='Pending requests'>
+                <BoardColumns
+                  cols={PENDING_COLS}
+                  labels={["Sent on", "Professor", "Status"]}
+                />
+                <div role='rowgroup' className='space-y-1'>
+                  {dataLoading ? (
+                    <BoardSkeleton />
+                  ) : pendingRequests.length === 0 ? (
+                    <BoardEmpty title='No open requests'>
+                      Enter a professor&apos;s email in the form to send your
+                      first request. They answer from an emailed link, no
+                      account needed.
+                    </BoardEmpty>
+                  ) : (
+                    pendingRequests.map((req) => {
+                      const s = requestStatus[req.status] ?? {
+                        label: req.status,
+                        lamp: "moving" as const,
+                      };
+                      return (
+                        <BoardRow key={req.requestId} cols={PENDING_COLS}>
+                          <span role='cell' className={DATE_CELL}>
                             {new Date(req.createdAt).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-                                req.status === "rejected"
-                                  ? "bg-red-100 text-red-700"
-                                  : req.status === "expired"
-                                    ? "bg-gray-100 text-gray-700"
-                                  : req.status === "invited"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {req.status}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                          </span>
+                          <span
+                            role='cell'
+                            className='order-1 min-w-0 break-words text-flap-ink md:order-none'
+                          >
+                            {req.facultyEmail}
+                          </span>
+                          <span role='cell' className='order-2 justify-self-end md:order-none md:justify-self-start'>
+                            <StatusFlap label={s.label} lamp={s.lamp} />
+                          </span>
+                        </BoardRow>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </BoardStrip>
           </TabsContent>
         </Tabs>
       </div>

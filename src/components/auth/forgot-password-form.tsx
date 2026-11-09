@@ -3,19 +3,10 @@
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
-import Logo from "../../../public/green_yellow_logo_sized.png";
 
 export function ForgotPasswordForm({
   className,
@@ -25,9 +16,18 @@ export function ForgotPasswordForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [touched, setTouched] = useState(false);
+
+  const emailError = !email.trim()
+    ? "Enter the email on your account."
+    : !/^\S+@\S+\.\S+$/.test(email.trim())
+      ? "This email looks incomplete. Use the form name@school.edu."
+      : null;
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched(true);
+    if (emailError) return;
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -47,117 +47,73 @@ export function ForgotPasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      {success ? (
-        <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-          <CardHeader className='pb-4'>
-            <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
-              Check Your Email
-            </CardTitle>
-            <CardDescription className='text-green-900/70'>
-              Password reset instructions sent
-            </CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-6'>
-            <p className='text-sm text-muted-foreground'>
+    <div className={cn("flex flex-col gap-4", className)} {...props}>
+      <div className='sheet p-6 md:p-8'>
+        {success ? (
+          <div role='status'>
+            <h2 className='font-display text-2xl font-extrabold uppercase leading-none tracking-[0.02em]'>
+              Check your email
+            </h2>
+            <p className='mt-3 text-ink'>
               If you registered using your email and password, you will receive
               a password reset email.
             </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Card className='rounded-3xl border-black/10 bg-white shadow-xl shadow-black/5'>
-            <CardHeader className='pb-4'>
-              <CardTitle className='text-3xl font-serif font-semibold text-green-900'>
-                Reset Your Password
-              </CardTitle>
-              <CardDescription className='text-green-900/70'>
-                Type in your email and we&apos;ll send you a link to reset your
-                password
-              </CardDescription>
-            </CardHeader>
-            <CardContent className='space-y-6'>
-              {/* Brand Logo Row */}
-              <div className='flex items-center gap-3 rounded-2xl bg-slate-50/50 p-2 -mx-2 mb-4'>
-                <div className='rounded-xl border border-black/10 bg-white p-2 shadow-sm'>
-                  <Image
-                    src={Logo}
-                    alt='ReadMyStudent logo'
-                    className='h-6 w-auto'
-                    priority
-                  />
-                </div>
-                <div className='min-w-0'>
-                  <div className='text-sm font-semibold text-green-900'>
-                    ReadMyStudent
-                  </div>
-                  <div className='text-xs text-black/50'>
-                    Secure recommendation letters
-                  </div>
-                </div>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotPassword} noValidate>
+            <div className='flex flex-col gap-5'>
+              <div className='grid gap-2'>
+                <Label htmlFor='email' className='caption text-ink-2'>
+                  Email
+                </Label>
+                <Input
+                  id='email'
+                  type='email'
+                  autoComplete='email'
+                  placeholder='you@university.edu'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setTouched(true)}
+                  aria-invalid={touched && !!emailError}
+                  aria-describedby={touched && emailError ? "email-error" : undefined}
+                />
+                {touched && emailError && (
+                  <span id='email-error' className='text-sm text-declined'>
+                    {emailError}
+                  </span>
+                )}
               </div>
 
-              <form onSubmit={handleForgotPassword}>
-                <div className='flex flex-col gap-6'>
-                  <div className='grid gap-2'>
-                    <Label
-                      htmlFor='email'
-                      className='font-medium text-gray-800'
-                    >
-                      Email <span className='text-red-600'>*</span>
-                    </Label>
-                    <Input
-                      id='email'
-                      type='email'
-                      placeholder='you@university.edu'
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className='rounded-xl border-black/15 bg-white px-3 py-5 text-black focus-visible:border-green-900 focus-visible:ring-green-900/20'
-                    />
-                  </div>
-
-                  {error && (
-                    <div className='rounded-xl bg-red-50 p-3 text-sm text-red-700'>
-                      ❌ {error}
-                    </div>
-                  )}
-                  <Button
-                    type='submit'
-                    disabled={isLoading}
-                    className='w-full rounded-2xl bg-green-900 py-6 text-sm font-semibold text-white shadow-md transition hover:bg-green-900/90 hover:shadow-lg disabled:opacity-60'
-                  >
-                    {isLoading ? "Sending..." : "Send reset email"}
-                  </Button>
+              {error && (
+                <div role='alert' className='text-sm text-declined'>
+                  {error}. Check the address and try again.
                 </div>
-                <div className='mt-6 text-center text-sm text-black/60'>
-                  Already have an account?{" "}
-                  <Link
-                    href='/login'
-                    className='font-semibold text-green-900 hover:underline'
-                  >
-                    Login
-                  </Link>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
+              )}
 
-          {/* Form Footer Links
-          <div className='text-center text-xs text-black/45'>
-            By logging in, you agree to our{" "}
-            <Link className='text-green-900 hover:underline' href='/terms'>
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link className='text-green-900 hover:underline' href='/privacy'>
-              Privacy Policy
-            </Link>
-            .
-          </div> */}
-        </>
-      )}
+              <Button
+                type='submit'
+                variant='gold'
+                size='lg'
+                disabled={isLoading}
+                className='w-full'
+              >
+                {isLoading ? "Sending..." : "Send reset email"}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        <div className='perforation mt-6' />
+        <p className='mt-5 text-sm text-ink-2'>
+          {success ? "Back to " : "Already have an account? "}
+          <Link
+            href='/login'
+            className='font-semibold text-forest underline underline-offset-4'
+          >
+            {success ? "Log in" : "Login"}
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

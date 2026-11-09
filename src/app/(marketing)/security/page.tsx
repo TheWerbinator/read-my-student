@@ -3,113 +3,95 @@ import Link from "next/link";
 export const metadata = {
   title: "Security",
   description:
-    "ReadMyStudent security overview: consent-first access, single-use links, encryption, and auditability for recommendation letters.",
+    "ReadMyStudent security overview: consent-first access, one link per school, and auditability for recommendation letters.",
 };
 
 export default function SecurityPage() {
   return (
-    <main className='bg-[#fbfbf8]'>
-      {/* HERO */}
-      <section className='mx-auto max-w-7xl px-6 pt-16 md:pt-24 pb-10 lg:pl-24'>
-        <div className='max-w-3xl'>
-          <div className='inline-flex items-center rounded-full bg-[#eaf3ee] px-4 py-2 text-xs font-semibold text-green-900 border border-green-900/10'>
+    <div className='px-5 py-12 md:px-8 md:py-20'>
+      <div className='mx-auto max-w-4xl'>
+        <header>
+          <h1 className='font-display text-5xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-7xl'>
             Security
-          </div>
-
-          <h1 className='mt-6 font-serif text-4xl md:text-5xl font-semibold tracking-tight text-green-900 leading-tight'>
-            Built for trust,{" "}
-            <span className='italic text-amber-500'>by design</span>.
           </h1>
-
-          <p className='mt-5 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
+          <p className='mt-6 max-w-2xl text-lg leading-relaxed text-flap-ink/90'>
             Recommendation letters are sensitive academic documents.
             ReadMyStudent is designed to reduce risk, prevent misuse, and keep
             access clear, auditable, and consent-based.
           </p>
-        </div>
-      </section>
+        </header>
 
-      {/* CONTENT */}
-      <section className='mx-auto max-w-7xl px-6 pb-16 md:pb-24 lg:pl-24'>
-        <div className='max-w-3xl space-y-10'>
-          <SecuritySection title='Consent-first access'>
-            Students explicitly control when and where recommendation links are
-            generated. Viewers can only access letters through student-approved
-            links. Faculty control the content they submit.
-          </SecuritySection>
+        <article className='sheet mt-10 px-5 py-8 sm:px-10 md:mt-14 md:px-14 md:py-12'>
+          <div className='prose-paper break-words text-base text-ink'>
+            <h2 id='consent-first-access' className='scroll-mt-6 mt-0!'>
+              Consent-first access
+            </h2>
+            <p>
+              Students explicitly control when and where recommendation links
+              are generated. Viewers can only access letters through
+              student-approved links. Faculty control the content they submit.
+            </p>
 
-          <SecuritySection title='Single-use recommendation links'>
-            Every recommendation submission requires a uniquely generated,
-            one-time-use link. Once a link is used, it automatically expires and
-            cannot be reused, forwarded, or replayed.
-          </SecuritySection>
+            <h2 id='single-use-links' className='scroll-mt-6'>
+              One link per school
+            </h2>
+            <p>
+              Each school gets its own uniquely generated delivery link. The
+              school confirms an email address before the letter opens, and the
+              link stops working 48 hours after the professor approves the
+              delivery. A professor’s request link
+              is unique to that request and stops working when the request is
+              declined or closes after 7 days with no answer.
+            </p>
 
-          <SecuritySection title='Access auditability'>
-            The platform records access events such as link generation,
-            submission timestamps, and viewing activity. This provides clarity
-            and accountability without exposing letter content.
-          </SecuritySection>
+            <h2 id='access-auditability' className='scroll-mt-6'>
+              Access auditability
+            </h2>
+            <p>
+              The platform records access events such as link generation,
+              submission timestamps, and viewing activity. This provides clarity
+              and accountability without exposing letter content.
+            </p>
 
-          <SecuritySection title='Data protection'>
-            We use reasonable technical and organizational measures to protect
-            personal information and sensitive documents. Recommendation letters
-            are handled within the platform and are not requested or transmitted
-            via email.
-          </SecuritySection>
+            <h2 id='data-protection' className='scroll-mt-6'>
+              Data protection
+            </h2>
+            <p>
+              We use reasonable technical and organizational measures to protect
+              personal information and sensitive documents. Recommendation
+              letters are handled within the platform and are not requested or
+              transmitted via email.
+            </p>
 
-          <SecuritySection title='Minimized data exposure'>
-            Access is limited to what is necessary for each role. Viewers
-            receive read-only access. Links expire automatically. We avoid
-            long-lived, broadly shareable URLs.
-          </SecuritySection>
+            <h2 id='minimized-data-exposure' className='scroll-mt-6'>
+              Minimized data exposure
+            </h2>
+            <p>
+              Access is limited to what is necessary for each role. Viewers
+              receive read-only access. Links expire automatically. We avoid
+              long-lived, broadly shareable URLs.
+            </p>
 
-          <SecuritySection title='Responsible use'>
-            Attempts to bypass access controls, reuse links, or access letters
-            without authorization violate our{" "}
-            <Link
-              href='/terms'
-              className='font-semibold text-green-900 hover:underline'
-            >
-              Terms of Service
-            </Link>
-            .
-          </SecuritySection>
+            <h2 id='responsible-use' className='scroll-mt-6'>
+              Responsible use
+            </h2>
+            <p>
+              Attempts to bypass access controls, reuse links, or access
+              letters without authorization violate our{" "}
+              <Link href='/terms'>Terms of Service</Link>.
+            </p>
 
-          <SecuritySection title='Security questions or concerns'>
-            If you are a faculty member, institution, or administrator with
-            questions about security practices or responsible disclosure, please
-            reach out through our{" "}
-            <Link
-              href='/contact'
-              className='font-semibold text-green-900 hover:underline'
-            >
-              contact page
-            </Link>
-            .
-          </SecuritySection>
-        </div>
-      </section>
-    </main>
-  );
-}
-
-/* ---------- UI ---------- */
-
-function SecuritySection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section>
-      <h2 className='font-serif text-2xl font-semibold text-[#0a2e1c]'>
-        {title}
-      </h2>
-      <div className='mt-3 text-sm md:text-base leading-relaxed text-[#5f7f6f]'>
-        {children}
+            <h2 id='security-questions' className='scroll-mt-6'>
+              Security questions or concerns
+            </h2>
+            <p>
+              If you are a faculty member, institution, or administrator with
+              questions about security practices or responsible disclosure,
+              please reach out through our <Link href='/contact'>contact page</Link>.
+            </p>
+          </div>
+        </article>
       </div>
-    </section>
+    </div>
   );
 }

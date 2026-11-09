@@ -125,33 +125,31 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         <Button
-          size='sm'
-          className='rounded-lg bg-amber-400 text-green-900 hover:bg-yellow-500 font-semibold'
+          variant='outline'
+          className='h-11 bg-transparent text-flap-ink ring-flap-ink/40 hover:bg-flap hover:text-flap-ink hover:ring-flap-ink/70'
         >
-          <School className='mr-2 h-4 w-4' /> Send to School
+          <School /> Send to School
         </Button>
       </DialogTrigger>
 
       {step === "details" ? (
-        <DialogContent className='sm:max-w-[425px] rounded-2xl'>
+        <DialogContent className='sm:max-w-[425px]'>
           <DialogHeader>
-            <DialogTitle className='font-serif text-green-900'>
+            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
               Send Recommendation
             </DialogTitle>
             <DialogDescription>
-              Enter the destination for the admissions office. A secure
-              one-time view link will be generated after faculty approval and
-              payment.
+              Enter the destination for the admissions office. A secure view
+              link is generated after payment and your professor&apos;s
+              approval.
             </DialogDescription>
           </DialogHeader>
 
           <div className='grid gap-4 py-4'>
             {recentSchools.length > 0 && (
               <div className='grid gap-1'>
-                <p className='text-xs text-gray-400 font-medium'>
-                  Previously sent to:
-                </p>
-                <div className='flex flex-wrap gap-1'>
+                <p className='caption text-ink-2'>Previously sent to</p>
+                <div className='flex flex-wrap gap-1.5'>
                   {recentSchools.map((s) => (
                     <button
                       key={s.email}
@@ -161,7 +159,7 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
                         setSchoolEmail(s.email);
                       }}
                       disabled={isLoading}
-                      className='rounded-full border border-gray-200 bg-gray-50 px-3 py-0.5 text-xs text-gray-600 hover:bg-amber-50 hover:border-amber-300 hover:text-green-900 transition-colors disabled:opacity-50'
+                      className='min-h-11 rounded-[2px] border border-rule bg-paper-2 px-3 text-sm text-ink hover:border-forest hover:bg-white transition-colors disabled:opacity-50'
                     >
                       {s.name}
                     </button>
@@ -171,23 +169,25 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
             )}
 
             <div className='grid gap-2'>
-              <Label htmlFor='school-name'>Institution Name</Label>
+              <Label htmlFor='school-name' className='caption text-ink-2'>
+                Institution name
+              </Label>
               <Input
                 id='school-name'
-                placeholder='e.g. Harvard Medical School'
-                className='rounded-xl'
+                placeholder='e.g. University of Example'
                 value={schoolName}
                 onChange={(e) => setSchoolName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
             <div className='grid gap-2'>
-              <Label htmlFor='school-email'>Admissions Email</Label>
+              <Label htmlFor='school-email' className='caption text-ink-2'>
+                Admissions email
+              </Label>
               <Input
                 id='school-email'
                 type='email'
-                placeholder='admissions@harvard.edu'
-                className='rounded-xl'
+                placeholder='admissions@university.edu'
                 value={schoolEmail}
                 onChange={(e) => setSchoolEmail(e.target.value)}
                 disabled={isLoading}
@@ -198,13 +198,13 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
             </div>
 
             {error && (
-              <p className='rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700'>
-                ❌ {error}
+              <p role='alert' className='border border-declined/40 bg-paper-2 px-3 py-2 text-sm text-declined'>
+                {error}
               </p>
             )}
 
-            <div className='rounded-lg bg-slate-50 p-3 text-xs text-gray-500'>
-              <span className='font-bold text-green-900'>
+            <div className='border border-rule bg-paper-2 p-3 text-sm text-ink-2'>
+              <span className='font-bold text-ink'>
                 $5.00 per delivery.
               </span>{" "}
               After payment, your professor approves the release. Once
@@ -215,7 +215,9 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
           <DialogFooter>
             <Button
               type='button'
-              className='w-full rounded-xl bg-green-900 hover:bg-[#093820] disabled:opacity-60'
+              variant='gold'
+              size='lg'
+              className='w-full'
               disabled={!isValid || isLoading}
               onClick={() => void handleProceedToPayment()}
             >
@@ -224,14 +226,14 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
           </DialogFooter>
         </DialogContent>
       ) : (
-        <DialogContent className='sm:max-w-[520px] rounded-2xl'>
+        <DialogContent className='sm:max-w-[520px]'>
           <DialogHeader>
-            <DialogTitle className='font-serif text-green-900'>
+            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
               Complete Payment
             </DialogTitle>
             <DialogDescription>
               Paying to deliver your letter to{" "}
-              <span className='font-medium text-gray-700'>{schoolName}</span>.
+              <span className='font-semibold text-ink'>{schoolName}</span>.
             </DialogDescription>
           </DialogHeader>
 
@@ -249,13 +251,13 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
           <div className='pt-1'>
             <button
               type='button'
-              className='text-xs text-gray-400 hover:text-gray-600 underline'
+              className='min-h-11 text-sm text-ink-2 underline hover:text-ink'
               onClick={() => {
                 setStep("details");
                 setClientSecret(null);
               }}
             >
-              ← Back to school details
+              Back to school details
             </button>
           </div>
         </DialogContent>

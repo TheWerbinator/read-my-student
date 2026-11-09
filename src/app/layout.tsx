@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Big_Shoulders, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import Footer from "@/components/marketing/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Board lettering: condensed caps from Chicago street signage.
+const board = Big_Shoulders({
+  variable: "--font-board",
+  subsets: ["latin"],
+  axes: ["opsz"],
+  // next/font has no fallback metrics for this family.
+  adjustFontFallback: false,
+});
+
+// Body: the US government's web typeface, legible on small phones.
+const body = Public_Sans({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL
-  ? `https://${process.env.NEXT_PUBLIC_SITE_URL}`
-  : "http://localhost:3000";
+// NEXT_PUBLIC_SITE_URL already includes the scheme (see .env.example).
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -71,11 +74,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${board.variable} ${body.variable} antialiased`}>
         {children}
-        <Footer />
         <Toaster richColors position='top-center' />
       </body>
     </html>
