@@ -8,14 +8,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
+import { FlapText } from "@/components/board/FlapText";
+import { lampOnBoard } from "@/components/board/status";
 import Footer from "@/components/marketing/Footer";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { authorizeRequestAccess } from "@/lib/request-access";
+import { EXPIRE_AFTER_DAYS } from "@/lib/request-sweep";
 import LogoWhite from "../../../../public/Logo_Official_White.png";
 import { RequestLinkActions } from "./RequestLinkActions";
+import { MarkOpened } from "./MarkOpened";
 
 export const metadata: Metadata = {
-  title: "Letter request | ReadMyStudent",
+  title: "Letter request",
   robots: { index: false, follow: false },
   // The token is in the URL, so never send it to other sites.
   referrer: "no-referrer",
@@ -27,27 +31,40 @@ const admin = createAdminClient(
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
 
+/** Whole days before the day-7 close, counted from created_at (same rule as the sweep). */
+function daysLeft(createdAt: string): number {
+  const ageDays = (Date.now() - new Date(createdAt).getTime()) / 86_400_000;
+  return Math.ceil(EXPIRE_AFTER_DAYS - ageDays);
+}
+
 function Shell({
   title,
+  above,
   children,
 }: {
   title: string;
+  above?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className='board on-board flex min-h-screen flex-col'>
       <header className='bg-board'>
         <div className='mx-auto flex max-w-2xl items-center justify-between gap-4 px-4 py-3'>
-          <Image src={LogoWhite} alt='ReadMyStudent' className='h-8 w-auto' />
+          <Image src={LogoWhite} alt='ReadMyStudent' className='h-10 w-auto' />
           <span className='caption text-flap-dim'>Letter request</span>
         </div>
       </header>
       <main className='flex-1 px-4 py-6 md:py-12'>
-        <div className='sheet mx-auto max-w-2xl p-5 md:p-8'>
-          <h1 className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-forest-ink md:text-3xl'>
-            {title}
-          </h1>
-          <div className='mt-5 space-y-4 text-ink'>{children}</div>
+        <div className='mx-auto max-w-2xl space-y-5'>
+          {above}
+          <div className='sheet p-5 md:p-8'>
+            <h1 className='font-display text-2xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] text-forest-ink md:text-3xl'>
+              {title}
+            </h1>
+            <div className='mt-5 space-y-4 text-ink [&_p]:max-w-[65ch]'>
+              {children}
+            </div>
+          </div>
         </div>
       </main>
       <Footer compact />
@@ -154,64 +171,92 @@ export default async function RequestLinkPage({
   const program = student?.program as string | null;
   const university = student?.university as string | null;
 
-  return (
-    <Shell title={`${studentName} asked you for a letter of recommendation`}>
-      <dl className='divide-y divide-rule border-y border-rule'>
-        <div className='py-3'>
-          <dt className={dtClass}>Requested by</dt>
-          <dd className='mt-1'>
-            {studentName}
-            {studentEmail && (
-              <span className='block break-all text-sm text-ink-2'>
-                {studentEmail}
+  const createdAt = request?.created_at as string | undefined;
+  const left = createdAt && !access.respondedAt ? daysLeft(createdAt) : null;
+  const requestedOn = createdAt
+    ? new Date(createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+  const where = [program, university].filter(Boolean).join(", ");
+
+  const departure = (
+    <section aria-label='This request' className='board-frame'>
+      <div className='flap-row grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-2 px-3 py-3 uppercase'>
+        <span className='caption text-flap-dim'>
+          {requestedOn ? `Requested ${requestedOn}` : "Requested"}
+        </span>
+        <FlapText
+          text={access.respondedAt ? "Draft saved" : "Waits on you"}
+          cascadeOnMount
+          delay={300}
+          className={`text-base ${access.respondedAt ? lampOnBoard.moving : lampOnBoard.waiting}`}
+        />
+        <p className='col-span-2 break-words font-display text-xl font-bold leading-tight tracking-[0.06em] text-flap-ink md:text-2xl'>
+          {studentName}
+        </p>
+        {(where || left !== null) && (
+          <p className='col-span-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm text-flap-dim'>
+            <span className='break-words'>{where}</span>
+            {left !== null && (
+              <span className='caption'>
+                {left >= 1
+                  ? `Closes in ${left} ${left === 1 ? "day" : "days"}`
+                  : "Closing soon"}
               </span>
             )}
-          </dd>
-        </div>
-        {university && (
-          <div className='py-3'>
-            <dt className={dtClass}>University</dt>
-            <dd className='mt-1'>{university}</dd>
-          </div>
+          </p>
         )}
-        {program && (
-          <div className='py-3'>
-            <dt className={dtClass}>Program</dt>
-            <dd className='mt-1'>{program}</dd>
-          </div>
-        )}
-        {request?.course_context && (
-          <div className='py-3'>
-            <dt className={dtClass}>Course or context</dt>
-            <dd className='mt-1'>{request.course_context as string}</dd>
-          </div>
-        )}
-        {request?.student_note && (
-          <div className='py-3'>
-            <dt className={dtClass}>Note from {studentName}</dt>
-            <dd className='mt-1 whitespace-pre-line'>
-              {request.student_note as string}
-            </dd>
-          </div>
-        )}
-      </dl>
+      </div>
+    </section>
+  );
 
+  return (
+    <Shell
+      title={`${studentName} asked you for a letter of recommendation`}
+      above={departure}
+    >
       <p>
-        Write and sign the letter here. Your draft saves as you go, so you can
-        come back to this link later.
+        Sent by ReadMyStudent on behalf of {studentName}
+        {studentEmail && (
+          <>
+            {" "}
+            (<span className='break-all'>{studentEmail}</span>)
+          </>
+        )}
+        . ReadMyStudent is a service students use to request recommendation
+        letters. You do not need an account.
       </p>
-      <p className='text-sm text-ink-2'>
-        When you finalize, the letter is sealed as a signed PDF and can no
-        longer be edited. {studentName} can then send it to schools, and sees
-        the letter only if you turn on preview.
-      </p>
+
+      {(request?.course_context || request?.student_note) && (
+        <dl className='divide-y divide-rule border-y border-rule'>
+          {request?.course_context && (
+            <div className='py-3'>
+              <dt className={dtClass}>Course or context</dt>
+              <dd className='mt-1'>{request.course_context as string}</dd>
+            </div>
+          )}
+          {request?.student_note && (
+            <div className='py-3'>
+              <dt className={dtClass}>Note from {studentName}</dt>
+              <dd className='mt-1 whitespace-pre-line'>
+                {request.student_note as string}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
+
       {!access.respondedAt && (
         <p className='text-sm text-ink-2'>
-          If you do not start the letter or decline within 7 days, the request
-          closes.
+          If you do not start the letter or decline within {EXPIRE_AFTER_DAYS}{" "}
+          days, the request closes.
         </p>
       )}
 
+      <MarkOpened token={token} />
       <RequestLinkActions
         token={token}
         requestId={access.requestId}
@@ -219,16 +264,19 @@ export default async function RequestLinkPage({
         professorEmail={access.professorEmail}
       />
 
-      <p className='border-t border-rule pt-4 text-sm text-ink-2'>
-        You do not need an account. If you already have one, you can{" "}
-        <Link
-          href='/login'
-          className='inline-block py-2 font-semibold text-forest underline'
-        >
-          log in
-        </Link>{" "}
-        to see this request in your dashboard.
-      </p>
+      {/* The rule spans the sheet; the text keeps the 65ch reading measure. */}
+      <div className='border-t border-rule pt-4'>
+        <p className='text-sm text-ink-2'>
+          If you already have an account, you can{" "}
+          <Link
+            href='/login'
+            className='inline-block py-2 font-semibold text-forest underline'
+          >
+            log in
+          </Link>{" "}
+          to see this request in your dashboard.
+        </p>
+      </div>
     </Shell>
   );
 }

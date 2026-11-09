@@ -5,13 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: [
-        "/signin",
-        "/signup",
-        "/dashboard",
-        "/app",
-        "/api",
-      ],
+      // /r and /view stay crawlable so their noindex meta is seen.
+      disallow: ["/dashboard", "/api"],
     },
     sitemap: "https://www.readmystudent.com/sitemap.xml",
   };

@@ -81,14 +81,17 @@ export const stripGrid = (cols: string) =>
 export function BoardColumns({
   cols,
   labels,
+  className,
 }: {
   cols: string;
   labels: string[];
+  /** Override when the strip's columns start at a breakpoint other than md. */
+  className?: string;
 }) {
   return (
     <div
       role='row'
-      className={cn(stripGrid(cols), "hidden px-4 pb-2 md:grid")}
+      className={cn(stripGrid(cols), "hidden px-4 pb-2 md:grid", className)}
     >
       {labels.map((l) => (
         <span key={l} role='columnheader' className='caption text-flap-dim'>

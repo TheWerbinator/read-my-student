@@ -640,30 +640,12 @@ export function WriteLetterDialog({
                           required: true,
                         },
                         {
-                          id: "department",
-                          label: "Department / School",
-                          placeholder: "Department or school",
-                          field: "department",
-                        },
-                        {
-                          id: "relationship",
-                          label: "Relationship",
-                          placeholder: "Professor, Advisor, Mentor",
-                          field: "relationship",
-                        },
-                        {
                           id: "recommender-email",
                           label: "Email",
                           placeholder: "faculty@university.edu",
                           field: "email",
                           type: "email",
                           required: true,
-                        },
-                        {
-                          id: "recommender-phone",
-                          label: "Phone",
-                          placeholder: "Include country code",
-                          field: "phone",
                         },
                       ] as Array<{
                         id: string;
@@ -701,14 +683,37 @@ export function WriteLetterDialog({
                   <details
                     className='group border-y border-rule py-3'
                     open={Boolean(
-                      recommenderForm.street || recommenderForm.city || recommenderForm.country,
+                      recommenderForm.street ||
+                        recommenderForm.city ||
+                        recommenderForm.country ||
+                        recommenderForm.department ||
+                        recommenderForm.relationship ||
+                        recommenderForm.phone,
                     )}
                   >
                     <summary className='flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-display text-base font-bold uppercase tracking-[0.06em] text-forest-ink'>
-                      Add a mailing address to the letterhead
+                      Add more letterhead details
                       <span className='caption text-ink-2 group-open:hidden'>Optional</span>
                     </summary>
                   <div className='mt-3 grid gap-4 sm:grid-cols-3'>
+                    {(
+                      [
+                        ["department", "Department or school", "department"],
+                        ["relationship", "Relationship to the student", "relationship"],
+                        ["recommender-phone", "Phone (include country code)", "phone"],
+                      ] as Array<[string, string, keyof RecommenderForm]>
+                    ).map(([id, label, field]) => (
+                      <div key={id} className='grid gap-2'>
+                        <Label htmlFor={id}>{label}</Label>
+                        <Input
+                          id={id}
+                          value={recommenderForm[field]}
+                          onChange={(e) => handleRecommenderChange(field, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className='mt-4 grid gap-4 sm:grid-cols-3'>
                     <div className='grid gap-2'>
                       <Label htmlFor='country'>Country</Label>
                       <Input
@@ -1182,8 +1187,9 @@ export function WriteLetterDialog({
                       aria-checked={studentPreviewEnabled}
                       onClick={() => void handleToggleStudentPreview()}
                       className={
-                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none " +
-                        (studentPreviewEnabled ? "bg-forest" : "bg-ink-2/40")
+                        // after: stretches the hit area to 44px without changing the look.
+                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 " +
+                        (studentPreviewEnabled ? "bg-forest" : "bg-ink-2")
                       }
                     >
                       <span

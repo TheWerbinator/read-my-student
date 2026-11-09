@@ -137,7 +137,7 @@ export default function HowItWorksPage() {
             </div>
           </div>
 
-          <div className='max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
+          <div className='min-w-0 max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
             <DepartureBoard title='Letter departures' note='Sample board' rows={sampleRows} mobileRows={3} />
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function HowItWorksPage() {
       <section aria-labelledby='stops-heading' className={section}>
         <div className='mx-auto max-w-6xl'>
           <h2 id='stops-heading' className={cn(h2, "max-w-3xl")}>
-            Six stops. <span className='text-gold'>Each one shows on your board.</span>
+            Six stops. Each one shows on your board.
           </h2>
           <ol className='board-frame mt-12 space-y-[3px]'>
             {stops.map((s) => (
@@ -182,7 +182,7 @@ export default function HowItWorksPage() {
         <div className='mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-12'>
           <div className='lg:col-span-5'>
             <h2 id='enter-heading' className={h2}>
-              You fill in <span className='text-gold'>three fields.</span>
+              You fill in three fields.
             </h2>
             <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
               The professor&apos;s email, the course (optional), and a personal note. Say what you are applying to and when it is due, because the professor reads this note first.
@@ -265,7 +265,7 @@ export default function HowItWorksPage() {
 
           <div className='order-1 lg:order-2 lg:col-span-5 lg:pl-6'>
             <h2 id='write-heading' className={h2}>
-              Your professor <span className='text-gold'>never makes an account.</span>
+              Your professor never makes an account.
             </h2>
             <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
               The email link opens your note and a writing window. The draft saves on its own, so they can stop and come back from the same link.
@@ -281,7 +281,7 @@ export default function HowItWorksPage() {
       <section aria-labelledby='quiet-heading' className={section}>
         <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
           <h2 id='quiet-heading' className={cn(h2, "lg:col-span-5")}>
-            If nobody answers, <span className='text-gold'>you still know.</span>
+            If nobody answers, you still know.
           </h2>
           <dl className='divide-y divide-flap lg:col-span-7'>
             {ifQuiet.map((f) => (
@@ -299,7 +299,7 @@ export default function HowItWorksPage() {
         <div className='mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12'>
           <div className='lg:col-span-6'>
             <h2 id='school-heading' className={h2}>
-              The school gets <span className='text-gold'>a link, not an attachment.</span>
+              The school gets a link, not an attachment.
             </h2>
             <dl className='mt-10 divide-y divide-flap'>
               {schoolFacts.map((f) => (

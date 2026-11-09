@@ -65,7 +65,7 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
         <div className='grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]'>
           <div>
             <Link href='/' className='inline-block' aria-label='ReadMyStudent home'>
-              <Image src={LogoWhite} alt='ReadMyStudent' className='h-auto w-40' />
+              <Image src={LogoWhite} alt='ReadMyStudent' className='h-auto w-40' sizes='160px' />
             </Link>
             <p className='mt-4 max-w-xs text-sm leading-relaxed text-flap-dim'>
               Recommendation letters, requested in minutes and sealed for the schools that read them.

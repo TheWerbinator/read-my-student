@@ -7,7 +7,7 @@ export default function MarketingLayout({ children }: { children: ReactNode }) {
     <div className='board on-board min-h-screen'>
       <SiteNav />
       <div className='lg:pl-68'>
-        <main>{children}</main>
+        <main id='main' tabIndex={-1} className='outline-none'>{children}</main>
         <Footer />
       </div>
     </div>

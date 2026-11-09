@@ -26,6 +26,11 @@
   /* Lamps: one ink per state */
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
+  --color-gold-hover: var(--gold-hover);
+  --color-declined-hover: var(--declined-hover);
+  --color-paper-hover: var(--paper-hover);
+  --color-sheet: var(--sheet);
+  --color-frame: var(--frame);
   --color-mint: var(--mint);
   --color-signal: var(--signal);
   /* Paper */
@@ -93,6 +98,7 @@
   --flap-dim: #a9bdb1;
   --gold: #ffaa00;
   --gold-deep: #e69500;
+  --gold-hover: #ffb829;
   --mint: #7fdba6;
   --signal: #ff8a7a;
 
@@ -109,7 +115,10 @@
   /* State inks on paper (AA on --paper) */
   --sealed: #146c3a;
   --declined: #b3261e;
+  --declined-hover: #8f1d17;
   --waiting: #8a5a00;
+  --paper-hover: #e2e8e8;
+  --sheet: #ffffff;
 
   --background: var(--paper);
   --foreground: var(--ink);
@@ -143,6 +152,16 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--rule);
   --sidebar-ring: var(--gold);
+}
+
+/*
+ * Fallback for Big Shoulders while it loads. Arial at weight 800 runs 14%
+ * wider (measured), so headlines would wrap, then jump when the font arrives.
+ */
+@font-face {
+  font-family: "Big Shoulders Fallback";
+  src: local("Arial"), local("Roboto"), local("Helvetica");
+  size-adjust: 88%;
 }
 
 @layer base {
@@ -359,7 +378,7 @@
 /* ---------- Paper surfaces ---------- */
 
 .sheet {
-  background: #ffffff;
+  background: var(--sheet);
   color: var(--ink);
   border: 1px solid var(--rule);
   border-radius: 2px;

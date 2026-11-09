@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getUserRole } from "@/app/actions/user";
 import { FacultyView } from "@/components/dashboard/FacultyView";
 import { StudentView } from "@/components/dashboard/StudentView";
 import { BoardSkeleton } from "@/components/dashboard/StatsCard";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 async function DashboardContent() {
   const role = await getUserRole();

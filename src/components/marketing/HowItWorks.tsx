@@ -55,7 +55,7 @@ export default function HowItWorks() {
           id='how-heading'
           className='max-w-3xl font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
         >
-          One request. Five stops. <span className='text-gold'>You see every one.</span>
+          One request. Five stops. You see every one.
         </h2>
 
         <ol className='board-frame mt-12 space-y-[3px]'>

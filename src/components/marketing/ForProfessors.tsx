@@ -13,7 +13,7 @@ export default function ForProfessors() {
             id='prof-heading'
             className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
           >
-            Your professor answers <span className='text-gold'>from one link.</span>
+            Your professor answers from one link.
           </h2>
           <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
             Letters stall when writing one means another portal and another password. Here your professor opens the email, writes, signs, and is done.

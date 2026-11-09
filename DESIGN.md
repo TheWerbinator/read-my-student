@@ -197,7 +197,7 @@ The world rejects the green-and-gold "trusted platform" look of icon-card grids,
 - Split-flap cells in Big Shoulders caps for headlines and status words; Public Sans for every sentence.
 - One ink per state, set by the ink law in the board status module.
 - Cool white paper sheets with square-cut corners for anything read or filled.
-- Gold appears as the primary action, the waiting state, the focus rim on the board, and the one lit phrase in a heading.
+- Gold appears as the primary action, the waiting state, the focus rim on the board, and the one lit phrase in a page's H1.
 
 ## Colors
 
@@ -230,11 +230,11 @@ A dark painted board with four lamp inks, plus a cool paper family whose inks mi
 
 **The Cool Paper Rule.** Paper is cool white: blue at or above red and green, so paper never drifts to cream.
 
-**The One Lit Phrase Rule.** A section heading on the board is flap white with at most one closing phrase lit in gold ("You see every one.", "from one link.").
+**The One Lit Phrase Rule.** Only a page's H1 may light one closing phrase in gold ("Leave on / TIME.", "Per school."), plus the closing "Next departure: your letter" flaps. Section headings (H2 and below) are plain flap white. When every heading glowed, gold stopped marking anything and competed with the primary action.
 
 ## Typography
 
-**Display Font:** Big Shoulders (variable, optical size axis), loaded through next/font with no metric fallback
+**Display Font:** Big Shoulders (variable, optical size axis), loaded through next/font. Its fallback is "Big Shoulders Fallback", a local Arial face at size-adjust 88% (globals.css), measured so headlines and board headers do not re-wrap when the real face arrives (CLS 0.007 on home).
 **Body Font:** Public Sans
 **Label/Mono Font:** Big Shoulders caps in the caption style
 
@@ -281,12 +281,12 @@ Depth is physical and literal: the board is a painted surface, flaps are thin ra
 
 ## Shapes
 
-Square-cut throughout. Flap cells, buttons, inputs, sheets, cards, dialogs, and board rows use 2px corners; badges, tab triggers, and pass markers use 1px; the board frame uses 4px. Nothing is pill-shaped. The only circles are the punched notches of a perforation: a 2px dashed rule line with a 16px notch at each end, filled with the color behind the sheet so the board shows through. Perforations separate a pass's stub from its body, horizontally on the desktop pass and vertically on the mobile strip.
+Square-cut throughout. Flap cells, buttons, inputs, sheets, cards, dialogs, and board rows use 2px corners; badges, tab triggers, and pass markers use 1px; the board frame uses 4px. Nothing is pill-shaped, with two functional exceptions: the student-preview switch (track and thumb, a native on/off convention) and loading spinners. The only other circles are the punched notches of a perforation: a 2px dashed rule line with a 16px notch at each end, filled with the color behind the sheet so the board shows through. Perforations separate a pass's stub from its body, horizontally on the desktop pass and vertically on the mobile strip.
 
 ## Components
 
 ### Buttons
-Printed flap-card buttons: condensed caps, a one-pixel lip, a 1px press.
+Printed flap-card buttons: condensed caps, a one-pixel lip, a 1px press. One source of truth: `src/components/ui/buttonStyles.ts`. `LinkButton` and the shadcn `Button` both build from it, and both default to 44px tall.
 - **Shape:** square-cut (2px).
 - **Gold:** gold face, board-deep ink. The one primary action per view.
 - **Primary:** forest face, white ink, hover to Forest Ink. Actions on paper.
@@ -312,7 +312,8 @@ Printed flap-card buttons: condensed caps, a one-pixel lip, a 1px press.
 
 ### Navigation
 - **Boarding pass:** a fixed vertical sheet at lg+: logo, a FROM REQUEST TO SCHOOL route in caps, five page fields (Title caps plus a one-line Public Sans note, divided by rules), a perforation, then the stub with the gold action and a caps Log in link. The active field shows a gold square marker with a Gold Deep border; others show an empty ink-2 square that turns forest on hover.
-- **Mobile:** a 64px sideways strip with the logo, a vertical perforation, and a GATE / MENU stub that unfolds the full pass, locks scroll, and closes on Escape.
+- **Mobile:** a 64px sideways strip with the logo, a vertical perforation, and a GATE / MENU stub that unfolds the full pass as a modal dialog: scroll locked, Tab kept inside the pass and its toggle, Escape closes, focus returns to the toggle.
+- **Skip link:** the first Tab stop on every page with the pass, a gold "Skip to content" cell that jumps to `#main`.
 - **Tabs:** a board-colored rail with 3px padding; the active trigger is a flap face with a 2px gold underline set inside.
 
 ### Split-Flap Text (signature)

@@ -92,7 +92,7 @@ export default function PricingPage() {
             id='buys-heading'
             className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl lg:col-span-5'
           >
-            What the $5 <span className='text-gold'>buys.</span>
+            What the $5 buys.
           </h2>
           <div className='sheet px-6 py-3 md:px-10 lg:col-span-7'>
             <dl className='divide-y divide-rule'>

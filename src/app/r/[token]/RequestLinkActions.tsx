@@ -40,24 +40,37 @@ export function RequestLinkActions({
 
   return (
     <div className='space-y-4'>
-      <div className='flex flex-wrap items-center gap-3'>
-        <WriteLetterDialog
-          studentName={studentName}
-          requestId={requestId}
-          accessToken={token}
-          defaultEmail={professorEmail}
-          onFinalized={() => router.refresh()}
-        />
-        {!declining && (
-          <Button
-            type='button'
-            variant='outline'
-            className='h-11'
-            onClick={() => setDeclining(true)}
-          >
-            Decline
-          </Button>
-        )}
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <div className='space-y-2'>
+          <WriteLetterDialog
+            studentName={studentName}
+            requestId={requestId}
+            accessToken={token}
+            defaultEmail={professorEmail}
+            onFinalized={() => router.refresh()}
+          />
+          <p className='max-w-[65ch] text-sm text-ink-2'>
+            Opens the writer. Your draft saves on its own. When you finalize,
+            the letter is sealed as a signed PDF that {studentName} can send to
+            schools. {studentName} sees the letter only if you turn on preview.
+          </p>
+        </div>
+        <div className='space-y-2'>
+          {!declining && (
+            <Button
+              type='button'
+              variant='outline'
+              className='h-11'
+              onClick={() => setDeclining(true)}
+            >
+              Decline
+            </Button>
+          )}
+          <p className='max-w-[65ch] text-sm text-ink-2'>
+            {studentName} gets an email that you declined, with your optional
+            message, and can ask someone else. Nothing is sent to any school.
+          </p>
+        </div>
       </div>
 
       {declining && (

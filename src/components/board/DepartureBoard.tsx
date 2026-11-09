@@ -50,9 +50,10 @@ export function DepartureBoard({
       </figcaption>
       <table className='w-full border-separate border-spacing-y-[3px] text-left tabular-nums'>
         <thead>
-          <tr className='caption text-flap-dim'>
+          {/* nowrap: a header that wraps in the fallback font jumps when Big Shoulders loads. */}
+          <tr className='caption whitespace-nowrap text-flap-dim'>
             <th scope='col' className='px-2 pb-1 font-semibold'>Time</th>
-            <th scope='col' className='px-2 pb-1 font-semibold'>Student to professor</th>
+            <th scope='col' className='px-2 pb-1 font-semibold'>Who</th>
             <th scope='col' className='hidden px-2 pb-1 font-semibold sm:table-cell'>School</th>
             <th scope='col' className='px-2 pb-1 text-right font-semibold'>Status</th>
           </tr>

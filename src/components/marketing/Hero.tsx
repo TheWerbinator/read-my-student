@@ -39,7 +39,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className='max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
+        <div className='min-w-0 max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
           <DepartureBoard title='Letter departures' note='Sample board' rows={sampleRows} mobileRows={3} />
         </div>
       </div>

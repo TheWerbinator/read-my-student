@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ChangeEmailForm } from "@/components/dashboard/ChangeEmailForm";
 import { FacultyProfileSettingsForm } from "@/components/dashboard/FacultyProfileSettingsForm";
 import { getFacultyProfile } from "@/app/actions/faculty";
+
+export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();

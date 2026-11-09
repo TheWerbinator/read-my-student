@@ -8,8 +8,10 @@ const board = Big_Shoulders({
   variable: "--font-board",
   subsets: ["latin"],
   axes: ["opsz"],
-  // next/font has no fallback metrics for this family.
+  // next/font has no fallback metrics for this family; globals.css defines a
+  // size-adjusted Arial face so text does not re-wrap when the font loads.
   adjustFontFallback: false,
+  fallback: ["Big Shoulders Fallback", "Arial", "sans-serif"],
 });
 
 // Body: the US government's web typeface, legible on small phones.

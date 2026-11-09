@@ -28,6 +28,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 
 import Footer from "@/components/marketing/Footer";
+import { LinkButton } from "@/components/ui/LinkButton";
 import LogoWhite from "../../../../public/Logo_Official_White.png";
 import { EmailGateForm } from "./EmailGateForm";
 import { DownloadButton } from "./DownloadButton";
@@ -44,7 +45,7 @@ const adminSupabase = createAdminClient(
 // ─── Metadata ─────────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
-  title: "Secure Letter Delivery | ReadMyStudent",
+  title: "Sealed letter",
   description:
     "View a securely delivered letter of recommendation via ReadMyStudent.",
   robots: { index: false, follow: false },
@@ -61,7 +62,7 @@ function ViewHeader({ children }: { children?: React.ReactNode }) {
     <header className='bg-board'>
       <div className='mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3'>
         <div className='flex items-center gap-4'>
-          <Image src={LogoWhite} alt='ReadMyStudent' className='h-8 w-auto' />
+          <Image src={LogoWhite} alt='ReadMyStudent' className='h-10 w-auto' sizes='60px' />
           <span className='caption text-flap-dim'>Sealed letter</span>
         </div>
         {children}
@@ -71,14 +72,15 @@ function ViewHeader({ children }: { children?: React.ReactNode }) {
 }
 
 function InvalidPage({ reason }: { reason: InvalidReason }) {
+  // One plain cause per state, written for an admissions reader.
   const content: Record<InvalidReason, { title: string; body: string }> = {
     "not-found": {
       title: "This link does not work",
-      body: "We could not find a letter for this link.",
+      body: "We could not find a letter for this link. It may have been cut off or changed when it was copied from the email.",
     },
     expired: {
       title: "This link has expired",
-      body: "This link works for 48 hours after the professor approved the delivery, and that time has passed.",
+      body: "Each letter link works for 48 hours after the professor approves the delivery, and that time has passed.",
     },
     used: {
       title: "This link does not work",
@@ -97,16 +99,13 @@ function InvalidPage({ reason }: { reason: InvalidReason }) {
             {title}
           </h1>
           <p className='mt-4'>{body}</p>
-          <p className='mt-4 text-sm text-ink-2'>Common reasons:</p>
-          <ul className='mt-1 list-disc space-y-1 pl-5 text-sm text-ink-2'>
-            <li>The link has expired.</li>
-            <li>The link was opened in a different browser session.</li>
-            <li>The link was mistyped or cut off when it was copied.</li>
-          </ul>
-          <p className='mt-4 border-t border-rule pt-4 text-sm'>
-            Next step: ask the student to send a new link. If that does not
-            help, contact ReadMyStudent support.
+          <p className='mt-4 border-t border-rule pt-4 text-sm text-ink-2'>
+            Ask the applicant to send the letter to you again. Each send
+            creates a fresh link for your office.
           </p>
+          <LinkButton href='/contact' variant='secondary' size='md' className='mt-5'>
+            Contact ReadMyStudent
+          </LinkButton>
         </div>
       </main>
       <Footer compact />

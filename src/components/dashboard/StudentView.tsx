@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ChevronDown, Plus } from "lucide-react";
 import {
   sendLetterRequest,
   getFinishedLetters,
@@ -10,12 +11,22 @@ import type { FinishedLetter, PendingRequest } from "@/app/actions/letters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { requestStatus } from "@/components/board/status";
-import { SendToSchoolDialog } from "@/components/dashboard/SendToSchoolDialog";
-import { LetterPreviewDialog } from "@/components/dashboard/LetterPreviewDialog";
+import { letterStop, requestStop } from "@/components/dashboard/stops";
+import dynamic from "next/dynamic";
+import { formatDate } from "@/lib/format-date";
+
+// The dialogs (Stripe checkout, html2canvas) load in their own chunks, not with the dashboard.
+const holdSpace = () => <span aria-hidden='true' className='inline-block h-11 w-32' />;
+const SendToSchoolDialog = dynamic(
+  () => import("@/components/dashboard/SendToSchoolDialog").then((m) => m.SendToSchoolDialog),
+  { loading: holdSpace },
+);
+const LetterPreviewDialog = dynamic(
+  () => import("@/components/dashboard/LetterPreviewDialog").then((m) => m.LetterPreviewDialog),
+  { loading: holdSpace },
+);
 import {
   BoardColumns,
   BoardEmpty,
@@ -25,16 +36,23 @@ import {
   StatusFlap,
 } from "@/components/dashboard/StatsCard";
 
-// Column templates. On phones the row stacks: professor and status on line one.
-const READY_COLS = "md:grid-cols-[7rem_minmax(0,1fr)_9rem_auto]";
-const PENDING_COLS = "md:grid-cols-[7rem_minmax(0,1fr)_9rem]";
-const DATE_CELL = "order-3 font-display text-base font-bold tabular-nums tracking-[0.06em] text-flap-dim md:order-none";
+// On phones the row stacks: professor and status on line one, date, then actions.
+// Fixed status and action widths keep every row's columns aligned (each row is
+// its own grid). Columns start at xl; below that, rows stack like on phones.
+const COLS = "xl:grid-cols-[6.5rem_minmax(0,1fr)_11rem_18rem]";
+const DATE_CELL = "order-3 font-display text-base font-bold tabular-nums tracking-[0.06em] text-flap-dim xl:order-none";
+
+
+type BoardItem =
+  | { kind: "letter"; id: string; date: string; letter: FinishedLetter }
+  | { kind: "request"; id: string; date: string; req: PendingRequest };
 
 export function StudentView() {
   const [profEmail, setProfEmail] = useState("");
   const [courseContext, setCourseContext] = useState("");
   const [studentNote, setStudentNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [result, setResult] = useState<
     | { status: "requested" }
     | { status: "error"; error: string }
@@ -91,6 +109,7 @@ export function StudentView() {
       setProfEmail("");
       setCourseContext("");
       setStudentNote("");
+      setFormOpen(false);
       // Refresh pending list
       const pending = await getPendingRequests();
       setPendingRequests(pending);
@@ -99,11 +118,125 @@ export function StudentView() {
     setIsLoading(false);
   };
 
+  // Completed requests come back as letters, never as pending, so nothing repeats.
+  const items: BoardItem[] = [
+    ...finishedLetters.map((letter): BoardItem => ({
+      kind: "letter",
+      id: letter.letterId,
+      date: letter.finalizedAt,
+      letter,
+    })),
+    ...pendingRequests.map((req): BoardItem => ({
+      kind: "request",
+      id: req.requestId,
+      date: req.createdAt,
+      req,
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const hasItems = items.length > 0;
+  // With no requests yet the form is the next step, so it stays open.
+  const showForm = !dataLoading && (!hasItems || formOpen);
+
   return (
-    <div className='grid grid-cols-1 gap-6 xl:grid-cols-12'>
-      {/* LEFT COL: Request Form */}
-      <div className='max-w-xl xl:col-span-4 xl:max-w-none'>
-        <div className='sheet space-y-5 p-6'>
+    <div className='space-y-6'>
+      <BoardStrip title='Your departures'>
+        <div role='table' aria-label='Your requests and letters'>
+          <BoardColumns
+            cols={COLS}
+            labels={["Date", "Professor", "Status", "Action"]}
+            className='md:hidden xl:grid'
+          />
+          <div role='rowgroup' className='space-y-1'>
+            {dataLoading ? (
+              <BoardSkeleton />
+            ) : !hasItems ? (
+              <BoardEmpty title='No departures yet'>
+                Send your first request below. Your professor gets one link by
+                email and needs no account. A reminder goes out on day 3, and
+                the request closes on day 7 if nobody answers. When the letter
+                is sealed, send it to each school from here.
+              </BoardEmpty>
+            ) : (
+              items.map((item) => {
+                const s =
+                  item.kind === "letter"
+                    ? letterStop(item.letter)
+                    : requestStop(item.req);
+                return (
+                  <BoardRow key={item.id} cols={COLS}>
+                    <span role='cell' className={DATE_CELL}>
+                      {formatDate(item.date)}
+                    </span>
+                    <span
+                      role='cell'
+                      className='order-1 min-w-0 break-words xl:order-none'
+                    >
+                      <span className='block font-semibold text-flap-ink'>
+                        {item.kind === "letter"
+                          ? item.letter.facultyName
+                          : item.req.facultyEmail}
+                      </span>
+                      <span className='block text-sm text-flap-dim'>{s.note}</span>
+                    </span>
+                    <span role='cell' className='order-2 justify-self-end xl:order-none xl:justify-self-start'>
+                      <StatusFlap label={s.label} lamp={s.lamp} />
+                    </span>
+                    <span
+                      role='cell'
+                      className='order-4 col-span-2 flex flex-wrap items-center gap-2 pt-1 empty:hidden xl:order-none xl:col-span-1 xl:justify-end xl:pt-0 xl:empty:block'
+                    >
+                      {item.kind === "letter" && (
+                        <>
+                          <LetterPreviewDialog
+                            letterId={item.letter.letterId}
+                            facultyName={item.letter.facultyName}
+                            previewEnabled={item.letter.studentPreviewEnabled}
+                          />
+                          <SendToSchoolDialog letterId={item.letter.letterId} />
+                        </>
+                      )}
+                    </span>
+                  </BoardRow>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {!dataLoading && hasItems && (
+          <button
+            type='button'
+            aria-expanded={formOpen}
+            aria-controls='new-request'
+            onClick={() => setFormOpen((o) => !o)}
+            className='flap-row mt-1 flex min-h-[44px] w-full items-center justify-between gap-3 px-4 py-3 text-left font-display text-lg font-bold uppercase tracking-[0.06em] text-gold focus-visible:outline-2 focus-visible:outline-gold'
+          >
+            <span className='flex items-center gap-2'>
+              <Plus className='size-4' aria-hidden='true' />
+              New request
+            </span>
+            <ChevronDown
+              className={`size-4 transition-transform motion-reduce:transition-none ${formOpen ? "rotate-180" : ""}`}
+              aria-hidden='true'
+            />
+          </button>
+        )}
+      </BoardStrip>
+
+      {result?.status === "requested" && (
+        <div
+          role='status'
+          className='sheet border border-sealed/40 p-3 text-sm text-sealed'
+        >
+          Request sent. We emailed your professor a link to answer.
+          They do not need an account. If they do not answer within 7
+          days, the request closes.
+        </div>
+      )}
+
+      {showForm && (
+        <div id='new-request' className='sheet max-w-xl space-y-5 p-6'>
           <div className='space-y-1'>
             <h2 className='font-display text-xl font-extrabold uppercase leading-none tracking-[0.04em] text-forest-ink'>
               Request a Letter
@@ -113,16 +246,6 @@ export function StudentView() {
             </p>
           </div>
 
-          {result?.status === "requested" && (
-            <div
-              role='status'
-              className='border border-sealed/40 bg-paper-2 p-3 text-sm text-sealed'
-            >
-              Request sent. We emailed your professor a link to answer.
-              They do not need an account. If they do not answer within 7
-              days, the request closes.
-            </div>
-          )}
           {result?.status === "error" && (
             <div
               role='alert'
@@ -180,113 +303,7 @@ export function StudentView() {
             </Button>
           </form>
         </div>
-      </div>
-
-      {/* RIGHT COL: Status Tabs */}
-      <div className='min-w-0 xl:col-span-8'>
-        <Tabs defaultValue='completed' className='w-full'>
-          <TabsList className='grid w-full grid-cols-2'>
-            <TabsTrigger value='completed'>Ready to Send</TabsTrigger>
-            <TabsTrigger value='pending'>Pending</TabsTrigger>
-          </TabsList>
-
-          {/* COMPLETED REQUESTS (Ready to send to schools) */}
-          <TabsContent value='completed' className='mt-4'>
-            <BoardStrip title='Ready to send'>
-              <div role='table' aria-label='Letters ready to send'>
-                <BoardColumns
-                  cols={READY_COLS}
-                  labels={["Date signed", "Professor", "Status", "Action"]}
-                />
-                <div role='rowgroup' className='space-y-1'>
-                  {dataLoading ? (
-                    <BoardSkeleton />
-                  ) : finishedLetters.length === 0 ? (
-                    <BoardEmpty title='No letters ready yet'>
-                      A letter shows up here once a professor seals it. If you
-                      have not asked anyone yet, send a request with the form.
-                    </BoardEmpty>
-                  ) : (
-                    finishedLetters.map((letter) => (
-                      <BoardRow key={letter.letterId} cols={READY_COLS}>
-                        <span role='cell' className={DATE_CELL}>
-                          {new Date(letter.finalizedAt).toLocaleDateString()}
-                        </span>
-                        <span
-                          role='cell'
-                          className='order-1 min-w-0 break-words font-semibold text-flap-ink md:order-none'
-                        >
-                          {letter.facultyName}
-                        </span>
-                        <span role='cell' className='order-2 justify-self-end md:order-none md:justify-self-start'>
-                          <StatusFlap label='Sealed' lamp='done' />
-                        </span>
-                        <span
-                          role='cell'
-                          className='order-4 col-span-2 flex flex-wrap items-center gap-2 pt-1 md:order-none md:col-span-1 md:justify-end md:pt-0'
-                        >
-                          <LetterPreviewDialog
-                            letterId={letter.letterId}
-                            facultyName={letter.facultyName}
-                            previewEnabled={letter.studentPreviewEnabled}
-                          />
-                          <SendToSchoolDialog letterId={letter.letterId} />
-                        </span>
-                      </BoardRow>
-                    ))
-                  )}
-                </div>
-              </div>
-            </BoardStrip>
-          </TabsContent>
-
-          {/* PENDING REQUESTS */}
-          <TabsContent value='pending' className='mt-4'>
-            <BoardStrip title='Pending requests'>
-              <div role='table' aria-label='Pending requests'>
-                <BoardColumns
-                  cols={PENDING_COLS}
-                  labels={["Sent on", "Professor", "Status"]}
-                />
-                <div role='rowgroup' className='space-y-1'>
-                  {dataLoading ? (
-                    <BoardSkeleton />
-                  ) : pendingRequests.length === 0 ? (
-                    <BoardEmpty title='No open requests'>
-                      Enter a professor&apos;s email in the form to send your
-                      first request. They answer from an emailed link, no
-                      account needed.
-                    </BoardEmpty>
-                  ) : (
-                    pendingRequests.map((req) => {
-                      const s = requestStatus[req.status] ?? {
-                        label: req.status,
-                        lamp: "moving" as const,
-                      };
-                      return (
-                        <BoardRow key={req.requestId} cols={PENDING_COLS}>
-                          <span role='cell' className={DATE_CELL}>
-                            {new Date(req.createdAt).toLocaleDateString()}
-                          </span>
-                          <span
-                            role='cell'
-                            className='order-1 min-w-0 break-words text-flap-ink md:order-none'
-                          >
-                            {req.facultyEmail}
-                          </span>
-                          <span role='cell' className='order-2 justify-self-end md:order-none md:justify-self-start'>
-                            <StatusFlap label={s.label} lamp={s.lamp} />
-                          </span>
-                        </BoardRow>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-            </BoardStrip>
-          </TabsContent>
-        </Tabs>
-      </div>
+      )}
     </div>
   );
 }

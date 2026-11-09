@@ -16,7 +16,7 @@ export default function DashboardLayout({
     <div className='board on-board min-h-screen'>
       <BoardingPassNav items={items} stub={<LogoutButton />} />
       <div className='lg:pl-68'>
-        <main>{children}</main>
+        <main id='main' tabIndex={-1} className='outline-none'>{children}</main>
         <Footer compact />
       </div>
     </div>

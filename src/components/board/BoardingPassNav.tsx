@@ -26,23 +26,46 @@ export function BoardingPassNav({ items, stub, notch = "var(--board)" }: Boardin
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
-  // Close on Escape, and lock scroll while unfolded. Links close it on click.
+  // While unfolded the pass is a modal: scroll locked, Tab kept inside the
+  // pass (and its toggle), Escape closes, and focus returns to the toggle.
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const toggle = toggleRef.current;
+    const focusables = () => [
+      ...(toggle ? [toggle] : []),
+      ...(panelRef.current?.querySelectorAll<HTMLElement>("a[href],button:not([disabled])") ?? []),
+    ];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return setOpen(false);
+      if (e.key !== "Tab") return;
+      const list = focusables();
+      const i = list.indexOf(document.activeElement as HTMLElement);
+      const next = e.shiftKey ? (i <= 0 ? list.length - 1 : i - 1) : (i + 1) % list.length;
+      e.preventDefault();
+      list[next]?.focus();
+    };
     window.addEventListener("keydown", onKey);
     panelRef.current?.querySelector<HTMLElement>("a,button")?.focus();
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      toggle?.focus();
     };
   }, [open]);
 
-  const isActive = (href: string) =>
+  // Only the most specific matching field is active, so /dashboard/settings
+  // lights Settings and not Dashboard too.
+  const matches = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  const activeHref = items
+    .map((i) => i.href)
+    .filter(matches)
+    .sort((a, b) => b.length - a.length)[0];
+  const isActive = (href: string) => href === activeHref;
 
   const nav = (
     <ul className='flex flex-col'>
@@ -95,6 +118,12 @@ export function BoardingPassNav({ items, stub, notch = "var(--board)" }: Boardin
 
   return (
     <>
+      <a
+        href='#main'
+        className='sr-only z-[80] font-display text-lg font-bold uppercase tracking-[0.06em] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:bg-gold focus:px-4 focus:py-3 focus:text-board-deep'
+      >
+        Skip to content
+      </a>
       {/* Desktop: the vertical pass. */}
       <nav
         aria-label='Main'
@@ -104,7 +133,7 @@ export function BoardingPassNav({ items, stub, notch = "var(--board)" }: Boardin
       >
         <div className='px-5 pt-5'>
           <Link href='/' className='block' aria-label='ReadMyStudent home'>
-            <Image src={Logo} alt='ReadMyStudent' className='h-auto w-36' priority />
+            <Image src={Logo} alt='ReadMyStudent' className='h-auto w-36' sizes='144px' />
           </Link>
         </div>
         <div className='mt-5 px-4'>{route}</div>
@@ -122,17 +151,18 @@ export function BoardingPassNav({ items, stub, notch = "var(--board)" }: Boardin
           className='sheet flex h-16 items-stretch'
         >
           <Link href='/' className='flex items-center px-3' aria-label='ReadMyStudent home'>
-            <Image src={Logo} alt='ReadMyStudent' className='h-auto w-28' priority />
+            <Image src={Logo} alt='ReadMyStudent' className='h-auto w-28' sizes='112px' />
           </Link>
           <div className='ml-auto perforation-v' />
           <button
+            ref={toggleRef}
             type='button'
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls='pass-panel'
             className='flex min-w-24 flex-col items-center justify-center px-4 font-display text-lg font-bold uppercase leading-none tracking-[0.06em] text-forest-ink'
           >
-            <span className='caption text-[0.625rem] text-ink-2'>Gate</span>
+            <span className='caption text-ink-2'>Gate</span>
             {open ? "Close" : "Menu"}
           </button>
         </div>
@@ -147,6 +177,9 @@ export function BoardingPassNav({ items, stub, notch = "var(--board)" }: Boardin
             <div
               id='pass-panel'
               ref={panelRef}
+              role='dialog'
+              aria-modal='true'
+              aria-label='Menu'
               style={{ ["--notch" as string]: notch }}
               className='sheet relative mt-1 max-h-[calc(100dvh-5.5rem)] overflow-y-auto overflow-x-hidden'
             >

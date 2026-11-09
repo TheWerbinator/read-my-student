@@ -92,7 +92,7 @@ export default function ForStudentsPage() {
             </div>
           </div>
 
-          <div className='max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
+          <div className='min-w-0 max-w-xl xl:col-span-6 xl:max-w-none xl:pt-3'>
             <DepartureBoard title='Letter departures' note='Sample board' rows={sampleRows} mobileRows={3} />
           </div>
         </div>
@@ -103,7 +103,7 @@ export default function ForStudentsPage() {
         <div className='mx-auto grid max-w-6xl items-start gap-12 lg:grid-cols-12'>
           <div className='lg:col-span-6'>
             <h2 id='fast-heading' className={h2}>
-              Easier to ask. <span className='text-gold'>Easier to answer.</span>
+              Easier to ask. Easier to answer.
             </h2>
             <dl className='mt-10 divide-y divide-flap'>
               {steps.map((s) => (
@@ -151,7 +151,7 @@ export default function ForStudentsPage() {
       <section aria-labelledby='hidden-heading' className={section}>
         <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
           <h2 id='hidden-heading' className={cn(h2, "lg:col-span-5")}>
-            You may <span className='text-gold'>not read it.</span>
+            You may not read it.
           </h2>
           <div className='max-w-xl space-y-4 text-lg leading-relaxed text-flap-ink/90 lg:col-span-7'>
             <p>
@@ -168,7 +168,7 @@ export default function ForStudentsPage() {
       <section aria-labelledby='send-heading' className={section}>
         <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
           <h2 id='send-heading' className={cn(h2, "lg:col-span-5")}>
-            Send it to <span className='text-gold'>every school.</span>
+            Send it to every school.
           </h2>
           <dl className='divide-y divide-flap lg:col-span-7'>
             {sendFacts.map((f) => (

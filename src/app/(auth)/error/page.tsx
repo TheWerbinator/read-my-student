@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+
+export const metadata: Metadata = { title: "Something went wrong" };
 
 async function ErrorContent({
   searchParams,

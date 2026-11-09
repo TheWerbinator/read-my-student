@@ -93,7 +93,7 @@ export default function ForFacultyPage() {
       <section aria-labelledby='do-heading' className={section}>
         <div className='mx-auto grid max-w-6xl gap-10 lg:grid-cols-12'>
           <h2 id='do-heading' className={`${h2} lg:col-span-5`}>
-            Four things <span className='text-gold'>you can do.</span>
+            Four things you can do.
           </h2>
           <dl className='divide-y divide-flap lg:col-span-7'>
             {steps.map((s) => (
@@ -144,7 +144,7 @@ export default function ForFacultyPage() {
 
           <div className='order-1 lg:order-2 lg:col-span-6 lg:pl-6'>
             <h2 id='sealed-faculty-heading' className={h2}>
-              Sealed once. <span className='text-gold'>Readable by the school.</span>
+              Sealed once. Readable by the school.
             </h2>
             <p className='mt-6 max-w-md text-lg leading-relaxed text-flap-ink/90'>
               The signature shows if a single byte changes. The school gets its own link, confirms an email address, and the first opening is logged.
@@ -169,7 +169,7 @@ export default function ForFacultyPage() {
       <section aria-labelledby='account-heading' className='px-5 pb-20 pt-8 md:px-8 md:pb-28'>
         <div className='mx-auto grid max-w-6xl gap-8 border-t border-flap pt-12 lg:grid-cols-12'>
           <h2 id='account-heading' className={`${h2} lg:col-span-5`}>
-            The link is <span className='text-gold'>all you need.</span>
+            The link is all you need.
           </h2>
           <div className='lg:col-span-7'>
             <p className='max-w-xl text-lg leading-relaxed text-flap-ink/90'>

@@ -426,6 +426,8 @@ export type FinishedLetter = {
   facultyName: string;
   finalizedAt: string;
   studentPreviewEnabled: boolean;
+  /** Schools that were issued a link (the professor approved the delivery). */
+  sentCount: number;
 };
 
 export type PendingRequest = {
@@ -433,6 +435,12 @@ export type PendingRequest = {
   facultyEmail: string;
   createdAt: string;
   status: string;
+  /** The professor opened the emailed link (client-side, so scanners do not count). */
+  openedAt: string | null;
+  /** The day-3 reminder went out. */
+  reminderSentAt: string | null;
+  /** The professor saved a first draft. */
+  respondedAt: string | null;
 };
 
 /**
@@ -465,6 +473,21 @@ export async function getFinishedLetters(): Promise<FinishedLetter[]> {
 
   if (error || !data) return [];
 
+  // Students have no RLS read on delivery_links; these letter ids are already
+  // scoped to this student by the query above.
+  const sent = new Map<string, number>();
+  if (data.length) {
+    const { data: links } = await supabaseAdmin
+      .from("delivery_links")
+      .select("letter_id")
+      .in("letter_id", data.map((r) => r.id as string))
+      .not("expires_at", "is", null);
+    for (const l of links ?? []) {
+      const id = l.letter_id as string;
+      sent.set(id, (sent.get(id) ?? 0) + 1);
+    }
+  }
+
   return data.map((row) => {
     const snapshot = row.recommender_snapshot as {
       firstName?: string;
@@ -479,6 +502,7 @@ export async function getFinishedLetters(): Promise<FinishedLetter[]> {
       facultyName,
       finalizedAt: row.finalized_at as string,
       studentPreviewEnabled: (row.student_preview_enabled as boolean) ?? false,
+      sentCount: sent.get(row.id as string) ?? 0,
     };
   });
 }
@@ -504,7 +528,7 @@ export async function getPendingRequests(): Promise<PendingRequest[]> {
 
   const { data, error } = await supabase
     .from("letter_requests")
-    .select("id, status, created_at, professor_email")
+    .select("id, status, created_at, professor_email, opened_at, reminder_sent_at, responded_at")
     .eq("student_id", studentRow.id)
     .in("status", ["requested", "in_progress", "invited", "rejected", "expired"])
     .order("created_at", { ascending: false });
@@ -516,6 +540,9 @@ export async function getPendingRequests(): Promise<PendingRequest[]> {
     facultyEmail: (row.professor_email as string | null) ?? "Unknown",
     createdAt: row.created_at as string,
     status: row.status as string,
+    openedAt: (row.opened_at as string | null) ?? null,
+    reminderSentAt: (row.reminder_sent_at as string | null) ?? null,
+    respondedAt: (row.responded_at as string | null) ?? null,
   }));
 }
 
@@ -528,6 +555,21 @@ export type PendingDelivery = {
   schoolName: string;
   paidAt: string;
 };
+
+/**
+ * Records the first time the professor opens the emailed link, for the
+ * student's Opened stop. Called from the page's client code, not on GET,
+ * so email link scanners do not count as an open. Set once.
+ */
+export async function markRequestOpened(token: string): Promise<void> {
+  const access = await authorizeRequestAccess(null, token);
+  if (!access) return;
+  await supabaseAdmin
+    .from("letter_requests")
+    .update({ opened_at: new Date().toISOString() })
+    .eq("id", access.requestId)
+    .is("opened_at", null);
+}
 
 // ─── Reject letter request ───────────────────────────────────────────────────
 

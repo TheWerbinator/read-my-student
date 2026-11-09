@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import html2canvas from "html2canvas";
 import {
   Dialog,
   DialogContent,
@@ -193,7 +192,9 @@ export function LetterPreviewDialog({
     const id = setTimeout(() => {
       if (!offscreenRef.current) return;
       setRendering(true);
-      html2canvas(offscreenRef.current, {
+      const target = offscreenRef.current;
+      // Loaded on first preview only, so the dashboard does not ship it up front.
+      import("html2canvas").then(({ default: html2canvas }) => html2canvas(target, {
         scale: 2,
         useCORS: true,
         allowTaint: false,
@@ -207,7 +208,7 @@ export function LetterPreviewDialog({
             .querySelectorAll('style, link[rel="stylesheet"]')
             .forEach((el) => el.remove());
         },
-      })
+      }))
         .then((canvas) => {
           setCanvasDataUrl(canvas.toDataURL("image/png"));
         })

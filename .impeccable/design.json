@@ -156,12 +156,12 @@
       "Split-flap cells in Big Shoulders caps for headlines and status words; Public Sans for every sentence.",
       "One ink per state, set by the ink law in the board status module.",
       "Cool white paper sheets with square-cut corners for anything read or filled.",
-      "Gold appears as the primary action, the waiting state, the focus rim, and the one lit phrase in a heading."
+      "Gold appears as the primary action, the waiting state, the focus rim on the board, and the one lit phrase in a page's H1."
     ],
     "rules": [
       { "name": "The Ink Law", "body": "White means moving, gold means waiting on someone, mint means done, red means stopped. One meaning per ink, everywhere. On paper the same four meanings use ink, waiting, sealed, and declined. Status color always comes from the lamp maps, never chosen per screen.", "section": "colors" },
       { "name": "The Cool Paper Rule", "body": "Paper is cool white: blue at or above red and green, so paper never drifts to cream.", "section": "colors" },
-      { "name": "The One Lit Phrase Rule", "body": "A section heading on the board is flap white with at most one closing phrase lit in gold (\"You see every one.\", \"from one link.\").", "section": "colors" },
+      { "name": "The One Lit Phrase Rule", "body": "Only a page's H1 may light one closing phrase in gold, plus the closing Next departure flaps. Section headings are plain flap white, so gold keeps meaning.", "section": "colors" },
       { "name": "The Caps Are Signage Rule", "body": "Big Shoulders is always uppercase and always short: headings, labels, buttons, status. Any full sentence is Public Sans.", "section": "typography" },
       { "name": "The Column-Sized Hero Rule", "body": "The hero headline is fitted to its six-column cell and never exceeds 4.75rem, even though section headings run larger caps. The flap cells carry the weight.", "section": "typography" },
       { "name": "The Hinge Rule", "body": "A hinge line exists only on single-character flap cells, centered on the glyph (Big Shoulders caps get 0.03em top padding to sit on it). Row bands carry the flap color and shading but never a hinge.", "section": "elevation" }

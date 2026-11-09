@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { LinkButton } from "@/components/ui/LinkButton";
+
+export const metadata: Metadata = { title: "Email confirmed" };
 
 export default async function EmailConfirmedPage({
   searchParams,

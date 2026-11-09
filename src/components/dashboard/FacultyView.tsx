@@ -24,7 +24,14 @@ import {
   StatsCard,
   StatusFlap,
 } from "@/components/dashboard/StatsCard";
-import { WriteLetterDialog } from "@/components/dashboard/WriteLetterDialog";
+import dynamic from "next/dynamic";
+import { formatDate } from "@/lib/format-date";
+
+// The writer (Lexical editor) loads in its own chunk, not with the dashboard.
+const WriteLetterDialog = dynamic(
+  () => import("@/components/dashboard/WriteLetterDialog").then((m) => m.WriteLetterDialog),
+  { loading: () => <span aria-hidden='true' className='inline-block h-11 w-32' /> },
+);
 import { createClient as createBrowserClient } from "@/lib/supabase/client";
 import {
   getPendingDeliveries,
@@ -210,7 +217,7 @@ export function FacultyView() {
             <p className='font-display text-lg font-bold uppercase leading-none tracking-[0.06em] text-flap-ink'>
               Secure letter workflow
             </p>
-            <p className='mt-1.5 text-sm text-flap-dim'>
+            <p className='mt-1.5 max-w-[65ch] text-sm text-flap-dim'>
               Students never see letter contents unless you turn on a preview.
               Finalized letters are sealed and signed for verification.
             </p>
@@ -263,7 +270,7 @@ export function FacultyView() {
               letterRequests.map((req) => (
                 <BoardRow key={req.requestId} cols={ROW_COLS}>
                   <span role='cell' className={DATE_CELL}>
-                    {new Date(req.createdAt).toLocaleDateString()}
+                    {formatDate(req.createdAt)}
                   </span>
                   <span role='cell' className={NAME_CELL}>
                     {req.studentName}
@@ -316,6 +323,18 @@ export function FacultyView() {
       </BoardStrip>
 
       {/* Pending delivery approvals */}
+      {/* An empty approvals board collapses to one line; only Incoming stays full. */}
+      {!loadingDeliveries && pendingDeliveries.length === 0 && !actionError ? (
+        <div className='board-frame flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6'>
+          <h2 className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-flap-ink'>
+            Pending delivery approvals
+          </h2>
+          <p className='max-w-[65ch] text-sm text-flap-dim'>
+            Nothing to approve. When a student sends your letter to a school,
+            it waits here for you.
+          </p>
+        </div>
+      ) : (
       <BoardStrip
         title='Pending delivery approvals'
         description='Students have paid to send your letter to a school. Review and approve or reject each request. The 48-hour delivery window starts only after you approve.'
@@ -350,7 +369,7 @@ export function FacultyView() {
               pendingDeliveries.map((d) => (
                 <BoardRow key={d.deliveryLinkId} cols={ROW_COLS}>
                   <span role='cell' className={DATE_CELL}>
-                    {new Date(d.paidAt).toLocaleDateString()}
+                    {formatDate(d.paidAt)}
                   </span>
                   <span role='cell' className={NAME_CELL}>
                     {d.studentFullName}
@@ -385,16 +404,7 @@ export function FacultyView() {
           </div>
         </div>
       </BoardStrip>
-
-      <BoardStrip
-        title='Finalized letters'
-        description='Sealed recommendations ready for secure delivery.'
-      >
-        <BoardEmpty title='No finalized letters yet'>
-          Letters you seal are listed under Student Preview Settings above,
-          where you can choose whether the student sees a preview.
-        </BoardEmpty>
-      </BoardStrip>
+      )}
 
       {/* Student preview settings dialog */}
       <Dialog
@@ -433,7 +443,7 @@ export function FacultyView() {
                     </p>
                     <p className='text-xs text-ink-2'>
                       Finalized{" "}
-                      {new Date(letter.finalizedAt).toLocaleDateString()}
+                      {formatDate(letter.finalizedAt)}
                     </p>
                   </div>
                   <button
@@ -451,7 +461,7 @@ export function FacultyView() {
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors after:absolute after:-inset-x-1 after:-inset-y-2.5 after:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                       (previewToggles[letter.letterId] ?? false)
                         ? "bg-forest"
-                        : "bg-ink-2/40"
+                        : "bg-ink-2"
                     }`}
                   >
                     <span

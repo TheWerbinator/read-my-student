@@ -41,7 +41,7 @@ export function EmailGateForm({
     <div className='board on-board flex min-h-screen flex-col'>
       <header className='bg-board'>
         <div className='mx-auto flex max-w-5xl items-center gap-4 px-4 py-3'>
-          <Image src={LogoWhite} alt='ReadMyStudent' className='h-8 w-auto' />
+          <Image src={LogoWhite} alt='ReadMyStudent' className='h-10 w-auto' sizes='60px' />
           <span className='caption text-flap-dim'>Sealed letter</span>
         </div>
       </header>

@@ -23,7 +23,7 @@ const FOOTER = `
   </table>`;
 
 function wrap(body: string): string {
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>ReadMyStudent</title></head>
 <body style="margin:0;padding:0;background-color:#eef2f2;font-family:${BODY};color:#14211a;">
   <table border="0" cellpadding="0" cellspacing="0" width="100%" role="presentation" bgcolor="#eef2f2" style="background-color:#eef2f2;">
     <tr>

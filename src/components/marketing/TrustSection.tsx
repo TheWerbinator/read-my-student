@@ -62,7 +62,7 @@ export default function TrustSection() {
             id='sealed-heading'
             className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
           >
-            Schools get a letter <span className='text-gold'>they can trust.</span>
+            Schools get a letter they can trust.
           </h2>
           <dl className='mt-10 divide-y divide-flap'>
             {facts.map((f) => (
