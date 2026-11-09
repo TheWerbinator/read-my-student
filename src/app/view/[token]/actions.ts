@@ -62,14 +62,6 @@ export async function verifyEmail(
     .digest("hex");
   const storedHash = (link.recipient_email_hash as string | null) ?? "";
 
-  console.log("[verifyEmail] submitted email (raw):", email);
-  console.log(
-    "[verifyEmail] submitted email (normalized):",
-    normalizedSubmittedEmail,
-  );
-  console.log("[verifyEmail] submitted email hash:", submittedHash);
-  console.log("[verifyEmail] stored recipient_email_hash:", storedHash);
-
   if (!storedHash || storedHash !== submittedHash) {
     return {
       error:

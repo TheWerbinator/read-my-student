@@ -155,9 +155,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const recipientEmailHash = createHash("sha256")
     .update(normalizedSchoolEmail)
     .digest("hex");
-  console.log("[webhook] school_email (raw):", school_email);
-  console.log("[webhook] school_email (normalized):", normalizedSchoolEmail);
-  console.log("[webhook] school_email hash:", recipientEmailHash);
 
   // NOTE: No delivery token is generated here.
   // The token is created only when faculty approves, so we can include it in
