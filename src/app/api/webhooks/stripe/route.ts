@@ -16,6 +16,13 @@
  *     3. Set payment_status = 'pending'.
  *     4. Email faculty asking them to APPROVE or REJECT the delivery.
  *
+ * Idempotency: Stripe can send one event more than once and retries failed
+ * deliveries. processStripeEventOnce() skips events already in stripe_events
+ * as processed. A failure answers 500 so Stripe retries, and every step below
+ * is safe to repeat: the delivery link is keyed on the checkout session, the
+ * payment event on the Stripe event id, and the email on a Resend idempotency key.
+ * Bad metadata or a missing letter answers 200, because a retry cannot fix it.
+ *
  * Required delivery_links columns (run once in Supabase SQL editor if missing):
  *   ALTER TABLE delivery_links ADD COLUMN IF NOT EXISTS school_name text;
  *   ALTER TABLE delivery_links ADD COLUMN IF NOT EXISTS student_user_id uuid;
@@ -27,10 +34,10 @@
  */
 
 import { createHash } from "crypto";
-import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
+import { processStripeEventOnce } from "@/lib/stripe-events";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { SendApprovalEmail } from "@/components/letter-request-email-templates";
@@ -51,8 +58,7 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
   // ── 2. Verify Stripe signature ──────────────────────────────────────────────
-  const headerStore = await headers();
-  const sig = headerStore.get("stripe-signature");
+  const sig = req.headers.get("stripe-signature");
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!sig || !webhookSecret) {
@@ -75,19 +81,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── 3. Route by event type ─────────────────────────────────────────────────
-  if (event.type === "checkout.session.completed") {
-    await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+  // ── 3. Route by event type, once per event id ───────────────────────────────
+  try {
+    await processStripeEventOnce(adminSupabase, event, async (e) => {
+      if (e.type === "checkout.session.completed") {
+        await handleCheckoutCompleted(e);
+      }
+    });
+  } catch (err) {
+    // Non-2xx makes Stripe retry the delivery later.
+    console.error(`[webhook] Failed to process ${event.type} ${event.id}:`, err);
+    return NextResponse.json({ error: "Processing failed." }, { status: 500 });
   }
-  // Other event types can be added here in future (e.g. payment_intent.payment_failed)
 
-  // Always return 200 quickly — Stripe retries any non-2xx response.
   return NextResponse.json({ received: true });
 }
 
 // ─── Fulfillment ──────────────────────────────────────────────────────────────
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+async function handleCheckoutCompleted(event: Stripe.CheckoutSessionCompletedEvent) {
+  const session = event.data.object;
   const meta = session.metadata;
 
   if (
@@ -106,29 +119,32 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { letter_id, school_name, school_email } = meta;
 
   // ── a. Load the letter to get faculty details ─────────────────────────────
-  const { data: letter } = await adminSupabase
+  const { data: letter, error: letterError } = await adminSupabase
     .from("letters")
     .select("id, faculty_id, student_id")
     .eq("id", letter_id)
     .maybeSingle();
 
+  if (letterError) throw letterError;
   if (!letter) {
     console.error("[webhook] Letter not found:", letter_id);
     return;
   }
 
   // ── b. Load faculty contact info for the notification email ───────────────
-  const { data: facultyRow } = await adminSupabase
+  const { data: facultyRow, error: facultyError } = await adminSupabase
     .from("faculty")
     .select("user_id")
     .eq("id", letter.faculty_id as string)
     .maybeSingle();
+  if (facultyError) throw facultyError;
 
   let faculty: { first_name: string | null; email: string | null } | null =
     null;
   if (facultyRow?.user_id) {
-    const { data: facultyAuthUser } =
+    const { data: facultyAuthUser, error: facultyAuthError } =
       await adminSupabase.auth.admin.getUserById(facultyRow.user_id as string);
+    if (facultyAuthError) throw facultyAuthError;
     if (facultyAuthUser?.user) {
       faculty = {
         first_name:
@@ -140,9 +156,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // ── c. Load student name for the notification email ───────────────────────
-  const { data: studentAuthUser } = await adminSupabase.auth.admin.getUserById(
-    meta.student_user_id,
-  );
+  const { data: studentAuthUser, error: studentAuthError } =
+    await adminSupabase.auth.admin.getUserById(meta.student_user_id);
+  if (studentAuthError) throw studentAuthError;
   const studentMeta = studentAuthUser?.user?.user_metadata ?? {};
   const studentFullName =
     [studentMeta.firstName, studentMeta.lastName].filter(Boolean).join(" ") ||
@@ -161,50 +177,71 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // the institution email at that moment.
 
   // ── e. Insert delivery_links row (pending approval) ──────────────────────
-  const { data: linkRow, error: linkError } = await adminSupabase
+  // A retry after a partial failure reuses the row. An upsert would reset
+  // payment_status on a link the professor already approved.
+  const { data: existingLink, error: findLinkError } = await adminSupabase
     .from("delivery_links")
-    .insert({
-      letter_id,
-      recipient_email_hash: recipientEmailHash,
-      school_name,
-      student_user_id: meta.student_user_id,
-      payment_status: "pending",
-      stripe_checkout_session_id: session.id,
-    })
     .select("id")
-    .single();
+    .eq("stripe_checkout_session_id", session.id)
+    .maybeSingle();
+  if (findLinkError) throw findLinkError;
 
-  if (linkError) {
-    console.error("[webhook] Failed to insert delivery_links:", linkError);
-    return;
+  let linkId = existingLink?.id as string | undefined;
+  if (!linkId) {
+    const { data: linkRow, error: linkError } = await adminSupabase
+      .from("delivery_links")
+      .insert({
+        letter_id,
+        recipient_email_hash: recipientEmailHash,
+        school_name,
+        student_user_id: meta.student_user_id,
+        payment_status: "pending",
+        stripe_checkout_session_id: session.id,
+      })
+      .select("id")
+      .single();
+    if (linkError) throw linkError;
+    linkId = linkRow.id as string;
   }
 
   // ── f. Record payment event ───────────────────────────────────────────────
-  await adminSupabase.from("payment_events").insert({
-    letter_id,
-    delivery_link_id: linkRow?.id ?? null,
-    stripe_event_id: session.id,
-    stripe_event_type: "checkout.session.completed",
-    amount_cents: session.amount_total ?? 500,
-    currency: session.currency ?? "usd",
-    status: "paid",
-  });
+  const { error: paymentEventError } = await adminSupabase
+    .from("payment_events")
+    .upsert(
+      {
+        letter_id,
+        delivery_link_id: linkId,
+        stripe_event_id: event.id,
+        stripe_event_type: event.type,
+        amount_cents: session.amount_total ?? 500,
+        currency: session.currency ?? "usd",
+        status: "paid",
+      },
+      { onConflict: "stripe_event_id", ignoreDuplicates: true },
+    );
+  if (paymentEventError) throw paymentEventError;
 
   // ── g. Email faculty: action required — approve or reject the delivery ───
   if (faculty?.email) {
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
 
-    await resend.emails.send({
-      from: "ReadMyStudent <notification@readmystudent.com>",
-      to: faculty.email,
-      subject: `Action required: approve delivery of your letter for ${studentFullName}`,
-      html: SendApprovalEmail({
-        facultyFirstName: faculty.first_name ?? "Professor",
-        studentFullName,
-        schoolName: school_name,
-        dashboardUrl: `${siteUrl}/dashboard`,
-      }),
-    });
+    // The key stops a second email when two copies of the event arrive together.
+    // Resend keeps keys for 24 hours; stripe_events covers later retries.
+    const { error: emailError } = await resend.emails.send(
+      {
+        from: "ReadMyStudent <notification@readmystudent.com>",
+        to: faculty.email,
+        subject: `Action required: approve delivery of your letter for ${studentFullName}`,
+        html: SendApprovalEmail({
+          facultyFirstName: faculty.first_name ?? "Professor",
+          studentFullName,
+          schoolName: school_name,
+          dashboardUrl: `${siteUrl}/dashboard`,
+        }),
+      },
+      { idempotencyKey: `delivery-approval/${session.id}` },
+    );
+    if (emailError) throw new Error(`Resend: ${emailError.message}`);
   }
 }

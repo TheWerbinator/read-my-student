@@ -1,16 +1,22 @@
 # Owner to-do list
 
-Items that need the owner, not code. Updated 2026-11-08.
+Items that need the owner, not code. Updated 2026-11-09.
 
 ## Before the next production deploy
 
 1. Generate a secret and add it as `CRON_SECRET` to the Vercel project, Production environment. The cleanup route now rejects every call while the secret is unset, so the daily retention sweep stops until you add it. Vercel sends the secret as a Bearer token on each cron call (https://vercel.com/docs/cron-jobs/manage-cron-jobs).
 2. Make sure that Vercel has `SUPABASE_SECRET_KEY` (the `sb_secret_...` key) for Production. The code no longer reads `SUPABASE_SERVICE_ROLE_KEY`. Do not deactivate the legacy keys in Supabase until this code is deployed, because the running deployment still uses the old variable. Supabase says the legacy keys keep working until the end of 2026 (https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys).
-3. Apply the database migrations to production before you deploy the request-link code (Phase 2). The CLI is already linked to production. Production already has the schema of the first two migrations, so mark them as applied first. `migration repair` changes only the history table and runs no SQL (https://supabase.com/docs/guides/deployment/database-migrations). Run these commands in order, and make sure that `migration list` shows only `20261107000000` (request links) and `20261109000000` (the `opened_at` column for the student's Opened stop) as missing on the remote before you push:
+3. Make sure that production has no duplicate checkout sessions in `delivery_links`. Migration `20261110000000` adds a unique constraint on `stripe_checkout_session_id`, and `db push` fails if duplicates exist. Run this query in the Supabase SQL editor for the production project. It must return no rows. If it returns rows, do not push, and send me the output.
+   ```sql
+   select stripe_checkout_session_id, count(*) from public.delivery_links where stripe_checkout_session_id is not null group by 1 having count(*) > 1;
+   ```
+4. Apply the database migrations to production before you deploy the request-link code (Phase 2) and the webhook idempotency code (Phase 0). The CLI is already linked to production. Production already has the schema of the first two migrations, so mark them as applied first. `migration repair` changes only the history table and runs no SQL (https://supabase.com/docs/guides/deployment/database-migrations). Run these commands in order. Before you push, make sure that `migration list` shows only these three as missing on the remote: `20261107000000` (request links), `20261109000000` (the `opened_at` column for the student's Opened stop) and `20261110000000` (the `stripe_events` table and the unique checkout session):
    - `npx supabase migration repair --status applied 20261106000000 20261106000001`
    - `npx supabase migration list`
    - `npx supabase db push`
-4. Make sure that the Stripe webhook endpoint is `https://www.readmystudent.com/api/webhooks/stripe` and that it listens for `checkout.session.completed`. The apex domain answers with a 307 redirect, so do not use `https://readmystudent.com/...`.
+5. After the push, make sure that production matches the migrations. Run `npx supabase db diff --remote --schema public`. The CLI builds a database from `supabase/migrations` and compares it with production (from `npx supabase db diff --help`, CLI on 2026-11-09). If it prints SQL, production has schema changes that the migrations do not hold. Send me the output. Nobody compared production with the baseline migration after the dump on 2026-11-06.
+6. Make sure that the Stripe webhook endpoint is `https://www.readmystudent.com/api/webhooks/stripe` and that it listens for `checkout.session.completed`. The apex domain answers with a 307 redirect, so do not use `https://readmystudent.com/...`.
+7. After the deploy, look at the webhook endpoint in the Stripe Dashboard for failed deliveries. The webhook now answers 500 when processing fails, so that Stripe retries. Stripe retries "for up to three days with an exponential back off in live mode" (https://docs.stripe.com/webhooks.md). Repeated failures for one event mean a real fault, so read the Vercel logs for `[webhook] Failed to process`.
 
 ## Stripe and tax
 
