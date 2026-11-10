@@ -18,6 +18,7 @@ jest.mock("@supabase/supabase-js", () => ({
   }),
 }));
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
+jest.mock("@/lib/stripe", () => ({ stripe: {} }));
 
 import { requireAdmin } from "@/lib/admin";
 import { formFromRow } from "@/lib/catalog";
@@ -86,6 +87,12 @@ describe("saveCatalogItemAction", () => {
     mockSave.mockResolvedValue({});
     const save = await action();
     expect(await save("row-1", { ...formFromRow(null), priceUsd: "1.00" })).toEqual({ ok: true });
-    expect(mockSave).toHaveBeenCalledWith(expect.anything(), "admin-1", "row-1", expect.objectContaining({ price_usd_cents: 100 }));
+    expect(mockSave).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin-1",
+      "row-1",
+      expect.objectContaining({ price_usd_cents: 100 }),
+      expect.objectContaining({ create: expect.any(Function), archive: expect.any(Function) }),
+    );
   });
 });

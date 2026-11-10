@@ -7,6 +7,7 @@ import {
   freeGrantRef,
   grantExpiry,
   pickGrant,
+  remaining,
   type CatalogItem,
   type CreditEvent,
   type CreditGrant,
@@ -105,6 +106,74 @@ export async function ensureFreeGrants(
     { onConflict: "source_ref", ignoreDuplicates: true },
   );
   if (insertError) throw insertError;
+}
+
+/**
+ * Records paid credits. The unique source_ref (the Stripe invoice or Checkout
+ * Session) makes a repeated webhook a no-op (BRD PAY-02, UAT-07).
+ */
+export async function grantPurchasedCredits(
+  db: SupabaseClient,
+  grant: {
+    studentId: string;
+    catalogId: string;
+    source: "membership" | "credits" | "bundle";
+    quantity: number;
+    expiresAt: Date | null;
+    sourceRef: string;
+    paymentIntent: string | null;
+  },
+): Promise<"granted" | "already"> {
+  const { data, error } = await db
+    .from("credit_grants")
+    .upsert(
+      {
+        student_id: grant.studentId,
+        catalog_id: grant.catalogId,
+        source: grant.source,
+        quantity: grant.quantity,
+        expires_at: grant.expiresAt?.toISOString() ?? null,
+        source_ref: grant.sourceRef,
+        stripe_payment_intent: grant.paymentIntent,
+      },
+      { onConflict: "source_ref", ignoreDuplicates: true },
+    )
+    .select("id");
+  if (error) throw error;
+  return data && data.length > 0 ? "granted" : "already";
+}
+
+/**
+ * After a Stripe refund, removes the credits still unused on the grants that
+ * payment bought. Credits already spent stay spent. Safe to repeat: a second
+ * call finds nothing left to remove. shortcut: this is not locked against a
+ * concurrent spend, so a request racing the refund can leave a grant at -1;
+ * move it into SQL beside consume_credit if refunds become frequent.
+ */
+export async function removeUnusedCredits(
+  db: SupabaseClient,
+  paymentIntent: string,
+  reason: string,
+): Promise<number> {
+  const { data: grants, error } = await db
+    .from("credit_grants")
+    .select("id, student_id")
+    .eq("stripe_payment_intent", paymentIntent);
+  if (error) throw error;
+
+  let removed = 0;
+  for (const g of grants ?? []) {
+    const wallet = await loadWallet(db, g.student_id as string);
+    const grant = wallet.grants.find((w) => w.id === g.id);
+    const left = grant ? remaining(grant, wallet.events) : 0;
+    if (left <= 0) continue;
+    const { error: insertError } = await db
+      .from("credit_events")
+      .insert({ grant_id: g.id, type: "adjust", delta: -left, reason });
+    if (insertError) throw insertError;
+    removed += left;
+  }
+  return removed;
 }
 
 /**

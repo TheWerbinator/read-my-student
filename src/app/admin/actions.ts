@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { adminDb, requireAdmin, saveCatalogItem } from "@/lib/admin";
 import { parseCatalogForm, type CatalogForm } from "@/lib/catalog";
+import { stripe } from "@/lib/stripe";
+import { stripePriceSync } from "@/lib/stripe-catalog";
 
 export type SaveResult = { ok: true } | { ok: false; errors: Record<string, string> };
 
@@ -14,7 +16,7 @@ export async function saveCatalogItemAction(id: string | null, form: CatalogForm
   if (!parsed.ok) return parsed;
 
   try {
-    await saveCatalogItem(adminDb(), adminUserId, id, parsed.row);
+    await saveCatalogItem(adminDb(), adminUserId, id, parsed.row, stripePriceSync(stripe));
   } catch (err) {
     console.error("[admin] Catalog save failed:", err);
     return { ok: false, errors: { form: "The catalog could not be saved. Try again." } };

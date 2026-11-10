@@ -15,6 +15,12 @@
  *     2. NO delivery token is generated here — token is created only when faculty approves.
  *     3. Set payment_status = 'pending'.
  *     4. Email faculty asking them to APPROVE or REJECT the delivery.
+ *   Memberships and credit purchases (metadata purpose "credits"), handled in
+ *   src/lib/stripe-billing.ts: checkout.session.completed and
+ *   checkout.session.async_payment_succeeded (one-time credits), invoice.paid
+ *   (a membership year), invoice.upcoming (move to next year's price or end),
+ *   customer.subscription.created/updated/deleted (mirror), charge.refunded
+ *   (remove unused credits).
  *
  * Idempotency: Stripe can send one event more than once and retries failed
  * deliveries. processStripeEventOnce() skips events already in stripe_events
@@ -38,6 +44,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { processStripeEventOnce } from "@/lib/stripe-events";
+import { handleBillingEvent } from "@/lib/stripe-billing";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { SendApprovalEmail } from "@/components/letter-request-email-templates";
@@ -84,8 +91,10 @@ export async function POST(req: NextRequest) {
   // ── 3. Route by event type, once per event id ───────────────────────────────
   try {
     await processStripeEventOnce(adminSupabase, event, async (e) => {
-      if (e.type === "checkout.session.completed") {
-        await handleCheckoutCompleted(e);
+      if (e.type === "checkout.session.completed" && e.data.object.metadata?.letter_id) {
+        await handleCheckoutCompleted(e); // the $5 school delivery, removed in Phase 3
+      } else {
+        await handleBillingEvent(adminSupabase, stripe, e);
       }
     });
   } catch (err) {

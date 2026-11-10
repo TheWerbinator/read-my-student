@@ -71,6 +71,43 @@ describe("catalog saves", () => {
     expect(del.error?.code).toBe("42501");
   });
 
+  itLocal("creates Stripe Prices when the offer changes, and archives the replaced ones", async () => {
+    const db = admin();
+    let n = 0;
+    const prices = {
+      create: jest.fn(async (row: { id: string; stripe_product_id?: string | null; price_inr_paise: number | null }) => ({
+        stripe_product_id: row.stripe_product_id ?? "prod_test",
+        stripe_price_usd: `price_usd_${++n}`,
+        stripe_price_inr: row.price_inr_paise === null ? null : `price_inr_${n}`,
+      })),
+      archive: jest.fn(async () => {}),
+    };
+
+    const created = await saveCatalogItem(db, randomUUID(), null, item, prices);
+    catalogIds.push(created.id);
+    expect(created).toMatchObject({ stripe_product_id: "prod_test", stripe_price_usd: "price_usd_1", stripe_price_inr: null });
+    expect(prices.create).toHaveBeenCalledWith(expect.objectContaining({ id: created.id }));
+
+    // Switching it off changes nothing a buyer gets: no new Prices.
+    await saveCatalogItem(db, randomUUID(), created.id, { ...item, active: true }, prices);
+    expect(prices.create).toHaveBeenCalledTimes(1);
+
+    // Adding an INR amount is a new offer: new Prices, the old USD Price archived, same Product.
+    const priced = await saveCatalogItem(db, randomUUID(), created.id, { ...item, price_inr_paise: 21900 }, prices);
+    expect(priced).toMatchObject({ stripe_product_id: "prod_test", stripe_price_usd: "price_usd_2", stripe_price_inr: "price_inr_2" });
+    expect(prices.archive).toHaveBeenCalledWith(["price_usd_1"]);
+  });
+
+  itLocal("leaves the row unchanged when Stripe fails", async () => {
+    const db = admin();
+    const created = await saveCatalogItem(db, randomUUID(), null, item);
+    catalogIds.push(created.id);
+    const failing = { create: jest.fn().mockRejectedValue(new Error("stripe down")), archive: jest.fn() };
+    await expect(saveCatalogItem(db, randomUUID(), created.id, { ...item, credits: 2 }, failing)).rejects.toThrow("stripe down");
+    const { data } = await db.from("plan_catalog").select("credits").eq("id", created.id).single();
+    expect(data?.credits).toBe(1);
+  });
+
   itLocal("refuses to update a row that does not exist", async () => {
     await expect(saveCatalogItem(admin(), randomUUID(), randomUUID(), item)).rejects.toThrow("does not exist");
   });

@@ -46,7 +46,10 @@ const eventIds: string[] = [];
 beforeAll(async () => {
   if (!isLocal || !KEY) return;
   const db = admin();
-  const { data: s } = await db.from("students").select("id, user_id").limit(1).single();
+  // The seeded student, by email: other test files create and delete students in parallel.
+  const { data: users } = await db.auth.admin.listUsers({ perPage: 1000 });
+  const seeded = users?.users.find((u) => u.email === "student@test.local");
+  const { data: s } = await db.from("students").select("id, user_id").eq("user_id", seeded?.id ?? "").maybeSingle();
   const { data: f } = await db
     .from("faculty")
     .select("id")

@@ -19,9 +19,16 @@ export type CatalogRow = {
   expiry: (typeof EXPIRIES)[number];
   expiry_year: number | null;
   active: boolean;
+  // Set by the Stripe sync on save (src/lib/stripe-catalog.ts), never by the form.
+  stripe_product_id?: string | null;
+  stripe_price_usd?: string | null;
+  stripe_price_inr?: string | null;
 };
 
-export type CatalogInput = Omit<CatalogRow, "id">;
+export const CATALOG_COLUMNS =
+  "id, stage, study_year, kind, credits, price_usd_cents, price_inr_paise, expiry, expiry_year, active, stripe_product_id, stripe_price_usd, stripe_price_inr";
+
+export type CatalogInput = Omit<CatalogRow, "id" | "stripe_product_id" | "stripe_price_usd" | "stripe_price_inr">;
 
 /** "1.47" -> 147. Returns null for anything that is not a plain amount with at most 2 decimals. */
 export function parseMoney(text: string): number | null {
