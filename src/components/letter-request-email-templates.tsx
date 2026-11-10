@@ -244,6 +244,10 @@ export function InstitutionDeliveryEmail(raw: InstitutionDeliveryProps): string 
     <p style="${SMALL}">
       This letter was signed and sealed via ReadMyStudent. The link is for your office only.
       If you have questions, reply to this email.
+    </p>
+    <p style="${SMALL}">
+      ReadMyStudent is an independent service that students and professors use to deliver
+      letters. It is not affiliated with or endorsed by ${p.schoolName}.
     </p>`;
 
   return wrap(body);
@@ -309,12 +313,6 @@ export function StudentRejectionEmail(raw: StudentRejectionProps): string {
       The letter was <strong>not</strong> sent to the institution. If you believe this was
       a mistake, we recommend reaching out to your professor directly.
     </p>
-    ${ruledBox(
-      "Refund",
-      `<p style="margin:0;font-size:15px;line-height:22px;color:#14211a;">
-        To get a refund of the $5.00 delivery fee, contact support.
-      </p>`,
-    )}
     ${ctaButton(p.supportUrl, "Contact Support")}
     <p style="${SMALL}">
       ReadMyStudent. Secure, Respectful Recommendation Letters.
@@ -329,7 +327,9 @@ interface SendApprovalProps {
   facultyFirstName: string;
   studentFullName: string;
   schoolName: string;
-  dashboardUrl: string;
+  schoolEmail: string;
+  /** The request page (/r/<token>), where the professor approves with or without an account. */
+  reviewUrl: string;
 }
 
 export function SendApprovalEmail(raw: SendApprovalProps): string {
@@ -338,13 +338,14 @@ export function SendApprovalEmail(raw: SendApprovalProps): string {
     facultyFirstName: esc(raw.facultyFirstName),
     studentFullName: esc(raw.studentFullName),
     schoolName: esc(raw.schoolName),
+    schoolEmail: esc(raw.schoolEmail),
   };
   const body = `
     ${heading("Action required: approve letter delivery")}
     <p style="${P}">Hi ${p.facultyFirstName},</p>
     <p style="${P}">
-      <strong>${p.studentFullName}</strong> has paid to have your finalized recommendation letter
-      delivered to <strong>${p.schoolName}</strong>.
+      <strong>${p.studentFullName}</strong> asked to send your finalized recommendation letter
+      to <strong>${p.schoolName}</strong>.
     </p>
     <p style="${P}">
       <strong>Your approval is required before the letter is released.</strong>
@@ -357,14 +358,17 @@ export function SendApprovalEmail(raw: SendApprovalProps): string {
         <strong>Destination:</strong> ${p.schoolName}
       </p>
       <p style="margin:8px 0 0;font-size:15px;line-height:22px;color:#14211a;">
+        <strong>Sent to:</strong> ${p.schoolEmail}
+      </p>
+      <p style="margin:8px 0 0;font-size:15px;line-height:22px;color:#14211a;">
         <strong>Requested by:</strong> ${p.studentFullName}
       </p>`,
     )}
     <p style="${P}">
-      Go to your dashboard to approve or reject this delivery request.
-      If you believe this request was made in error, you can safely reject it.
+      Check that the address belongs to the school's admissions office. If it does not,
+      or if you did not expect this request, decline it.
     </p>
-    ${ctaButton(p.dashboardUrl, "Review in Dashboard")}
+    ${ctaButton(p.reviewUrl, "Review the delivery")}
     <p style="${SMALL}">
       ReadMyStudent. Secure, Respectful Recommendation Letters.
     </p>`;

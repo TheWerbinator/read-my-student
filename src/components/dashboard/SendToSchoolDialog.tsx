@@ -1,12 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  EmbeddedCheckout,
-  EmbeddedCheckoutProvider,
-} from "@stripe/react-stripe-js";
+import { useState, useEffect } from "react";
 import { School } from "lucide-react";
+import { requestDelivery } from "@/app/actions/letters";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,10 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
-);
 
 const LS_KEY = "rms_recent_schools";
 const MAX_RECENT = 5;
@@ -56,13 +48,12 @@ function saveRecentSchool(school: RecentSchool): void {
 
 export function SendToSchoolDialog({ letterId }: { letterId: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<"details" | "payment">("details");
+  const [sent, setSent] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolEmail, setSchoolEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentSchools, setRecentSchools] = useState<RecentSchool[]>([]);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) setRecentSchools(loadRecentSchools());
@@ -74,52 +65,31 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
       setSchoolName("");
       setSchoolEmail("");
       setError(null);
-      setStep("details");
-      setClientSecret(null);
+      setSent(false);
     }
   };
 
   const isValid =
     schoolName.trim().length > 0 && schoolEmail.trim().includes("@");
 
-  const handleProceedToPayment = async () => {
+  const handleSend = async () => {
     if (!isValid) return;
     setIsLoading(true);
     setError(null);
-
     try {
-      const res = await fetch(`/api/letters/${letterId}/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ schoolName, schoolEmail }),
-      });
-
-      const data = (await res.json()) as {
-        clientSecret?: string;
-        error?: string;
-      };
-
-      if (!res.ok || !data.clientSecret) {
-        setError(data.error ?? "Something went wrong. Please try again.");
-        setIsLoading(false);
+      const result = await requestDelivery(letterId, { schoolName, schoolEmail });
+      if (result.error) {
+        setError(result.error);
         return;
       }
-
       saveRecentSchool({ name: schoolName.trim(), email: schoolEmail.trim() });
-      setClientSecret(data.clientSecret);
-      setStep("payment");
+      setSent(true);
     } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Passed to EmbeddedCheckoutProvider — recreates the session if needed
-  const fetchClientSecret = useCallback(
-    () => Promise.resolve(clientSecret ?? ""),
-    [clientSecret],
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -132,136 +102,106 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
         </Button>
       </DialogTrigger>
 
-      {step === "details" ? (
-        <DialogContent className='sm:max-w-[425px]'>
-          <DialogHeader>
-            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
-              Send Recommendation
-            </DialogTitle>
-            <DialogDescription>
-              Enter the destination for the admissions office. A secure view
-              link is generated after payment and your professor&apos;s
-              approval.
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className='sm:max-w-[425px]'>
+        <DialogHeader>
+          <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
+            {sent ? "Waiting for your professor" : "Send Recommendation"}
+          </DialogTitle>
+          <DialogDescription>
+            {sent
+              ? `We emailed your professor to approve sending the letter to ${schoolName.trim()}. The school gets a secure link only after they approve.`
+              : "Enter the admissions office's details. Your professor approves each school before the letter is sent."}
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className='grid gap-4 py-4'>
-            {recentSchools.length > 0 && (
-              <div className='grid gap-1'>
-                <p className='caption text-ink-2'>Previously sent to</p>
-                <div className='flex flex-wrap gap-1.5'>
-                  {recentSchools.map((s) => (
-                    <button
-                      key={s.email}
-                      type='button'
-                      onClick={() => {
-                        setSchoolName(s.name);
-                        setSchoolEmail(s.email);
-                      }}
-                      disabled={isLoading}
-                      className='min-h-11 rounded-[2px] border border-rule bg-paper-2 px-3 text-sm text-ink hover:border-forest hover:bg-white transition-colors disabled:opacity-50'
-                    >
-                      {s.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className='grid gap-2'>
-              <Label htmlFor='school-name' className='caption text-ink-2'>
-                Institution name
-              </Label>
-              <Input
-                id='school-name'
-                placeholder='e.g. University of Example'
-                value={schoolName}
-                onChange={(e) => setSchoolName(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div className='grid gap-2'>
-              <Label htmlFor='school-email' className='caption text-ink-2'>
-                Admissions email
-              </Label>
-              <Input
-                id='school-email'
-                type='email'
-                placeholder='admissions@university.edu'
-                value={schoolEmail}
-                onChange={(e) => setSchoolEmail(e.target.value)}
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && isValid) void handleProceedToPayment();
-                }}
-              />
-            </div>
-
-            {error && (
-              <p role='alert' className='border border-declined/40 bg-paper-2 px-3 py-2 text-sm text-declined'>
-                {error}
-              </p>
-            )}
-
-            <div className='border border-rule bg-paper-2 p-3 text-sm text-ink-2'>
-              <span className='font-bold text-ink'>
-                $5.00 per delivery.
-              </span>{" "}
-              After payment, your professor approves the release. Once
-              approved, the school receives a secure 48-hour link.
-            </div>
-          </div>
-
+        {sent ? (
           <DialogFooter>
-            <Button
-              type='button'
-              variant='gold'
-              size='lg'
-              className='w-full'
-              disabled={!isValid || isLoading}
-              onClick={() => void handleProceedToPayment()}
-            >
-              {isLoading ? "Preparing payment…" : "Pay & Send ($5.00)"}
+            <Button type='button' variant='gold' size='lg' className='w-full' onClick={() => handleClose(false)}>
+              Done
             </Button>
           </DialogFooter>
-        </DialogContent>
-      ) : (
-        <DialogContent className='sm:max-w-[520px]'>
-          <DialogHeader>
-            <DialogTitle className='font-display text-xl font-extrabold uppercase tracking-[0.04em] text-forest-ink'>
-              Complete Payment
-            </DialogTitle>
-            <DialogDescription>
-              Paying to deliver your letter to{" "}
-              <span className='font-semibold text-ink'>{schoolName}</span>.
-            </DialogDescription>
-          </DialogHeader>
+        ) : (
+          <>
+            <div className='grid gap-4 py-4'>
+              {recentSchools.length > 0 && (
+                <div className='grid gap-1'>
+                  <p className='caption text-ink-2'>Previously sent to</p>
+                  <div className='flex flex-wrap gap-1.5'>
+                    {recentSchools.map((s) => (
+                      <button
+                        key={s.email}
+                        type='button'
+                        onClick={() => {
+                          setSchoolName(s.name);
+                          setSchoolEmail(s.email);
+                        }}
+                        disabled={isLoading}
+                        className='min-h-11 rounded-[2px] border border-rule bg-paper-2 px-3 text-sm text-ink hover:border-forest hover:bg-white transition-colors disabled:opacity-50'
+                      >
+                        {s.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          <div className='py-2'>
-            {clientSecret && (
-              <EmbeddedCheckoutProvider
-                stripe={stripePromise}
-                options={{ fetchClientSecret }}
+              <div className='grid gap-2'>
+                <Label htmlFor='school-name' className='caption text-ink-2'>
+                  Institution name
+                </Label>
+                <Input
+                  id='school-name'
+                  placeholder='e.g. University of Example'
+                  value={schoolName}
+                  onChange={(e) => setSchoolName(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className='grid gap-2'>
+                <Label htmlFor='school-email' className='caption text-ink-2'>
+                  Admissions email
+                </Label>
+                <Input
+                  id='school-email'
+                  type='email'
+                  placeholder='admissions@university.edu'
+                  value={schoolEmail}
+                  onChange={(e) => setSchoolEmail(e.target.value)}
+                  disabled={isLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && isValid) void handleSend();
+                  }}
+                />
+              </div>
+
+              {error && (
+                <p role='alert' className='border border-declined/40 bg-paper-2 px-3 py-2 text-sm text-declined'>
+                  {error}
+                </p>
+              )}
+
+              <div className='border border-rule bg-paper-2 p-3 text-sm text-ink-2'>
+                Your professor sees the school name and this email address
+                before approving. Once approved, the school receives a secure
+                link that works for 48 hours.
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type='button'
+                variant='gold'
+                size='lg'
+                className='w-full'
+                disabled={!isValid || isLoading}
+                onClick={() => void handleSend()}
               >
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
-            )}
-          </div>
-
-          <div className='pt-1'>
-            <button
-              type='button'
-              className='min-h-11 text-sm text-ink-2 underline hover:text-ink'
-              onClick={() => {
-                setStep("details");
-                setClientSecret(null);
-              }}
-            >
-              Back to school details
-            </button>
-          </div>
-        </DialogContent>
-      )}
+                {isLoading ? "Sending…" : "Send for approval"}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
     </Dialog>
   );
 }

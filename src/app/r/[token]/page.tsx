@@ -1,6 +1,7 @@
 /**
  * /r/[token]: a professor answers one letter request from the emailed link,
- * with no account. Access rules live in authorizeRequestAccess.
+ * with no account, and later approves each school the student sends the
+ * letter to. Access rules live in authorizeRequestAccess.
  */
 
 import type { Metadata } from "next";
@@ -17,6 +18,7 @@ import { EXPIRE_AFTER_DAYS } from "@/lib/request-sweep";
 import LogoWhite from "../../../../public/Logo_Official_White.png";
 import { RequestLinkActions } from "./RequestLinkActions";
 import { MarkOpened } from "./MarkOpened";
+import { DeliveryApprovals, type DeliveryToApprove } from "./DeliveryApprovals";
 
 export const metadata: Metadata = {
   title: "Letter request",
@@ -107,10 +109,25 @@ export default async function RequestLinkPage({
         .single(),
       admin
         .from("letters")
-        .select("is_draft")
+        .select("id, is_draft")
         .eq("request_id", access.requestId)
         .maybeSingle(),
     ]);
+
+  const { data: pendingRows } =
+    letter && !letter.is_draft
+      ? await admin
+          .from("delivery_links")
+          .select("id, school_name, recipient_email")
+          .eq("letter_id", letter.id as string)
+          .eq("payment_status", "pending")
+          .order("created_at")
+      : { data: null };
+  const pending: DeliveryToApprove[] = (pendingRows ?? []).map((d) => ({
+    id: d.id as string,
+    schoolName: (d.school_name as string | null) ?? "A school",
+    schoolEmail: (d.recipient_email as string | null) ?? null,
+  }));
 
   const studentAuth = student?.user_id
     ? (await admin.auth.admin.getUserById(student.user_id as string)).data.user
@@ -150,8 +167,14 @@ export default async function RequestLinkPage({
       <Shell title='Your letter is finalized'>
         <p>
           The letter for {studentName} is sealed and signed. {studentName} can
-          now send it to their schools. You do not need to do anything else.
+          now send it to their schools.{" "}
+          {pending.length > 0
+            ? "Each school needs your approval before it gets the letter."
+            : "You do not need to do anything else."}
         </p>
+        {pending.length > 0 && (
+          <DeliveryApprovals token={token} studentName={studentName} deliveries={pending} />
+        )}
         <div className='border-t border-rule pt-5'>
           <h2 className='font-display text-xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
             Writing more letters?

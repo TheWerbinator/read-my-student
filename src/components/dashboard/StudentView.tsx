@@ -19,7 +19,7 @@ import { letterStop, requestStop } from "@/components/dashboard/stops";
 import dynamic from "next/dynamic";
 import { formatDate } from "@/lib/format-date";
 
-// The dialogs (Stripe checkout, html2canvas) load in their own chunks, not with the dashboard.
+// The dialogs (the school form, html2canvas) load in their own chunks, not with the dashboard.
 const holdSpace = () => <span aria-hidden='true' className='inline-block h-11 w-32' />;
 const SendToSchoolDialog = dynamic(
   () => import("@/components/dashboard/SendToSchoolDialog").then((m) => m.SendToSchoolDialog),
@@ -70,19 +70,9 @@ export function StudentView() {
   // Show a toast and clean the URL if returning from Stripe
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const paymentStatus = params.get("payment");
-    if (paymentStatus === "success") {
-      toast.success("Payment successful! Your professor has been notified and your delivery link has been generated.");
-    } else if (paymentStatus === "cancelled") {
-      toast.info("Payment cancelled. No charge was made.");
-    }
     // Credit purchases return with ?checkout=<session id>. The webhook adds the credits.
-    const checkout = params.has("checkout");
-    if (checkout) {
+    if (params.has("checkout")) {
       toast.success("Payment received. Your credits appear here within a minute. Refresh the page if you do not see them.");
-    }
-    if (paymentStatus || checkout) {
-      params.delete("payment");
       params.delete("checkout");
       const newUrl = [window.location.pathname, params.toString()].filter(Boolean).join("?");
       window.history.replaceState({}, "", newUrl);

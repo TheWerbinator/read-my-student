@@ -9,9 +9,10 @@ import {
   InstitutionDeliveryEmail,
   StudentRejectionEmail,
   RequestRejectionEmail,
+  SendApprovalEmail,
 } from "@/components/letter-request-email-templates";
 import { randomBytes, createHash, randomUUID } from "crypto";
-import { stripe } from "@/lib/stripe";
+import { z } from "zod";
 import {
   authorizeRequestAccess,
   hashToken,
@@ -586,7 +587,9 @@ export type PendingDelivery = {
   letterId: string;
   studentFullName: string;
   schoolName: string;
-  paidAt: string;
+  /** Shown so the professor can spot an address that is not the school's. */
+  schoolEmail: string | null;
+  requestedAt: string;
 };
 
 /**
@@ -851,7 +854,7 @@ export async function getPendingDeliveries(): Promise<PendingDelivery[]> {
   const { data, error } = await supabaseAdmin
     .from("delivery_links")
     .select(
-      "id, letter_id, school_name, student_user_id, created_at, letters!inner(faculty_id)",
+      "id, letter_id, school_name, recipient_email, student_user_id, created_at, letters!inner(faculty_id)",
     )
     .eq("payment_status", "pending")
     .eq("letters.faculty_id", facultyRow.id)
@@ -876,67 +879,214 @@ export async function getPendingDeliveries(): Promise<PendingDelivery[]> {
       letterId: row.letter_id as string,
       studentFullName,
       schoolName: (row.school_name as string | null) ?? "Unknown school",
-      paidAt: row.created_at as string,
+      schoolEmail: (row.recipient_email as string | null) ?? null,
+      requestedAt: row.created_at as string,
     });
   }
   return results;
 }
 
+const deliverySchema = z.object({
+  schoolName: z.string().trim().min(1).max(200),
+  schoolEmail: z.string().trim().toLowerCase().pipe(z.email()),
+});
+
 /**
- * Faculty approves a pending delivery.
- * Sets payment_status = 'paid' and starts the 48-hour expiry window NOW.
+ * A student asks to send a finalized letter to a school. Free since Phase 3.
+ * Nothing reaches the school until the professor approves, from the request
+ * link (/r/<token>), which works with or without an account.
  */
-export async function approveDelivery(
-  deliveryLinkId: string,
+export async function requestDelivery(
+  letterId: string,
+  input: { schoolName: string; schoolEmail: string },
 ): Promise<{ error: string | null }> {
+  const parsed = deliverySchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "Enter the school's name and its full admissions email address." };
+  }
+  const { schoolName, schoolEmail } = parsed.data;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated." };
 
-  const { data: facultyRow } = await supabaseAdmin
-    .from("faculty")
+  const { data: student } = await supabaseAdmin
+    .from("students")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!facultyRow) return { error: "Faculty record not found." };
+  const { data: letter } = student
+    ? await supabaseAdmin
+        .from("letters")
+        .select("id, is_draft, request_id, faculty_id")
+        .eq("id", letterId)
+        .eq("student_id", student.id)
+        .maybeSingle()
+    : { data: null };
+  if (!letter) return { error: "Letter not found." };
+  if (letter.is_draft) return { error: "This letter is not finalized yet." };
 
-  // Verify the delivery_link belongs to a letter authored by this faculty
-  const { data: link } = await supabaseAdmin
+  const emailHash = createHash("sha256").update(schoolEmail).digest("hex");
+  const { count } = await supabaseAdmin
+    .from("delivery_links")
+    .select("id", { count: "exact", head: true })
+    .eq("letter_id", letterId)
+    .eq("recipient_email_hash", emailHash)
+    .in("payment_status", ["pending", "paid", "used"]);
+  if (count) {
+    return { error: "This letter is already sent, or waiting for approval, for that address." };
+  }
+
+  const { data: request } = await supabaseAdmin
+    .from("letter_requests")
+    .select("id, professor_email")
+    .eq("id", letter.request_id as string)
+    .maybeSingle();
+  if (!request?.professor_email) {
+    return { error: "We could not find your professor's email for this letter. Contact support." };
+  }
+
+  // Professors with an account have a first name; link-only professors do not.
+  let facultyFirstName = "Professor";
+  const { data: faculty } = await supabaseAdmin
+    .from("faculty")
+    .select("user_id")
+    .eq("id", letter.faculty_id as string)
+    .maybeSingle();
+  if (faculty?.user_id) {
+    const { data } = await supabaseAdmin.auth.admin.getUserById(faculty.user_id as string);
+    facultyFirstName = (data.user?.user_metadata?.firstName as string | undefined) ?? facultyFirstName;
+  }
+
+  const { data: link, error: insertError } = await supabaseAdmin
+    .from("delivery_links")
+    .insert({
+      letter_id: letterId,
+      recipient_email_hash: emailHash,
+      // Kept only until the professor answers (owner, 2026-11-09).
+      recipient_email: schoolEmail,
+      school_name: schoolName,
+      student_user_id: user.id,
+      payment_status: "pending",
+    })
+    .select("id")
+    .single();
+  if (insertError) return { error: insertError.message };
+
+  const studentFullName =
+    [user.user_metadata?.firstName, user.user_metadata?.lastName].filter(Boolean).join(" ") ||
+    "Your student";
+  const { error: emailError } = await resend.emails.send({
+    from: "ReadMyStudent <notification@readmystudent.com>",
+    to: request.professor_email as string,
+    subject: `Action required: approve delivery of your letter for ${studentFullName}`,
+    html: SendApprovalEmail({
+      facultyFirstName,
+      studentFullName,
+      schoolName,
+      schoolEmail,
+      reviewUrl: requestLinkUrl(request.id as string),
+    }),
+  });
+  if (emailError) {
+    // The professor never heard about it, so the delivery must not exist.
+    await supabaseAdmin.from("delivery_links").delete().eq("id", link.id);
+    return { error: `Email failed: ${emailError.message}` };
+  }
+  return { error: null };
+}
+
+type DeliveryRow = {
+  id: string;
+  payment_status: string;
+  school_name: string | null;
+  recipient_email: string | null;
+  student_user_id: string | null;
+};
+
+/**
+ * A delivery the caller may approve or decline: the letter's professor by
+ * session, or anyone holding the request link (professors without an account).
+ * Also returns the professor's name for the student's email.
+ */
+async function deliveryForProfessor(
+  deliveryLinkId: string,
+  token?: string,
+): Promise<{ link: DeliveryRow; professorName: string } | null> {
+  let query = supabaseAdmin
     .from("delivery_links")
     .select(
-      "id, payment_status, school_name, student_user_id, stripe_checkout_session_id, letters!inner(faculty_id)",
+      "id, payment_status, school_name, recipient_email, student_user_id, letters!inner(faculty_id, request_id)",
     )
-    .eq("id", deliveryLinkId)
-    .eq("letters.faculty_id", facultyRow.id)
-    .maybeSingle();
+    .eq("id", deliveryLinkId);
 
-  if (!link) return { error: "Delivery not found or access denied." };
-  if ((link.payment_status as string) !== "pending")
+  let professorName: string;
+  if (token) {
+    const access = await authorizeRequestAccess(null, token);
+    if (!access) return null;
+    query = query.eq("letters.request_id", access.requestId);
+    professorName = access.professorEmail ?? "Your professor";
+  } else {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: facultyRow } = await supabaseAdmin
+      .from("faculty")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!facultyRow) return null;
+    query = query.eq("letters.faculty_id", facultyRow.id);
+    const m = user.user_metadata ?? {};
+    professorName =
+      [m.firstName, m.lastName].filter(Boolean).join(" ") || user.email || "Your professor";
+  }
+
+  const { data: link } = await query.maybeSingle();
+  return link ? { link: link as unknown as DeliveryRow, professorName } : null;
+}
+
+/**
+ * The professor approves a pending delivery: the school gets a view link that
+ * expires 48 hours from now, and the stored school address is cleared.
+ */
+export async function approveDelivery(
+  deliveryLinkId: string,
+  token?: string,
+): Promise<{ error: string | null }> {
+  const found = await deliveryForProfessor(deliveryLinkId, token);
+  if (!found) return { error: "Delivery not found or access denied." };
+  const fullLink = found.link;
+  if (fullLink.payment_status !== "pending")
     return { error: "This delivery is not awaiting approval." };
+  if (!fullLink.recipient_email) {
+    // Deliveries paid for before Phase 3 kept the address in Stripe only.
+    return { error: "This delivery has no school address. Ask the student to send it again." };
+  }
 
-  // Generate the delivery token now — this is the moment the link becomes live.
+  // Generate the delivery token now: this is the moment the link becomes live.
   const rawToken = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(rawToken).digest("hex");
   const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
-  const { error: updateError } = await supabaseAdmin
+  // The status filter makes the claim atomic, so two approvals cannot both send.
+  const { data: claimed, error: updateError } = await supabaseAdmin
     .from("delivery_links")
     .update({
       payment_status: "paid",
       expires_at: expiresAt,
       token_hash: tokenHash,
     })
-    .eq("id", deliveryLinkId);
+    .eq("id", deliveryLinkId)
+    .eq("payment_status", "pending")
+    .select("id");
 
   if (updateError) return { error: updateError.message };
-
-  const fullLink = link as unknown as {
-    school_name: string | null;
-    student_user_id: string | null;
-    stripe_checkout_session_id: string | null;
-  };
+  if (!claimed?.length) return { error: "This delivery is not awaiting approval." };
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
@@ -953,99 +1103,61 @@ export async function approveDelivery(
       [meta.firstName, meta.lastName].filter(Boolean).join(" ") || "Applicant";
   }
 
-  // Retrieve the school email from Stripe session metadata — never stored in DB
-  let recipientEmail: string | null = null;
-  if (fullLink.stripe_checkout_session_id) {
-    try {
-      const session = await stripe.checkout.sessions.retrieve(
-        fullLink.stripe_checkout_session_id,
-      );
-      recipientEmail = session.metadata?.school_email ?? null;
-    } catch (err) {
-      console.error(
-        "[approveDelivery] Failed to retrieve Stripe session:",
-        err,
-      );
-    }
+  const { error: emailError } = await resend.emails.send({
+    from: "ReadMyStudent <notification@readmystudent.com>",
+    to: fullLink.recipient_email,
+    subject: `Recommendation letter available for ${studentFullName}`,
+    html: InstitutionDeliveryEmail({
+      schoolName: fullLink.school_name ?? "your institution",
+      studentFullName,
+      viewUrl,
+      expiresAt,
+    }),
+  });
+  if (emailError) {
+    console.error("[approveDelivery] Resend failed:", emailError);
+    // Put it back, so the professor can try again.
+    await supabaseAdmin
+      .from("delivery_links")
+      .update({ payment_status: "pending", expires_at: null, token_hash: null })
+      .eq("id", deliveryLinkId);
+    return { error: `The school email could not be sent: ${emailError.message}. Try again.` };
   }
 
-  if (recipientEmail) {
-    const { error: emailError } = await resend.emails.send({
-      from: "ReadMyStudent <notification@readmystudent.com>",
-      to: recipientEmail,
-      subject: `Recommendation letter available for ${studentFullName}`,
-      html: InstitutionDeliveryEmail({
-        schoolName: fullLink.school_name ?? "your institution",
-        studentFullName,
-        viewUrl,
-        expiresAt,
-      }),
-    });
-    if (emailError) {
-      console.error("[approveDelivery] Resend failed:", emailError);
-      return {
-        error: `Delivery approved but email failed: ${emailError.message}`,
-      };
-    }
-  } else {
-    console.error(
-      "[approveDelivery] No recipient email found for delivery link",
-      deliveryLinkId,
-    );
-    return {
-      error:
-        "Delivery approved but could not retrieve the institution email from Stripe.",
-    };
-  }
+  // The school has its link, so the address is no longer needed (owner, 2026-11-09).
+  await supabaseAdmin
+    .from("delivery_links")
+    .update({ recipient_email: null })
+    .eq("id", deliveryLinkId);
 
   return { error: null };
 }
 
 /**
- * Faculty rejects a pending delivery.
- * Sets payment_status = 'rejected'; student will need to request a refund.
+ * The professor declines a pending delivery. The school gets nothing, the
+ * stored address is cleared, and the student is told.
  */
 export async function rejectDelivery(
   deliveryLinkId: string,
+  token?: string,
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated." };
-
-  const { data: facultyRow } = await supabaseAdmin
-    .from("faculty")
-    .select("id, first_name, last_name")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!facultyRow) return { error: "Faculty record not found." };
-
-  const { data: link } = await supabaseAdmin
-    .from("delivery_links")
-    .select(
-      "id, payment_status, school_name, student_user_id, letters!inner(faculty_id)",
-    )
-    .eq("id", deliveryLinkId)
-    .eq("letters.faculty_id", facultyRow.id)
-    .maybeSingle();
-
-  if (!link) return { error: "Delivery not found or access denied." };
-  if ((link.payment_status as string) !== "pending")
+  const found = await deliveryForProfessor(deliveryLinkId, token);
+  if (!found) return { error: "Delivery not found or access denied." };
+  if (found.link.payment_status !== "pending")
     return { error: "This delivery is not awaiting approval." };
 
-  const { error: updateError } = await supabaseAdmin
+  const { data: claimed, error: updateError } = await supabaseAdmin
     .from("delivery_links")
-    .update({ payment_status: "rejected" })
-    .eq("id", deliveryLinkId);
+    .update({ payment_status: "rejected", recipient_email: null })
+    .eq("id", deliveryLinkId)
+    .eq("payment_status", "pending")
+    .select("id");
 
   if (updateError) return { error: updateError.message };
+  if (!claimed?.length) return { error: "This delivery is not awaiting approval." };
 
   // Email the student to let them know the delivery was rejected.
-  const rejLink = link as unknown as {
-    school_name: string | null;
-    student_user_id: string | null;
-  };
+  const rejLink = found.link;
 
   if (rejLink.student_user_id) {
     const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
@@ -1054,9 +1166,7 @@ export async function rejectDelivery(
     const studentEmail = authUser?.user?.email;
     const meta = authUser?.user?.user_metadata ?? {};
     const studentFirstName = (meta.firstName as string | undefined) ?? "there";
-    const facultyName =
-      [facultyRow.first_name, facultyRow.last_name].filter(Boolean).join(" ") ||
-      "Your professor";
+    const facultyName = found.professorName;
 
     if (studentEmail) {
       const siteUrl =

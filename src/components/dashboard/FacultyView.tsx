@@ -355,27 +355,30 @@ export function FacultyView() {
         <div role='table' aria-label='Pending delivery approvals'>
           <BoardColumns
             cols={ROW_COLS}
-            labels={["Paid on", "Student", "Destination", "Status", "Action"]}
+            labels={["Requested", "Student", "Destination", "Status", "Action"]}
           />
           <div role='rowgroup' className='space-y-1'>
             {loadingDeliveries ? (
               <BoardSkeleton rows={2} />
             ) : pendingDeliveries.length === 0 ? (
               <BoardEmpty title='Nothing to approve'>
-                When a student pays to send your letter to a school, the
+                When a student asks to send your letter to a school, the
                 request waits here for your approval.
               </BoardEmpty>
             ) : (
               pendingDeliveries.map((d) => (
                 <BoardRow key={d.deliveryLinkId} cols={ROW_COLS}>
                   <span role='cell' className={DATE_CELL}>
-                    {formatDate(d.paidAt)}
+                    {formatDate(d.requestedAt)}
                   </span>
                   <span role='cell' className={NAME_CELL}>
                     {d.studentFullName}
                   </span>
                   <span role='cell' className={MID_CELL}>
                     {d.schoolName}
+                    {d.schoolEmail && (
+                      <span className='block break-all text-sm text-flap-dim'>{d.schoolEmail}</span>
+                    )}
                   </span>
                   <span role='cell' className={STATUS_CELL}>
                     <StatusFlap label='To approve' lamp='waiting' />
