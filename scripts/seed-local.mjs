@@ -84,6 +84,8 @@ if (catalogCount) {
 } else {
   const never = { expiry: "never", expiry_year: null };
   const toYear = (n) => ({ expiry: "end_of_year_n", expiry_year: n });
+  // Extra credits end with the school year they are bought in (owner, 2026-11-10).
+  const thisYear = { expiry: "end_of_year", expiry_year: null };
   const rows = [
     { stage: "hs", study_year: null, kind: "free_allocation", credits: 20, price_usd_cents: null, ...never },
     { stage: "hs", study_year: null, kind: "credits", credits: 1, price_usd_cents: 100, ...never },
@@ -92,10 +94,10 @@ if (catalogCount) {
       stage: "ug", study_year: y, kind: "membership", credits, price_usd_cents: cents, ...toYear(5),
       free_credits: y <= 4 ? 3 : 0,
     })),
-    { stage: "ug", study_year: null, kind: "credits", credits: 1, price_usd_cents: 147, ...toYear(5) },
+    { stage: "ug", study_year: null, kind: "credits", credits: 1, price_usd_cents: 147, ...thisYear },
     { stage: "masters", study_year: 1, kind: "membership", credits: 45, price_usd_cents: 7000, ...toYear(2) },
     { stage: "masters", study_year: 2, kind: "membership", credits: 55, price_usd_cents: 9000, ...toYear(2) },
-    { stage: "masters", study_year: null, kind: "credits", credits: 1, price_usd_cents: 199, ...toYear(2) },
+    { stage: "masters", study_year: null, kind: "credits", credits: 1, price_usd_cents: 199, ...thisYear },
     { stage: "phd", study_year: null, kind: "credits", credits: 1, price_usd_cents: 255, ...never },
     // BRD DEC-09: $259 for 100 costs more than 100 single credits. Owner to fix in admin.
     { stage: "phd", study_year: null, kind: "bundle", credits: 100, price_usd_cents: 25900, ...never },
