@@ -226,6 +226,14 @@ const sections = [
             Browser storage on your own device that remembers the last five
             schools you sent a letter to, so you can pick them again.
           </li>
+          <li>
+            For professors who install the ReadMyStudent browser extension: a
+            sign-in token in the extension&apos;s storage on your device. It
+            lasts 30 days, or until you click Disconnect. The extension reads
+            only your own requests, letters, and profile details from
+            ReadMyStudent. It does not read the pages you visit or your
+            browsing history, and it sends data only to ReadMyStudent.
+          </li>
         </ul>
         <p>
           The student dashboard loads Stripe&apos;s payment script, which may

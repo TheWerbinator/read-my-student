@@ -23,6 +23,12 @@ import {
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { sanitizeLetterHtml, validateLexicalJson } from "@/lib/sanitize";
 import { ensureFreeGrants, refundCredit, spendCredit, type StudentRow } from "@/lib/credit-wallet";
+import {
+  listFacultyFinalizedLetters,
+  listFacultyRequests,
+  type FacultyFinalizedLetter,
+  type FacultyLetterRequest,
+} from "@/lib/faculty-data";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -686,84 +692,18 @@ export async function rejectLetterRequest(
 
 // ─── Faculty incoming requests ────────────────────────────────────────────────
 
-export type FacultyLetterRequest = {
-  requestId: string;
-  studentName: string;
-  courseContext: string | null;
-  studentNote: string | null;
-  createdAt: string;
-};
+export type { FacultyLetterRequest, FacultyFinalizedLetter };
 
 /**
  * Returns letter_requests rows assigned to the current faculty member that
  * still need a letter written (status = 'requested').
  */
 export async function getFacultyRequests(): Promise<FacultyLetterRequest[]> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
-
-  const { data: facultyRow } = await supabaseAdmin
-    .from("faculty")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-  if (!facultyRow) return [];
-
-  const { data, error } = await supabaseAdmin
-    .from("letter_requests")
-    .select("id, student_id, course_context, student_note, created_at")
-    .eq("faculty_id", facultyRow.id)
-    .eq("status", "requested")
-    .order("created_at", { ascending: false });
-
-  if (error || !data) return [];
-
-  // Resolve student names via auth.users (names live in user_metadata)
-  const results: FacultyLetterRequest[] = [];
-  for (const row of data) {
-    const { data: studentRow } = await supabaseAdmin
-      .from("students")
-      .select("user_id")
-      .eq("id", row.student_id as string)
-      .maybeSingle();
-
-    let studentName = "Unknown Student";
-    if (studentRow?.user_id) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
-        studentRow.user_id as string,
-      );
-      if (authUser?.user) {
-        const meta = authUser.user.user_metadata ?? {};
-        studentName =
-          [meta.firstName, meta.lastName].filter(Boolean).join(" ") ||
-          authUser.user.email ||
-          "Unknown Student";
-      }
-    }
-
-    results.push({
-      requestId: row.id as string,
-      studentName,
-      courseContext: (row.course_context as string | null) ?? null,
-      studentNote: (row.student_note as string | null) ?? null,
-      createdAt: row.created_at as string,
-    });
-  }
-
-  return results;
+  const facultyId = await currentFacultyId();
+  return facultyId ? listFacultyRequests(supabaseAdmin, facultyId) : [];
 }
 
 // ─── Faculty finalized letters list ───────────────────────────────────────────
-
-export type FacultyFinalizedLetter = {
-  letterId: string;
-  studentName: string;
-  finalizedAt: string;
-  studentPreviewEnabled: boolean;
-};
 
 /**
  * Returns all finalized (non-draft) letters belonging to the current faculty.
@@ -771,59 +711,23 @@ export type FacultyFinalizedLetter = {
 export async function getFacultyFinalizedLetters(): Promise<
   FacultyFinalizedLetter[]
 > {
+  const facultyId = await currentFacultyId();
+  return facultyId ? listFacultyFinalizedLetters(supabaseAdmin, facultyId) : [];
+}
+
+async function currentFacultyId(): Promise<string | null> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (!user) return null;
 
   const { data: facultyRow } = await supabaseAdmin
     .from("faculty")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!facultyRow) return [];
-
-  const { data, error } = await supabaseAdmin
-    .from("letters")
-    .select("id, student_id, finalized_at, student_preview_enabled")
-    .eq("faculty_id", facultyRow.id)
-    .eq("is_draft", false)
-    .order("finalized_at", { ascending: false });
-
-  if (error || !data) return [];
-
-  const results: FacultyFinalizedLetter[] = [];
-  for (const row of data) {
-    const { data: studentRow } = await supabaseAdmin
-      .from("students")
-      .select("user_id")
-      .eq("id", row.student_id as string)
-      .maybeSingle();
-
-    let studentName = "Unknown Student";
-    if (studentRow?.user_id) {
-      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(
-        studentRow.user_id as string,
-      );
-      if (authUser?.user) {
-        const meta = authUser.user.user_metadata ?? {};
-        studentName =
-          [meta.firstName, meta.lastName].filter(Boolean).join(" ") ||
-          authUser.user.email ||
-          "Unknown Student";
-      }
-    }
-
-    results.push({
-      letterId: row.id as string,
-      studentName,
-      finalizedAt: row.finalized_at as string,
-      studentPreviewEnabled: (row.student_preview_enabled as boolean) ?? false,
-    });
-  }
-
-  return results;
+  return (facultyRow?.id as string | undefined) ?? null;
 }
 
 /**

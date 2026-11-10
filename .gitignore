@@ -43,6 +43,11 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# browser extension (WXT)
+/extension/node_modules
+/extension/.output
+/extension/.wxt
+
 # impeccable: local working files (live server, decision page logs, review captures)
 /.impeccable/live/
 /.impeccable/questions/
