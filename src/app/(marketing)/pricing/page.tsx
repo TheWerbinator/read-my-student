@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { adminDb } from "@/lib/admin";
-import { pricingRow, type PricingRow } from "@/lib/billing";
+import { pricingRows } from "@/lib/billing";
 import { CATALOG_COLUMNS, type CatalogRow } from "@/lib/catalog";
 
 export const metadata = {
@@ -59,10 +59,7 @@ async function priceSheets() {
   );
   return STAGES.map((s) => ({
     ...s,
-    rows: rows
-      .filter((r) => r.stage === s.key)
-      .map((r) => pricingRow(r, country))
-      .filter((r): r is PricingRow => r !== null),
+    rows: pricingRows(rows.filter((r) => r.stage === s.key), country),
   })).filter((s) => s.rows.some((r) => !r.free));
 }
 

@@ -50,6 +50,40 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
   return { id: row.id, label: "Extra credit", detail: expiryNote(row), price: `${amount} each`, free: false };
 }
 
+/**
+ * The pricing lines for one stage, with yearly free allocations that give the
+ * same credits merged into one line ("Years 1 to 4, free"). Expects rows sorted
+ * by year, as the pricing page sorts them.
+ */
+export function pricingRows(rows: CatalogRow[], country: string | null): PricingRow[] {
+  const out: PricingRow[] = [];
+  const groups = new Map<string, { line: PricingRow; row: CatalogRow; years: number[] }>();
+  for (const row of rows) {
+    const line = pricingRow(row, country);
+    if (!line) continue;
+    if (row.kind !== "free_allocation" || !row.study_year) {
+      out.push(line);
+      continue;
+    }
+    const key = `${row.credits}:${row.expiry}:${row.expiry_year}`;
+    const group = groups.get(key);
+    if (group) {
+      group.years.push(row.study_year);
+      continue;
+    }
+    groups.set(key, { line, row, years: [row.study_year] });
+    out.push(line);
+  }
+  for (const { line, row, years } of groups.values()) {
+    if (years.length < 2) continue;
+    const first = years[0];
+    const last = years[years.length - 1];
+    line.label = last - first === years.length - 1 ? `Years ${first} to ${last}, free` : `Years ${years.join(", ")}, free`;
+    line.detail = `${row.credits === 1 ? "1 credit" : `${row.credits} credits`} each school year. ${expiryNote(row)}`;
+  }
+  return out;
+}
+
 const MAX_CREDITS_PER_PURCHASE = 100;
 
 /** Subscription statuses that still count as having a membership. */

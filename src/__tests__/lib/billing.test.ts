@@ -14,6 +14,7 @@ import {
   offerMetadata,
   priceFor,
   pricingRow,
+  pricingRows,
   renewalRow,
 } from "@/lib/billing";
 import type { CatalogRow } from "@/lib/catalog";
@@ -193,5 +194,21 @@ describe("pricingRow", () => {
   it("hides items that are switched off or cannot be bought yet", () => {
     expect(pricingRow(row({ active: false }), "US")).toBeNull();
     expect(pricingRow(row({ stripe_price_usd: null }), "US")).toBeNull();
+  });
+});
+
+describe("pricingRows", () => {
+  const free = (y: number, over: Partial<CatalogRow> = {}) =>
+    row({ id: `free-${y}`, study_year: y, kind: "free_allocation", credits: 3, price_usd_cents: null, expiry: "end_of_year", expiry_year: null, stripe_price_usd: null, ...over });
+
+  it("merges yearly free credits into one line, in the place of the first year", () => {
+    const lines = pricingRows([free(1), free(2), free(3), free(4), row()], "US");
+    expect(lines.map((l) => l.label)).toEqual(["Years 1 to 4, free", "Year 2 membership"]);
+    expect(lines[0].detail).toBe("3 credits each school year. Credits last until the end of that school year.");
+  });
+
+  it("keeps different allocations apart and names years that are not in a row", () => {
+    const labels = pricingRows([free(1), free(2, { credits: 5 }), free(3)], "US").map((l) => l.label);
+    expect(labels).toEqual(["Years 1, 3, free", "Year 2, free"]);
   });
 });
