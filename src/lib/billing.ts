@@ -52,15 +52,26 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
 
 /**
  * The pricing lines for one stage, with yearly free allocations that give the
- * same credits merged into one line ("Years 1 to 4, free"). Expects rows sorted
- * by year, as the pricing page sorts them.
+ * same credits merged into one line ("Years 1 to 4, free"), and the last
+ * membership year marked "+" because it also covers every later year. Expects
+ * rows sorted by year, as the pricing page sorts them.
  */
 export function pricingRows(rows: CatalogRow[], country: string | null): PricingRow[] {
   const out: PricingRow[] = [];
   const groups = new Map<string, { line: PricingRow; row: CatalogRow; years: number[] }>();
+  const lastYear = rows.length ? lastMembershipYear(rows, rows[0].stage) : null;
   for (const row of rows) {
     const line = pricingRow(row, country);
     if (!line) continue;
+    if (row.kind === "membership" && row.study_year !== null && row.study_year === lastYear) {
+      const credits = row.credits === 1 ? "1 credit" : `${row.credits} credits`;
+      const expiry =
+        row.expiry === "end_of_year_n"
+          ? `Credits last until the end of Year ${row.expiry_year} or the end of the year they arrive in, whichever is later.`
+          : expiryNote(row);
+      line.label = `Year ${lastYear}+ membership`;
+      line.detail = `${credits} a year, at this price every year from Year ${lastYear} on. ${expiry}`;
+    }
     if (row.kind !== "free_allocation" || !row.study_year) {
       out.push(line);
       continue;
@@ -94,7 +105,13 @@ export function checkPurchase(
   row: CatalogRow,
   student: StudentYear,
   now: Date,
-  opts: { quantity: number; hasActiveMembership: boolean; autoRenewConsent: boolean },
+  opts: {
+    quantity: number;
+    hasActiveMembership: boolean;
+    autoRenewConsent: boolean;
+    /** From lastMembershipYear: lets a student past that year buy its membership. */
+    lastMembershipYear?: number | null;
+  },
 ): { ok: true } | { ok: false; error: string } {
   if (!row.active || row.kind === "free_allocation" || !row.stripe_price_usd) {
     return { ok: false, error: "This item is not for sale." };
@@ -102,7 +119,8 @@ export function checkPurchase(
   if (row.stage !== student.stage) return { ok: false, error: "This item is for a different stage." };
 
   const year = currentYear(student, now);
-  if (row.study_year !== null && row.study_year !== year) {
+  const lastYear = row.kind === "membership" ? (opts.lastMembershipYear ?? null) : null;
+  if (row.study_year !== null && !membershipCovers(row, year, lastYear)) {
     return { ok: false, error: `This item is for Year ${row.study_year}. You are in Year ${year ?? "unknown"}.` };
   }
 
@@ -178,12 +196,26 @@ export function offerChanged(before: CatalogRow | null, after: Omit<CatalogRow, 
   return keys.some((k) => before[k] !== after[k]);
 }
 
-/** The membership a renewal at `renewalAt` should charge, or null when the student has no next year (end the subscription). */
+/** The highest year with an active membership for this stage. Its membership also covers every later year ("Year 5+"). */
+export function lastMembershipYear(catalog: CatalogRow[], stage: CatalogRow["stage"]): number | null {
+  const years = catalog
+    .filter((r) => r.active && r.kind === "membership" && r.stage === stage && r.study_year !== null)
+    .map((r) => r.study_year as number);
+  return years.length ? Math.max(...years) : null;
+}
+
+/** Whether a membership for `row.study_year` is the one for a student in `year`. */
+function membershipCovers(row: CatalogRow, year: number | null, lastYear: number | null): boolean {
+  return row.study_year === year || (year !== null && lastYear !== null && row.study_year === lastYear && year > lastYear);
+}
+
+/** The membership a renewal at `renewalAt` should charge, or null when the stage has none for that year (end the subscription). */
 export function renewalRow(catalog: CatalogRow[], student: StudentYear, renewalAt: Date): CatalogRow | null {
   const year = currentYear(student, renewalAt);
+  const lastYear = student.stage ? lastMembershipYear(catalog, student.stage) : null;
   return (
     catalog.find(
-      (r) => r.active && r.kind === "membership" && r.stage === student.stage && r.study_year === year,
+      (r) => r.active && r.kind === "membership" && r.stage === student.stage && membershipCovers(r, year, lastYear),
     ) ?? null
   );
 }

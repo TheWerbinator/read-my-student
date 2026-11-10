@@ -43,9 +43,10 @@ const sections = [
         </p>
         <p>
           Each renewal charges the price listed at that time for your next year
-          in school, to the card or UPI mandate you paid with. After your last
-          membership year (Year 5 for undergraduates, Year 2 for Master&apos;s
-          students), the membership ends on its own and is not charged again.
+          in school, to the card or UPI mandate you paid with. After the last
+          listed year (Year 5 for undergraduates, Year 2 for Master&apos;s
+          students), each renewal charges the price for that last year, until
+          you cancel.
         </p>
       </>
     ),

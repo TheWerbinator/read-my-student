@@ -87,4 +87,5 @@ Items that need the owner, not code. Updated 2026-11-09.
 | PhD pricing | A flat per-credit price and an optional bulk pack, both catalog rows. No tier logic (2026-11-09). |
 | What a credit buys | One request to one professor. The credit returns if the professor declines or does not answer in 7 days. Sending the finished letter to schools is free, with no limit (confirmed 2026-11-09, replacing BRD v2.0 §1.2 and §9). |
 | No response | The credit returns after 7 days. The professor gets a reminder on day 3. |
+| After the last year | The last membership year (UG Year 5, Master's Year 2) shows as "Year 5+" and "Year 2+". The membership keeps renewing at that year's price until the student cancels. Credits from a renewal after that year last until the end of the year they arrive in. Signup offers "Year 5+" and "Year 2+" (2026-11-10, replacing BRD v2.0 §3.2 and §3.3, where the membership ends). |
 | Region | Stay in the current Supabase region, `us-west-2`. |

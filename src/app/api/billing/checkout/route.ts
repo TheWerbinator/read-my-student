@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminDb } from "@/lib/admin";
-import { LIVE_STATUSES, checkPurchase, chooseCurrency, priceFor } from "@/lib/billing";
+import { LIVE_STATUSES, checkPurchase, chooseCurrency, lastMembershipYear, priceFor } from "@/lib/billing";
 import { CATALOG_COLUMNS, type CatalogRow } from "@/lib/catalog";
 import { studentYear, type StudentRow } from "@/lib/credit-wallet";
 import { stripe } from "@/lib/stripe";
@@ -62,11 +62,24 @@ export async function POST(req: NextRequest) {
     .in("status", LIVE_STATUSES);
   if (subError) throw subError;
 
+  let lastYear: number | null = null;
+  if (item.kind === "membership") {
+    const { data: memberships, error: membershipsError } = await db
+      .from("plan_catalog")
+      .select(CATALOG_COLUMNS)
+      .eq("stage", item.stage)
+      .eq("kind", "membership")
+      .eq("active", true);
+    if (membershipsError) throw membershipsError;
+    lastYear = lastMembershipYear((memberships ?? []) as CatalogRow[], item.stage);
+  }
+
   const now = new Date();
   const check = checkPurchase(item, studentYear(student as StudentRow), now, {
     quantity,
     hasActiveMembership: (liveMemberships ?? 0) > 0,
     autoRenewConsent,
+    lastMembershipYear: lastYear,
   });
   if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 

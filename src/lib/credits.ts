@@ -99,7 +99,10 @@ export type CatalogItem = {
  */
 export function grantExpiry(item: CatalogItem, s: StudentYear, now: Date): Date | null {
   if (item.expiry === "never") return null;
-  const year = item.expiry === "end_of_year" ? currentYear(s, now) : item.expiryYear;
+  const thisYear = currentYear(s, now);
+  let year = item.expiry === "end_of_year" ? thisYear : item.expiryYear;
+  // Credits that arrive after Year N (a "Year 5+" renewal) last until the end of that year (owner, 2026-11-10).
+  if (year !== null && thisYear !== null && thisYear > year) year = thisYear;
   const end = year === null ? null : endOfYear(s, year);
   if (end === null) {
     throw new Error(`Catalog item ${item.id} needs a year in school, and the student has none.`);

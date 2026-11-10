@@ -12,7 +12,7 @@ export const contactFormSchema = z.object({
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
-/** The highest year a student can pick at signup: the BRD membership years. */
+/** The highest year a student can pick at signup: the BRD membership years. The last one reads "Year 5+" and covers later years. */
 export const SIGNUP_YEARS = { ug: 5, masters: 2 } as const;
 
 export const registerSchema = z.object({

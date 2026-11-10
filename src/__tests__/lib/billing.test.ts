@@ -14,6 +14,7 @@ import {
   offerMetadata,
   priceFor,
   pricingRow,
+  lastMembershipYear,
   pricingRows,
   renewalRow,
 } from "@/lib/billing";
@@ -81,6 +82,15 @@ describe("checkPurchase", () => {
       ok: false,
       error: "This item is for Year 1. You are in Year 2.",
     });
+  });
+
+  it("sells the last year's membership to a student past that year, and only that one", () => {
+    const ug7: StudentYear = { stage: "ug", studyYear: 7, yearStartedOn: d("2026-09-01") };
+    const last = { ...ok, lastMembershipYear: 5 };
+    expect(checkPurchase(row({ study_year: 5 }), ug7, now, last)).toEqual({ ok: true });
+    expect(checkPurchase(row({ study_year: 4 }), ug7, now, last)).toMatchObject({ ok: false });
+    expect(checkPurchase(row({ study_year: 5 }), ug7, now, ok)).toMatchObject({ ok: false });
+    expect(checkPurchase(row({ study_year: 5 }), ug2, now, last)).toMatchObject({ ok: false });
   });
 
   it("refuses a second membership", () => {
@@ -153,8 +163,15 @@ describe("renewalRow", () => {
     expect(renewalRow(catalog, ug2, d("2027-11-09"))?.id).toBe("ug-3");
   });
 
-  it("ends the subscription after the last year that has a membership", () => {
-    expect(renewalRow(catalog, ug2, d("2030-11-09"))).toBeNull(); // Year 6
+  it("keeps renewing at the last year's membership after that year", () => {
+    expect(renewalRow(catalog, ug2, d("2030-11-09"))?.id).toBe("ug-5"); // Year 6
+    expect(renewalRow(catalog, ug2, d("2036-11-09"))?.id).toBe("ug-5"); // Year 12
+    expect(lastMembershipYear(catalog, "ug")).toBe(5);
+  });
+
+  it("ends the subscription when the stage has no membership for the year", () => {
+    const gap = catalog.filter((r) => r.id !== "ug-1");
+    expect(renewalRow(gap, { ...ug2, studyYear: 1 }, d("2026-11-09"))).toBeNull();
   });
 
   it("skips inactive rows and other stages", () => {
@@ -202,9 +219,17 @@ describe("pricingRows", () => {
     row({ id: `free-${y}`, study_year: y, kind: "free_allocation", credits: 3, price_usd_cents: null, expiry: "end_of_year", expiry_year: null, stripe_price_usd: null, ...over });
 
   it("merges yearly free credits into one line, in the place of the first year", () => {
-    const lines = pricingRows([free(1), free(2), free(3), free(4), row()], "US");
-    expect(lines.map((l) => l.label)).toEqual(["Years 1 to 4, free", "Year 2 membership"]);
+    const lines = pricingRows([free(1), free(2), free(3), free(4), row(), row({ id: "ug-3", study_year: 3 })], "US");
+    expect(lines.map((l) => l.label)).toEqual(["Years 1 to 4, free", "Year 2 membership", "Year 3+ membership"]);
     expect(lines[0].detail).toBe("3 credits each school year. Credits last until the end of that school year.");
+  });
+
+  it("marks the last membership year with a plus", () => {
+    const lines = pricingRows([row({ id: "ug-4", study_year: 4 }), row({ id: "ug-5", study_year: 5, credits: 50 })], "US");
+    expect(lines.map((l) => l.label)).toEqual(["Year 4 membership", "Year 5+ membership"]);
+    expect(lines[1].detail).toBe(
+      "50 credits a year, at this price every year from Year 5 on. Credits last until the end of Year 5 or the end of the year they arrive in, whichever is later.",
+    );
   });
 
   it("keeps different allocations apart and names years that are not in a row", () => {

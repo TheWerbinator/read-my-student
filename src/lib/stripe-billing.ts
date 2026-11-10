@@ -122,8 +122,10 @@ async function grantInvoice(db: SupabaseClient, stripe: Stripe, invoice: Stripe.
  * for the student's year on the renewal date, at today's catalog price (owner,
  * 2026-11-09). With no proration, "customers are billed the full amount at the
  * new price when the next invoice is generated"
- * (https://docs.stripe.com/billing/subscriptions/prorations.md). No next-year
- * membership (after UG Year 5 or Master's Year 2) ends the subscription.
+ * (https://docs.stripe.com/billing/subscriptions/prorations.md). After the last
+ * membership year (UG Year 5, Master's Year 2), it keeps renewing at that year's
+ * price (owner, 2026-11-10). A stage with no membership for the year ends the
+ * subscription.
  */
 async function prepareRenewal(db: SupabaseClient, stripe: Stripe, invoice: Stripe.Invoice) {
   const subscriptionId = idOf(invoice.parent?.subscription_details?.subscription);

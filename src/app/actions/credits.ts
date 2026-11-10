@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { adminDb } from "@/lib/admin";
-import { LIVE_STATUSES, checkPurchase, chooseCurrency } from "@/lib/billing";
+import { LIVE_STATUSES, checkPurchase, chooseCurrency, lastMembershipYear } from "@/lib/billing";
 import { CATALOG_COLUMNS, formatMoney, type CatalogRow } from "@/lib/catalog";
 import { ensureFreeGrants, loadWallet, studentYear, type StudentRow } from "@/lib/credit-wallet";
 import { balance, currentYear, remaining, type Stage } from "@/lib/credits";
@@ -23,6 +23,8 @@ export type ForSale = {
   kind: CatalogRow["kind"];
   credits: number;
   studyYear: number | null;
+  /** The last membership year, which also covers every later year ("Year 5+"). */
+  orLater: boolean;
   price: string;
 };
 
@@ -94,10 +96,17 @@ export async function getWallet(): Promise<Wallet | null> {
 
   const hasMembership = (subs.count ?? 0) > 0;
   const country = (await headers()).get("x-vercel-ip-country");
-  const forSale = ((catalogRows.data ?? []) as CatalogRow[])
+  const catalog = (catalogRows.data ?? []) as CatalogRow[];
+  const lastYear = lastMembershipYear(catalog, row.stage as Stage);
+  const forSale = catalog
     .filter(
       (r) =>
-        checkPurchase(r, year, now, { quantity: 1, hasActiveMembership: hasMembership, autoRenewConsent: true }).ok,
+        checkPurchase(r, year, now, {
+          quantity: 1,
+          hasActiveMembership: hasMembership,
+          autoRenewConsent: true,
+          lastMembershipYear: lastYear,
+        }).ok,
     )
     .map((r) => {
       const inr = chooseCurrency(country, r) === "inr";
@@ -106,6 +115,7 @@ export async function getWallet(): Promise<Wallet | null> {
         kind: r.kind,
         credits: r.credits,
         studyYear: r.study_year,
+        orLater: r.kind === "membership" && r.study_year !== null && r.study_year === lastYear,
         price: formatMoney(inr ? r.price_inr_paise : r.price_usd_cents, inr ? "INR" : "USD") ?? "",
       };
     });

@@ -215,12 +215,14 @@ describe("membership webhooks", () => {
     expect(update).toHaveBeenCalledWith("sub_test", expect.objectContaining({ items: [{ id: "si_test", price: "price_m2_inr" }] }));
   });
 
-  itLocal("ends the subscription when there is no membership for the next year", async () => {
-    // Renewal after the end of Master's Year 2.
-    jest.spyOn(stripe.subscriptions, "retrieve").mockResolvedValue(subscription({}, new Date(Date.now() + 700 * DAY)) as never);
+  itLocal("after Master's Year 2, keeps renewing at the Year 2 price", async () => {
+    // Renewal in Master's Year 3: the Year 2 membership covers it ("Year 2+").
+    const year3 = new Date(Date.now() + 700 * DAY);
+    jest.spyOn(stripe.subscriptions, "retrieve").mockResolvedValue(subscription({}, year3) as never);
     const update = jest.spyOn(stripe.subscriptions, "update").mockResolvedValue({} as never);
     await post("invoice.upcoming", { ...invoice("", "upcoming"), id: undefined });
-    expect(update).toHaveBeenCalledWith("sub_test", { cancel_at_period_end: true });
+    expect(update).toHaveBeenCalledWith("sub_test", expect.objectContaining({ items: [{ id: "si_test", price: "price_m2_usd" }] }));
+    expect(update).not.toHaveBeenCalledWith("sub_test", { cancel_at_period_end: true });
   });
 
   itLocal("a refund removes the unused credits from that payment, and spent ones stay spent", async () => {

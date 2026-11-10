@@ -43,7 +43,7 @@ const SOURCE_LABEL: Record<string, string> = {
 const STAGE_LABEL = { hs: "High school", ug: "Undergraduate", masters: "Master's", phd: "PhD" };
 
 function itemTitle(item: ForSale): string {
-  if (item.kind === "membership") return `Year ${item.studyYear} membership: ${item.credits} credits`;
+  if (item.kind === "membership") return `Year ${item.studyYear}${item.orLater ? "+" : ""} membership: ${item.credits} credits`;
   if (item.kind === "bundle") return `Pack of ${item.credits} credits`;
   return item.credits === 1 ? "Extra credit" : `${item.credits} extra credits`;
 }
@@ -192,7 +192,7 @@ function BuyDialog({ item }: { item: ForSale }) {
           </DialogTitle>
           <DialogDescription>
             {membership
-              ? `${item.price} for Year ${item.studyYear}. The credits are added when the payment goes through.`
+              ? `${item.price} for Year ${item.studyYear}${item.orLater ? " and every year after" : ""}. The credits are added when the payment goes through.`
               : `${item.price}${many ? " per credit" : ""}. The credits are added when the payment goes through.`}
           </DialogDescription>
         </DialogHeader>

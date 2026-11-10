@@ -337,6 +337,7 @@ export function SignUpForm({
                     {Array.from({ length: SIGNUP_YEARS[stage] }, (_, i) => (
                       <option key={i + 1} value={String(i + 1)}>
                         Year {i + 1}
+                        {i + 1 === SIGNUP_YEARS[stage] ? "+" : ""}
                       </option>
                     ))}
                   </select>

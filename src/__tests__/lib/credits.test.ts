@@ -122,6 +122,11 @@ describe("catalog rules", () => {
     expect(grantExpiry(ugPaid(2, 25), ug2, d("2026-10-01"))).toEqual(d("2030-09-01"));
   });
 
+  it("ends credits that arrive after Year 5 at the end of the year they arrive in", () => {
+    expect(grantExpiry(ugPaid(5, 50), ug2, d("2029-10-01"))).toEqual(d("2030-09-01")); // Year 5
+    expect(grantExpiry(ugPaid(5, 50), ug2, d("2031-10-01"))).toEqual(d("2032-09-01")); // Year 7
+  });
+
   it("ends a free UG grant at the end of the year it was made in", () => {
     expect(grantExpiry(ugFree(3), ug2, d("2027-10-01"))).toEqual(d("2028-09-01"));
   });
