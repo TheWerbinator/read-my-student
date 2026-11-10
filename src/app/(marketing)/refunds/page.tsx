@@ -99,10 +99,19 @@ const sections = [
     id: "contact",
     title: "6. Contact",
     body: (
-      <p>
-        Questions about a charge? Reach us through the{" "}
-        <Link href='/contact'>contact page</Link>.
-      </p>
+      <>
+        <p>
+          Questions about a charge? Reach us through the{" "}
+          <Link href='/contact'>contact page</Link>.
+        </p>
+        <p>
+          Grievance Officer for users in India: Dr. Prosenjit Chatterjee,{" "}
+          <a href='mailto:readmystudent@gmail.com'>readmystudent@gmail.com</a>.
+          You can also use the <Link href='/contact'>contact page</Link> and
+          start the subject with &quot;Grievance&quot;. We acknowledge a
+          complaint within 48 hours and resolve it within one month.
+        </p>
+      </>
     ),
   },
 ];
@@ -118,7 +127,7 @@ export default function RefundsPage() {
           <p className='mt-6 max-w-2xl text-lg leading-relaxed text-flap-ink/90'>
             How memberships renew, how to cancel, and when a credit comes back.
           </p>
-          <p className='caption mt-5 text-flap-dim'>Last updated: November 9, 2026</p>
+          <p className='caption mt-5 text-flap-dim'>Last updated: November 10, 2026</p>
 
           <nav aria-label='Contents' className='mt-10'>
             <p className='caption text-flap-dim'>Contents</p>

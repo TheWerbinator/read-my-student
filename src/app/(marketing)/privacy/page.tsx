@@ -22,9 +22,11 @@ const sections = [
           laws).
         </p>
         <p>
-          To reach the person responsible for privacy at ReadMyStudent, use
-          the <Link href='/contact'>contact page</Link> and start the subject
-          with &quot;Privacy&quot;.
+          The person responsible for privacy at ReadMyStudent is Shawn Werber.
+          Write to YS2PC Research Group LLC, Attn: Shawn Werber, 398 N 300 W,
+          Cedar City, UT 84721, United States, or use the{" "}
+          <Link href='/contact'>contact page</Link> and start the subject with
+          &quot;Privacy&quot;.
         </p>
       </>
     ),
@@ -302,10 +304,20 @@ const sections = [
     id: "contact",
     title: "13. Contact",
     body: (
-      <p>
-        Questions or requests about privacy: use the{" "}
-        <Link href='/contact'>contact page</Link>.
-      </p>
+      <>
+        <p>
+          Questions or requests about privacy: use the{" "}
+          <Link href='/contact'>contact page</Link>, or write to Shawn Werber
+          at the address in section 1.
+        </p>
+        <p>
+          Grievance Officer for users in India: Dr. Prosenjit Chatterjee,{" "}
+          <a href='mailto:readmystudent@gmail.com'>readmystudent@gmail.com</a>.
+          You can also use the <Link href='/contact'>contact page</Link> and
+          start the subject with &quot;Grievance&quot;. We acknowledge a
+          complaint within 48 hours and resolve it within one month.
+        </p>
+      </>
     ),
   },
 ];
@@ -322,7 +334,7 @@ export default function PrivacyPolicyPage() {
             What we collect about students, professors, and schools, why, who
             receives it, how long we keep it, and what you can ask us to do.
           </p>
-          <p className='caption mt-5 text-flap-dim'>Last updated: November 9, 2026</p>
+          <p className='caption mt-5 text-flap-dim'>Last updated: November 10, 2026</p>
 
           <nav aria-label='Contents' className='mt-10'>
             <p className='caption text-flap-dim'>Contents</p>
