@@ -13,7 +13,7 @@ export default function CTASection() {
           </h2>
           <div>
             <p className='text-lg leading-relaxed text-flap-ink/90'>
-              Students pay $5 each time they send a sealed letter to a school.{" "}
+              Students use one credit for each professor they ask, and get it back if the professor declines. Sending the letter to schools is free.{" "}
               <Link href='/pricing' className='text-flap-ink underline'>
                 See pricing
               </Link>

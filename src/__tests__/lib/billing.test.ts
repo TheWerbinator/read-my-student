@@ -13,6 +13,7 @@ import {
   offerFromMetadata,
   offerMetadata,
   priceFor,
+  pricingRow,
   renewalRow,
 } from "@/lib/billing";
 import type { CatalogRow } from "@/lib/catalog";
@@ -159,5 +160,38 @@ describe("renewalRow", () => {
     const withOff = catalog.map((r) => (r.id === "ug-3" ? { ...r, active: false } : r));
     expect(renewalRow(withOff, ug2, d("2027-11-09"))).toBeNull();
     expect(renewalRow(catalog, { ...ug2, stage: "masters" }, d("2027-11-09"))).toBeNull();
+  });
+});
+
+describe("pricingRow", () => {
+  it("prices a membership in the visitor's currency, with USD as the fallback", () => {
+    expect(pricingRow(row(), "US")).toMatchObject({
+      label: "Year 2 membership",
+      detail: "25 credits a year. Credits last until the end of Year 5.",
+      price: "$25.00 a year",
+      free: false,
+    });
+    expect(pricingRow(row(), "IN")?.price).toBe("₹2,100.00 a year");
+    expect(pricingRow(row({ stripe_price_inr: null }), "IN")?.price).toBe("$25.00 a year");
+  });
+
+  it("shows free credits, extra credits and packs", () => {
+    expect(
+      pricingRow(row({ kind: "free_allocation", credits: 3, price_usd_cents: null, expiry: "end_of_year", expiry_year: null, stripe_price_usd: null }), "US"),
+    ).toMatchObject({ label: "Year 2, free", price: "Free", free: true, detail: "3 credits. Credits last until the end of that school year." });
+    expect(pricingRow(row({ kind: "credits", study_year: null, credits: 1, price_usd_cents: 147 }), "US")).toMatchObject({
+      label: "Extra credit",
+      price: "$1.47 each",
+    });
+    expect(pricingRow(row({ kind: "bundle", stage: "phd", study_year: null, credits: 100, price_usd_cents: 25900, expiry: "never" }), "US")).toMatchObject({
+      label: "Pack of 100",
+      price: "$259.00",
+      detail: "Credits never expire.",
+    });
+  });
+
+  it("hides items that are switched off or cannot be bought yet", () => {
+    expect(pricingRow(row({ active: false }), "US")).toBeNull();
+    expect(pricingRow(row({ stripe_price_usd: null }), "US")).toBeNull();
   });
 });

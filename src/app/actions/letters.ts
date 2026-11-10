@@ -238,7 +238,7 @@ export async function finalizeLetter(
 
   if (updateError) return { success: false, error: updateError.message };
 
-  // Advance request status so the student can proceed to pay for delivery.
+  // Advance request status so the student can send the letter to schools.
   await supabaseAdmin
     .from("letter_requests")
     .update({ status: "in_progress" })

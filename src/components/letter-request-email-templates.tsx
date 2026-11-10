@@ -321,7 +321,7 @@ export function StudentRejectionEmail(raw: StudentRejectionProps): string {
   return wrap(body);
 }
 
-// Send-to-School Notification (faculty notified when student pays to deliver)
+// Send-to-School Notification (faculty asked to approve a school delivery)
 
 interface SendApprovalProps {
   facultyFirstName: string;

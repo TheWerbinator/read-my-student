@@ -59,7 +59,7 @@ const stops: Stop[] = [
     when: "When ready",
     step: "Send",
     who: "Student",
-    detail: "Pick a school and send. Each school gets its own secure link, for $5 per school.",
+    detail: "Pick a school and send. Your professor approves it, and the school gets its own secure link at no charge.",
     status: "Sent",
     lamp: "done",
   },
@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
             </LinkButton>
           </div>
           <p className='mt-8 text-sm text-flap-dim'>
-            Professors never pay. Students pay $5 per school.{" "}
+            Professors never pay. Students use one credit per professor, and sending to schools is free.{" "}
             <Link href='/pricing' className='text-flap-ink underline'>
               See pricing
             </Link>

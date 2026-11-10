@@ -19,7 +19,7 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
         q: "What does it cost?",
         a: (
           <>
-            Asking a professor for a letter is free. You pay $5 USD each time you send a sealed letter to one school.{" "}
+            Each request to a professor uses one credit from your membership or a credit pack. You get the credit back if the professor declines or does not answer. Sending the letter to your schools is free.{" "}
             <Link href='/pricing' className='text-forest underline'>
               See pricing
             </Link>
@@ -33,7 +33,7 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
       },
       {
         q: "What if my professor does not answer?",
-        a: "Your professor gets a reminder on day 3. With no answer, the request closes on day 7.",
+        a: "Your professor gets a reminder on day 3. With no answer, the request closes on day 7 and your credit comes back.",
       },
       {
         q: "Can I read the letter?",
@@ -41,7 +41,7 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
       },
       {
         q: "Can I send one letter to several schools?",
-        a: "Yes. Each school is a separate delivery with its own link and its own $5 fare.",
+        a: "Yes, at no charge. Each school gets its own link, and your professor approves each school before it is sent.",
       },
     ],
   },
@@ -87,7 +87,7 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
       },
       {
         q: "Does it cost anything?",
-        a: "No. The student pays the delivery fare.",
+        a: "No. Opening and downloading a letter is free for schools.",
       },
       {
         q: "How long does the link work?",

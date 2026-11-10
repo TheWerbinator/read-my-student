@@ -1,7 +1,7 @@
 // Billing rules for memberships and credit purchases. Pure functions; the
 // Stripe and database calls live in stripe-catalog.ts and stripe-billing.ts.
 
-import type { CatalogRow } from "@/lib/catalog";
+import { formatMoney, type CatalogRow } from "@/lib/catalog";
 import { currentYear, grantExpiry, type CatalogItem, type StudentYear } from "@/lib/credits";
 
 export type Currency = "usd" | "inr";
@@ -13,6 +13,41 @@ export function chooseCurrency(country: string | null, row: CatalogRow): Currenc
 
 export function priceFor(row: CatalogRow, currency: Currency): string | null {
   return (currency === "inr" ? row.stripe_price_inr : row.stripe_price_usd) ?? null;
+}
+
+export type PricingRow = { id: string; label: string; detail: string; price: string; free: boolean };
+
+function expiryNote(row: CatalogRow): string {
+  if (row.expiry === "never") return "Credits never expire.";
+  if (row.expiry === "end_of_year_n") return `Credits last until the end of Year ${row.expiry_year}.`;
+  return "Credits last until the end of that school year.";
+}
+
+/** One line of the public pricing page, in the visitor's currency. Null for items that are not on sale. */
+export function pricingRow(row: CatalogRow, country: string | null): PricingRow | null {
+  if (!row.active) return null;
+  const credits = row.credits === 1 ? "1 credit" : `${row.credits} credits`;
+  if (row.kind === "free_allocation") {
+    return {
+      id: row.id,
+      label: row.study_year ? `Year ${row.study_year}, free` : "Free on signup",
+      detail: `${credits}. ${expiryNote(row)}`,
+      price: "Free",
+      free: true,
+    };
+  }
+  // Only items that can be bought: the same rule as checkPurchase.
+  if (!row.stripe_price_usd) return null;
+  const inr = chooseCurrency(country, row) === "inr";
+  const amount = formatMoney(inr ? row.price_inr_paise : row.price_usd_cents, inr ? "INR" : "USD");
+  if (!amount) return null;
+  if (row.kind === "membership") {
+    return { id: row.id, label: `Year ${row.study_year} membership`, detail: `${credits} a year. ${expiryNote(row)}`, price: `${amount} a year`, free: false };
+  }
+  if (row.kind === "bundle") {
+    return { id: row.id, label: `Pack of ${row.credits}`, detail: expiryNote(row), price: amount, free: false };
+  }
+  return { id: row.id, label: "Extra credit", detail: expiryNote(row), price: `${amount} each`, free: false };
 }
 
 const MAX_CREDITS_PER_PURCHASE = 100;

@@ -31,6 +31,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "FERPA", href: "/ferpa" },
       { label: "Privacy policy", href: "/privacy" },
       { label: "Terms of service", href: "/terms" },
+      { label: "Refunds and cancellation", href: "/refunds" },
       { label: "Accessibility", href: "/accessibility" },
     ],
   },

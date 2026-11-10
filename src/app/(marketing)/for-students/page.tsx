@@ -57,8 +57,8 @@ const sendFacts = [
     body: "The reader confirms an email address before the letter opens, and the first opening is logged.",
   },
   {
-    title: "$5 per school",
-    body: "That is the only charge today. Professors never pay.",
+    title: "Free to send",
+    body: "Your credit paid for the request. Sending the letter to each school costs nothing, and professors never pay.",
   },
 ];
 
