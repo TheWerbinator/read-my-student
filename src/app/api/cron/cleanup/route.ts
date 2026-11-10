@@ -8,9 +8,9 @@
  *
  *   1. **Letters** — deletes the PDF from the `letters` storage bucket and
  *      removes the DB row for any letter whose `expires_at` has passed
- *      (default: 1 year after finalization). Cascades to letter_signatures,
- *      delivery_links, and access_logs if FK ON DELETE CASCADE is set; if not,
- *      those rows are cleaned up explicitly before the letter row is deleted.
+ *      (default: 1 year after finalization). The delete cascades to
+ *      letter_signatures, access_logs, delivery_links, and the links'
+ *      delivery_access_events (migration 20261115000000).
  *
  *   2. **Faculty assets** — removes logo/signature files from their respective
  *      Supabase Storage buckets (`faculty-logos` / `faculty-signatures`) and
@@ -74,9 +74,7 @@ export async function GET(req: NextRequest) {
         if (storageErr) results.letters_storage_error = storageErr.message;
       }
 
-      // Delete letter rows — cascades handle child tables if configured;
-      // otherwise child rows with no CASCADE will block this and should be
-      // addressed with a migration adding ON DELETE CASCADE.
+      // Delete letter rows. Every child table cascades (payment_events is set null).
       const ids = (expiredLetters ?? []).map((r) => r.id as string);
       const { count: deleted, error: deleteErr } = await adminSupabase
         .from("letters")

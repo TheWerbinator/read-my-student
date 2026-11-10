@@ -237,6 +237,25 @@ describe("approving and declining", () => {
     expect(await approveDelivery(id)).toEqual({ error: null });
   });
 
+  itLocal("the yearly cleanup can delete a letter a school has opened, with its access events", async () => {
+    const db = admin();
+    const { letterId } = await finalizedLetter();
+    const { data: link } = await db
+      .from("delivery_links")
+      .insert({ letter_id: letterId, recipient_email_hash: "x", payment_status: "used" })
+      .select("id")
+      .single();
+    await db.from("delivery_access_events").insert({ delivery_link_id: link!.id, event_type: "opened" });
+
+    const { error } = await db.from("letters").delete().eq("id", letterId);
+    expect(error).toBeNull();
+    const { count } = await db
+      .from("delivery_access_events")
+      .select("id", { count: "exact", head: true })
+      .eq("delivery_link_id", link!.id);
+    expect(count).toBe(0);
+  });
+
   itLocal("the first school open can be recorded as 'used'", async () => {
     const { letterId } = await finalizedLetter();
     const { error } = await admin()
