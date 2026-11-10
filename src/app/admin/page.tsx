@@ -68,7 +68,10 @@ function StageSheet({ stage, rows }: { stage: CatalogRow["stage"]; rows: Catalog
                 <TableRow key={row.id} className={row.active ? undefined : "text-ink-2"}>
                   <TableCell className='font-semibold'>{KIND_NAMES[row.kind]}</TableCell>
                   <TableCell>{yearText(row)}</TableCell>
-                  <TableCell className='text-right'>{row.credits}</TableCell>
+                  <TableCell className='text-right'>
+                    {row.credits}
+                    {row.free_credits > 0 && <span className='block text-ink-2'>+{row.free_credits} free</span>}
+                  </TableCell>
                   <TableCell className='text-right'>
                     <Price minor={row.price_usd_cents} currency='USD' free={free} />
                   </TableCell>
@@ -111,7 +114,12 @@ export default async function AdminCatalogPage() {
           <CatalogItemDialog row={null} label='Add item' />
         </div>
         {STAGES.map((stage) => (
-          <StageSheet key={stage} stage={stage} rows={rows.filter((r) => r.stage === stage)} />
+          <StageSheet
+            key={stage}
+            stage={stage}
+            // Yearly free rows switched off by migration 20261116000000: their credits moved onto the memberships.
+            rows={rows.filter((r) => r.stage === stage && !(r.kind === "free_allocation" && r.study_year !== null && !r.active))}
+          />
         ))}
       </div>
     </div>

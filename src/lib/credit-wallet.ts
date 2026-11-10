@@ -2,6 +2,8 @@
 // client: students can read their ledger but never write it.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { yearlyFreeAllocation } from "@/lib/billing";
+import { CATALOG_COLUMNS, type CatalogRow } from "@/lib/catalog";
 import {
   dueFreeAllocations,
   freeGrantRef,
@@ -74,13 +76,13 @@ export async function ensureFreeGrants(
   if (!student.stage) return;
   const { data: rows, error } = await db
     .from("plan_catalog")
-    .select("id, stage, study_year, kind, credits, expiry, expiry_year")
-    .eq("kind", "free_allocation")
+    .select(CATALOG_COLUMNS)
+    .in("kind", ["free_allocation", "membership"])
     .eq("stage", student.stage)
     .eq("active", true);
   if (error) throw error;
 
-  const catalog: CatalogItem[] = (rows ?? []).map((r) => ({
+  const catalog: CatalogItem[] = ((rows ?? []) as CatalogRow[]).filter((r) => r.kind === "free_allocation").map((r) => ({
     id: r.id as string,
     stage: r.stage as Stage,
     studyYear: r.study_year as number | null,
@@ -92,6 +94,9 @@ export async function ensureFreeGrants(
 
   const year = studentYear(student);
   const due = dueFreeAllocations(catalog, year, now);
+  // Yearly free credits live on that year's membership row (migration 20261116000000).
+  const yearly = yearlyFreeAllocation((rows ?? []) as CatalogRow[], year, now);
+  if (yearly) due.push(yearly);
   if (due.length === 0) return;
 
   const { error: insertError } = await db.from("credit_grants").upsert(

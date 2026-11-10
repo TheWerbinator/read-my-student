@@ -18,6 +18,8 @@ export type CatalogRow = {
   price_inr_paise: number | null;
   expiry: (typeof EXPIRIES)[number];
   expiry_year: number | null;
+  /** Free credits for that year, membership or not. Membership rows with a year only. */
+  free_credits: number;
   active: boolean;
   // Set by the Stripe sync on save (src/lib/stripe-catalog.ts), never by the form.
   stripe_product_id?: string | null;
@@ -26,7 +28,7 @@ export type CatalogRow = {
 };
 
 export const CATALOG_COLUMNS =
-  "id, stage, study_year, kind, credits, price_usd_cents, price_inr_paise, expiry, expiry_year, active, stripe_product_id, stripe_price_usd, stripe_price_inr";
+  "id, stage, study_year, kind, credits, price_usd_cents, price_inr_paise, expiry, expiry_year, free_credits, active, stripe_product_id, stripe_price_usd, stripe_price_inr";
 
 export type CatalogInput = Omit<CatalogRow, "id" | "stripe_product_id" | "stripe_price_usd" | "stripe_price_inr">;
 
@@ -65,10 +67,15 @@ export const catalogFormSchema = z
     priceInr: z.string(),
     expiry: z.enum(EXPIRIES),
     expiryYear: z.union([z.literal(""), year]),
+    freeCredits: z.coerce.number().int().min(0, "Free credits cannot be negative."),
     active: z.boolean(),
   })
   .superRefine((form, ctx) => {
     const free = form.kind === "free_allocation";
+    if (form.freeCredits > 0 && form.kind === "membership" && form.studyYear === "")
+      ctx.addIssue({ code: "custom", path: ["freeCredits"], message: "Only a membership for a set year has free credits." });
+    if (free && form.studyYear !== "")
+      ctx.addIssue({ code: "custom", path: ["studyYear"], message: "Put yearly free credits on that year's membership." });
     const check = (field: "priceUsd" | "priceInr", required: boolean) => {
       const text = form[field].trim();
       if (free && text) ctx.addIssue({ code: "custom", path: [field], message: "Free allocations have no price." });
@@ -111,6 +118,8 @@ export function parseCatalogForm(
       price_inr_paise: free || !f.priceInr.trim() ? null : parseMoney(f.priceInr),
       expiry: f.expiry,
       expiry_year: f.expiry === "end_of_year_n" && f.expiryYear !== "" ? f.expiryYear : null,
+      // The field is hidden for other kinds, so a value left over from switching kind is dropped.
+      free_credits: f.kind === "membership" ? f.freeCredits : 0,
       active: f.active,
     },
   };
@@ -127,6 +136,7 @@ export function formFromRow(row: CatalogRow | null): CatalogForm {
     priceInr: moneyText(row?.price_inr_paise ?? null),
     expiry: row?.expiry ?? "never",
     expiryYear: row?.expiry_year ?? "",
+    freeCredits: row?.free_credits ?? 0,
     active: row?.active ?? true,
   };
 }

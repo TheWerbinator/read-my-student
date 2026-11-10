@@ -46,6 +46,7 @@ const item: CatalogInput = {
   price_inr_paise: null,
   expiry: "never",
   expiry_year: null,
+  free_credits: 0,
   active: false,
 };
 

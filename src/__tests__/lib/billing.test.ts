@@ -17,6 +17,7 @@ import {
   lastMembershipYear,
   pricingRows,
   renewalRow,
+  yearlyFreeAllocation,
 } from "@/lib/billing";
 import type { CatalogRow } from "@/lib/catalog";
 import type { StudentYear } from "@/lib/credits";
@@ -35,6 +36,7 @@ const row = (over: Partial<CatalogRow> = {}): CatalogRow => ({
   price_inr_paise: 210000,
   expiry: "end_of_year_n",
   expiry_year: 5,
+  free_credits: 0,
   active: true,
   stripe_product_id: "prod_1",
   stripe_price_usd: "price_usd",
@@ -215,13 +217,13 @@ describe("pricingRow", () => {
 });
 
 describe("pricingRows", () => {
-  const free = (y: number, over: Partial<CatalogRow> = {}) =>
-    row({ id: `free-${y}`, study_year: y, kind: "free_allocation", credits: 3, price_usd_cents: null, expiry: "end_of_year", expiry_year: null, stripe_price_usd: null, ...over });
-
-  it("merges yearly free credits into one line, in the place of the first year", () => {
-    const lines = pricingRows([free(1), free(2), free(3), free(4), row(), row({ id: "ug-3", study_year: 3 })], "US");
-    expect(lines.map((l) => l.label)).toEqual(["Years 1 to 4, free", "Year 2 membership", "Year 3+ membership"]);
-    expect(lines[0].detail).toBe("3 credits each school year. Credits last until the end of that school year.");
+  it("shows a year's free credits inside that year's membership line", () => {
+    const lines = pricingRows([row({ free_credits: 3 }), row({ id: "ug-3", study_year: 3 })], "US");
+    expect(lines.map((l) => l.label)).toEqual(["Year 2 membership", "Year 3+ membership"]);
+    expect(lines[0].detail).toBe(
+      "25 credits a year. Credits last until the end of Year 5. Plus 3 free credits that year, with or without a membership, which last until the end of that school year.",
+    );
+    expect(lines[1].detail).not.toMatch(/free/);
   });
 
   it("marks the last membership year with a plus", () => {
@@ -232,8 +234,20 @@ describe("pricingRows", () => {
     );
   });
 
-  it("keeps different allocations apart and names years that are not in a row", () => {
-    const labels = pricingRows([free(1), free(2, { credits: 5 }), free(3)], "US").map((l) => l.label);
-    expect(labels).toEqual(["Years 1, 3, free", "Year 2, free"]);
+});
+
+describe("yearlyFreeAllocation", () => {
+  const catalog = [1, 2, 3].map((y) => row({ id: `ug-${y}`, study_year: y, free_credits: y === 3 ? 2 : 3 }));
+
+  it("grants the free credits on the membership for the student's year, keyed by that year", () => {
+    expect(yearlyFreeAllocation(catalog, ug2, now)).toEqual({
+      id: "ug-2", stage: "ug", studyYear: 2, kind: "free_allocation", credits: 3, expiry: "end_of_year", expiryYear: null,
+    });
+  });
+
+  it("uses the last year's row for later years, and grants nothing when it has none", () => {
+    expect(yearlyFreeAllocation(catalog, ug2, d("2028-11-09"))).toMatchObject({ id: "ug-3", studyYear: 4, credits: 2 });
+    const none = catalog.map((r) => ({ ...r, free_credits: 0 }));
+    expect(yearlyFreeAllocation(none, ug2, now)).toBeNull();
   });
 });

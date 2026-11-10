@@ -23,6 +23,13 @@ function expiryNote(row: CatalogRow): string {
   return "Credits last until the end of that school year.";
 }
 
+/** The year's free credits, which a student gets with or without the membership (DEC-04). */
+function freeNote(row: CatalogRow, when: "that year" | "each year" = "that year"): string {
+  if (row.free_credits <= 0) return "";
+  const n = row.free_credits === 1 ? "1 free credit" : `${row.free_credits} free credits`;
+  return ` Plus ${n} ${when}, with or without a membership, which last until the end of that school year.`;
+}
+
 /** One line of the public pricing page, in the visitor's currency. Null for items that are not on sale. */
 export function pricingRow(row: CatalogRow, country: string | null): PricingRow | null {
   if (!row.active) return null;
@@ -42,7 +49,7 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
   const amount = formatMoney(inr ? row.price_inr_paise : row.price_usd_cents, inr ? "INR" : "USD");
   if (!amount) return null;
   if (row.kind === "membership") {
-    return { id: row.id, label: `Year ${row.study_year} membership`, detail: `${credits} a year. ${expiryNote(row)}`, price: `${amount} a year`, free: false };
+    return { id: row.id, label: `Year ${row.study_year} membership`, detail: `${credits} a year. ${expiryNote(row)}${freeNote(row)}`, price: `${amount} a year`, free: false };
   }
   if (row.kind === "bundle") {
     return { id: row.id, label: `Pack of ${row.credits}`, detail: expiryNote(row), price: amount, free: false };
@@ -51,15 +58,12 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
 }
 
 /**
- * The pricing lines for one stage, with yearly free allocations that give the
- * same credits merged into one line ("Years 1 to 4, free"), and the last
- * membership year marked "+" because it also covers every later year. Expects
- * rows sorted by year, as the pricing page sorts them.
+ * The pricing lines for one stage, with the last membership year marked "+"
+ * because it also covers every later year.
  */
 export function pricingRows(rows: CatalogRow[], country: string | null): PricingRow[] {
-  const out: PricingRow[] = [];
-  const groups = new Map<string, { line: PricingRow; row: CatalogRow; years: number[] }>();
   const lastYear = rows.length ? lastMembershipYear(rows, rows[0].stage) : null;
+  const out: PricingRow[] = [];
   for (const row of rows) {
     const line = pricingRow(row, country);
     if (!line) continue;
@@ -70,27 +74,9 @@ export function pricingRows(rows: CatalogRow[], country: string | null): Pricing
           ? `Credits last until the end of Year ${row.expiry_year} or the end of the year they arrive in, whichever is later.`
           : expiryNote(row);
       line.label = `Year ${lastYear}+ membership`;
-      line.detail = `${credits} a year, at this price every year from Year ${lastYear} on. ${expiry}`;
+      line.detail = `${credits} a year, at this price every year from Year ${lastYear} on. ${expiry}${freeNote(row, "each year")}`;
     }
-    if (row.kind !== "free_allocation" || !row.study_year) {
-      out.push(line);
-      continue;
-    }
-    const key = `${row.credits}:${row.expiry}:${row.expiry_year}`;
-    const group = groups.get(key);
-    if (group) {
-      group.years.push(row.study_year);
-      continue;
-    }
-    groups.set(key, { line, row, years: [row.study_year] });
     out.push(line);
-  }
-  for (const { line, row, years } of groups.values()) {
-    if (years.length < 2) continue;
-    const first = years[0];
-    const last = years[years.length - 1];
-    line.label = last - first === years.length - 1 ? `Years ${first} to ${last}, free` : `Years ${years.join(", ")}, free`;
-    line.detail = `${row.credits === 1 ? "1 credit" : `${row.credits} credits`} each school year. ${expiryNote(row)}`;
   }
   return out;
 }
@@ -209,7 +195,19 @@ function membershipCovers(row: CatalogRow, year: number | null, lastYear: number
   return row.study_year === year || (year !== null && lastYear !== null && row.study_year === lastYear && year > lastYear);
 }
 
-/** The membership a renewal at `renewalAt` should charge, or null when the stage has none for that year (end the subscription). */
+/**
+ * The free credits for the student's current year, from the membership row that
+ * covers it, as a grantable item. Null when that year has none. Its studyYear is
+ * the student's year, so the grant key stays one per year even under "Year 5+".
+ */
+export function yearlyFreeAllocation(catalog: CatalogRow[], student: StudentYear, now: Date): CatalogItem | null {
+  const row = renewalRow(catalog, student, now);
+  const year = currentYear(student, now);
+  if (!row || row.free_credits <= 0 || year === null) return null;
+  return { id: row.id, stage: row.stage, studyYear: year, kind: "free_allocation", credits: row.free_credits, expiry: "end_of_year", expiryYear: null };
+}
+
+/** The membership for the student's year on `renewalAt`, or null when the stage has none for that year (a renewal then ends the subscription). */
 export function renewalRow(catalog: CatalogRow[], student: StudentYear, renewalAt: Date): CatalogRow | null {
   const year = currentYear(student, renewalAt);
   const lastYear = student.stage ? lastMembershipYear(catalog, student.stage) : null;

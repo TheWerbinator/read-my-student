@@ -38,7 +38,6 @@ const admin = () =>
 
 const userIds: string[] = [];
 const studentIds: string[] = [];
-const catalogIds: string[] = [];
 
 async function makeStudent(row: Partial<StudentRow> = {}) {
   const db = admin();
@@ -88,36 +87,36 @@ afterAll(async () => {
   if (!isLocal || !KEY) return;
   const db = admin();
   if (studentIds.length) await db.from("students").delete().in("id", studentIds);
-  if (catalogIds.length) await db.from("plan_catalog").delete().in("id", catalogIds);
   for (const id of userIds) await db.auth.admin.deleteUser(id);
 });
 
 describe("free grants", () => {
-  itLocal("grants the current year's free credits once, however often it runs", async () => {
+  itLocal("grants the current year's free credits from its membership row, once, however often it runs", async () => {
     const db = admin();
-    // A test-only stage so the seeded catalog rows do not interfere.
-    const { data: rows, error } = await db
+    // The seeded UG Year 1 membership carries 3 free credits (seed-local.mjs, migration 20261116000000).
+    const { data: year1, error } = await db
       .from("plan_catalog")
-      .insert([
-        { stage: "masters", study_year: 1, kind: "free_allocation", credits: 7, expiry: "end_of_year" },
-        { stage: "masters", study_year: 2, kind: "free_allocation", credits: 9, expiry: "end_of_year" },
-      ])
-      .select("id");
+      .select("id, free_credits")
+      .eq("stage", "ug")
+      .eq("kind", "membership")
+      .eq("study_year", 1)
+      .eq("active", true)
+      .single();
     if (error) throw error;
-    catalogIds.push(...rows.map((r) => r.id as string));
+    expect(year1.free_credits).toBe(3);
 
-    const { student } = await makeStudent({ stage: "masters", study_year: 1, year_started_on: "2026-08-01" });
+    const { student } = await makeStudent({ stage: "ug", study_year: 1, year_started_on: "2026-08-01" });
     const now = new Date("2026-11-09T00:00:00Z");
     await ensureFreeGrants(db, student, now);
     await ensureFreeGrants(db, student, now);
 
     const { data: grants } = await db
       .from("credit_grants")
-      .select("quantity, expires_at, source_ref")
+      .select("catalog_id, quantity, expires_at, source_ref")
       .eq("student_id", student.id);
-    const free = (grants ?? []).filter((g) => (g.source_ref as string).startsWith("free:masters:"));
+    const free = (grants ?? []).filter((g) => (g.source_ref as string).startsWith("free:ug:"));
     expect(free).toHaveLength(1);
-    expect(free[0]).toMatchObject({ quantity: 7, source_ref: `free:masters:y1:${student.id}` });
+    expect(free[0]).toMatchObject({ catalog_id: year1.id, quantity: 3, source_ref: `free:ug:y1:${student.id}` });
     expect(new Date(free[0].expires_at as string).toISOString()).toBe("2027-08-01T00:00:00.000Z");
   });
 });

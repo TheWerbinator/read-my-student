@@ -15,6 +15,7 @@ const form = (over: Partial<CatalogForm> = {}): CatalogForm => ({
   priceInr: "",
   expiry: "end_of_year_n",
   expiryYear: 5,
+  freeCredits: 0,
   active: true,
   ...over,
 });
@@ -61,8 +62,21 @@ describe("catalog form", () => {
         price_inr_paise: 209900,
         expiry: "end_of_year_n",
         expiry_year: 5,
+        free_credits: 0,
         active: true,
       },
+    });
+  });
+
+  it("keeps a year's free credits on its membership, and nowhere else", () => {
+    const ok = parseCatalogForm(form({ freeCredits: "3" }));
+    expect(ok.ok && ok.row.free_credits).toBe(3);
+    expect(parseCatalogForm(form({ studyYear: "", freeCredits: "3" }))).toMatchObject({ ok: false, errors: { freeCredits: expect.any(String) } });
+    const switched = parseCatalogForm(form({ kind: "credits", studyYear: "", freeCredits: "3" }));
+    expect(switched.ok && switched.row.free_credits).toBe(0);
+    expect(parseCatalogForm(form({ kind: "free_allocation", priceUsd: "", freeCredits: "0" }))).toMatchObject({
+      ok: false,
+      errors: { studyYear: "Put yearly free credits on that year's membership." },
     });
   });
 
@@ -81,7 +95,7 @@ describe("catalog form", () => {
   });
 
   it("stores no price for free credits", () => {
-    const result = parseCatalogForm(form({ kind: "free_allocation", priceUsd: "", expiry: "end_of_year", expiryYear: "" }));
+    const result = parseCatalogForm(form({ kind: "free_allocation", studyYear: "", priceUsd: "", expiry: "end_of_year", expiryYear: "" }));
     expect(result.ok && result.row).toMatchObject({ price_usd_cents: null, price_inr_paise: null, expiry_year: null });
   });
 

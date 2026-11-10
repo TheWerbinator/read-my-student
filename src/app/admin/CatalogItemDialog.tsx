@@ -151,6 +151,18 @@ export function CatalogItemDialog({ row, label }: { row: CatalogRow | null; labe
                 onChange={(e) => set("credits", e.target.value)}
               />
             </Field>
+            {form.kind === "membership" && (
+              <Field id={id("freeCredits")} label='Free credits that year, membership or not' error={errors.freeCredits}>
+                <Input
+                  {...fieldProps("freeCredits")}
+                  type='number'
+                  min={0}
+                  inputMode='numeric'
+                  value={String(form.freeCredits)}
+                  onChange={(e) => set("freeCredits", e.target.value)}
+                />
+              </Field>
+            )}
             <Field id={id("priceUsd")} label='Price in USD' error={errors.priceUsd}>
               <Input
                 {...fieldProps("priceUsd")}

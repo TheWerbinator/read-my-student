@@ -87,12 +87,10 @@ if (catalogCount) {
   const rows = [
     { stage: "hs", study_year: null, kind: "free_allocation", credits: 20, price_usd_cents: null, ...never },
     { stage: "hs", study_year: null, kind: "credits", credits: 1, price_usd_cents: 100, ...never },
-    ...[1, 2, 3, 4].map((y) => ({
-      stage: "ug", study_year: y, kind: "free_allocation", credits: 3, price_usd_cents: null,
-      expiry: "end_of_year", expiry_year: null,
-    })),
+    // Years 1-4 also give 3 free credits, membership or not (free_credits).
     ...[[1, 2000, 20], [2, 2500, 25], [3, 3000, 35], [4, 3500, 40], [5, 4000, 50]].map(([y, cents, credits]) => ({
       stage: "ug", study_year: y, kind: "membership", credits, price_usd_cents: cents, ...toYear(5),
+      free_credits: y <= 4 ? 3 : 0,
     })),
     { stage: "ug", study_year: null, kind: "credits", credits: 1, price_usd_cents: 147, ...toYear(5) },
     { stage: "masters", study_year: 1, kind: "membership", credits: 45, price_usd_cents: 7000, ...toYear(2) },
