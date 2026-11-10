@@ -1,6 +1,7 @@
 /**
  * Daily sweep of letter requests the professor has not answered:
- * a reminder on day 3, and the request closes as 'expired' on day 7.
+ * a reminder on day 3, and the request closes as 'expired' on day 7 and its
+ * credit goes back to the student.
  * "Answered" means the professor saved a draft (responded_at) or declined.
  * Server-only: uses the secret key client. Called from /api/cron/cleanup.
  */
@@ -12,6 +13,7 @@ import {
   RequestReminderEmail,
 } from "@/components/letter-request-email-templates";
 import { requestLinkUrl } from "@/lib/request-access";
+import { refundCredit } from "@/lib/credit-wallet";
 
 // shortcut: fixed day counts; move them to the admin settings screen when it exists.
 export const REMINDER_AFTER_DAYS = 3;
@@ -71,6 +73,17 @@ export async function sweepUnansweredRequests(now = new Date()): Promise<{
   if (expireErr) console.error("[request-sweep] expire error:", expireErr);
 
   for (const req of expired ?? []) {
+    // shortcut: a refund that fails here is only logged, and the next run will
+    // not retry it (the request is no longer 'requested'). Add a catch-up query
+    // for expired requests with a consume and no refund if the log shows any.
+    let refund: Awaited<ReturnType<typeof refundCredit>> | "failed";
+    try {
+      refund = await refundCredit(admin, req.id as string);
+    } catch (e) {
+      console.error("[request-sweep] refund error:", req.id, e);
+      refund = "failed";
+    }
+
     const s = await student(req.student_id as string);
     if (!s?.email) continue;
     const { error } = await resend.emails.send({
@@ -81,6 +94,7 @@ export async function sweepUnansweredRequests(now = new Date()): Promise<{
         studentFirstName: s.firstName,
         professorEmail: (req.professor_email as string | null) ?? "Your professor",
         dashboardUrl: `${siteUrl}/dashboard`,
+        creditReturned: refund === "refunded" || refund === "already",
       }),
     });
     if (error) console.error("[request-sweep] expiry email error:", req.id, error);

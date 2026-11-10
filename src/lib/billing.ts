@@ -17,6 +17,9 @@ export function priceFor(row: CatalogRow, currency: Currency): string | null {
 
 const MAX_CREDITS_PER_PURCHASE = 100;
 
+/** Subscription statuses that still count as having a membership. */
+export const LIVE_STATUSES = ["active", "trialing", "past_due", "unpaid"];
+
 /** Whether the student may buy `quantity` of this item now. */
 export function checkPurchase(
   row: CatalogRow,

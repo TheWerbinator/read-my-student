@@ -85,6 +85,8 @@ describe("registerSchema", () => {
     universityOpeId: "00223",
     program: "Computer Science",
     graduationDate: "2026-05",
+    stage: "ug" as const,
+    studyYear: "2",
   };
 
   const validFaculty = {
@@ -106,6 +108,30 @@ describe("registerSchema", () => {
 
   it("accepts valid faculty data", () => {
     expect(registerSchema.safeParse(validFaculty).success).toBe(true);
+  });
+
+  it("requires a stage for a student but not for faculty", () => {
+    const result = registerSchema.safeParse({ ...validStudent, stage: undefined });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].path).toEqual(["stage"]);
+  });
+
+  it("refuses high school until the consent step exists", () => {
+    expect(registerSchema.safeParse({ ...validStudent, stage: "hs" }).success).toBe(false);
+  });
+
+  it("requires a year within the stage's membership years", () => {
+    const bad = (stage: "ug" | "masters", studyYear: string) =>
+      registerSchema.safeParse({ ...validStudent, stage, studyYear }).error?.issues[0].path;
+    expect(bad("ug", "")).toEqual(["studyYear"]);
+    expect(bad("ug", "6")).toEqual(["studyYear"]);
+    expect(bad("masters", "3")).toEqual(["studyYear"]);
+    expect(bad("ug", "5")).toBeUndefined();
+    expect(bad("masters", "2")).toBeUndefined();
+  });
+
+  it("needs no year for PhD", () => {
+    expect(registerSchema.safeParse({ ...validStudent, stage: "phd", studyYear: "" }).success).toBe(true);
   });
 
   it("rejects a missing email", () => {

@@ -34,6 +34,8 @@ export async function signUpAction(data: RegisterFormValues) {
     universityOpeId,
     program,
     graduationDate,
+    stage,
+    studyYear,
     institution,
     institutionOpeId,
     title,
@@ -92,6 +94,10 @@ export async function signUpAction(data: RegisterFormValues) {
           university_opeid: universityOpeId,
           program: program,
           graduation_date: graduationDate, // Supabase handles ISO strings for dates automatically
+          // The year advances on each anniversary of signup (owner, 2026-11-09). PhD has no year.
+          stage,
+          study_year: stage === "phd" ? null : Number(studyYear),
+          year_started_on: stage === "phd" ? null : new Date().toISOString().slice(0, 10),
         });
 
       if (studentError) {

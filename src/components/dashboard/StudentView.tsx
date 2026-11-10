@@ -8,6 +8,8 @@ import {
   getPendingRequests,
 } from "@/app/actions/letters";
 import type { FinishedLetter, PendingRequest } from "@/app/actions/letters";
+import { getWallet, type Wallet } from "@/app/actions/credits";
+import { CreditsPanel } from "@/components/dashboard/CreditsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +64,8 @@ export function StudentView() {
   const [finishedLetters, setFinishedLetters] = useState<FinishedLetter[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  // undefined while loading.
+  const [wallet, setWallet] = useState<Wallet | null | undefined>(undefined);
 
   // Show a toast and clean the URL if returning from Stripe
   useEffect(() => {
@@ -72,8 +76,14 @@ export function StudentView() {
     } else if (paymentStatus === "cancelled") {
       toast.info("Payment cancelled. No charge was made.");
     }
-    if (paymentStatus) {
+    // Credit purchases return with ?checkout=<session id>. The webhook adds the credits.
+    const checkout = params.has("checkout");
+    if (checkout) {
+      toast.success("Payment received. Your credits appear here within a minute. Refresh the page if you do not see them.");
+    }
+    if (paymentStatus || checkout) {
       params.delete("payment");
+      params.delete("checkout");
       const newUrl = [window.location.pathname, params.toString()].filter(Boolean).join("?");
       window.history.replaceState({}, "", newUrl);
     }
@@ -81,12 +91,14 @@ export function StudentView() {
 
   useEffect(() => {
     async function load() {
-      const [finished, pending] = await Promise.all([
+      const [finished, pending, w] = await Promise.all([
         getFinishedLetters(),
         getPendingRequests(),
+        getWallet(),
       ]);
       setFinishedLetters(finished);
       setPendingRequests(pending);
+      setWallet(w);
       setDataLoading(false);
     }
     void load();
@@ -110,9 +122,10 @@ export function StudentView() {
       setCourseContext("");
       setStudentNote("");
       setFormOpen(false);
-      // Refresh pending list
-      const pending = await getPendingRequests();
+      // Refresh the pending list and the balance the request spent from.
+      const [pending, w] = await Promise.all([getPendingRequests(), getWallet()]);
       setPendingRequests(pending);
+      setWallet(w);
     }
 
     setIsLoading(false);
@@ -135,6 +148,7 @@ export function StudentView() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const hasItems = items.length > 0;
+  const noCredits = wallet?.status === "no_stage" || (wallet?.status === "ok" && wallet.balance < 1);
   // With no requests yet the form is the next step, so it stays open.
   const showForm = !dataLoading && (!hasItems || formOpen);
 
@@ -224,6 +238,8 @@ export function StudentView() {
         )}
       </BoardStrip>
 
+      <CreditsPanel wallet={wallet} />
+
       {result?.status === "requested" && (
         <div
           role='status'
@@ -292,14 +308,21 @@ export function StudentView() {
                 className='min-h-[100px]'
               />
             </div>
+            {noCredits && (
+              <p className='border border-rule bg-paper-2 p-3 text-sm text-ink-2'>
+                {wallet?.status === "no_stage"
+                  ? "Requests need your year in school, which is not set on your account. Contact support."
+                  : "You have no credits left. Each request uses one. Buy credits in the Credits panel above."}
+              </p>
+            )}
             <Button
               type='submit'
               variant='gold'
               size='lg'
-              disabled={isLoading}
+              disabled={isLoading || noCredits}
               className='w-full'
             >
-              {isLoading ? "Sending…" : "Send Request"}
+              {isLoading ? "Sending…" : "Send Request (1 credit)"}
             </Button>
           </form>
         </div>

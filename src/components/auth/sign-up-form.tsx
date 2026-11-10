@@ -15,7 +15,7 @@ import { CountryCombobox } from "@/components/auth/CountryCombobox";
 import { UniversityCombobox } from "@/components/auth/UniversityCombobox"; // Ensure this matches the file you provided
 
 // Backend
-import { registerSchema, RegisterFormValues } from "@/lib/schemas";
+import { registerSchema, RegisterFormValues, SIGNUP_YEARS } from "@/lib/schemas";
 import { signUpAction } from "@/app/actions/register";
 
 // Type definition from your UniversityCombobox
@@ -33,6 +33,10 @@ const ROLES = [
   { value: "STUDENT", label: "Student", hint: "Ask for a letter" },
   { value: "FACULTY", label: "Professor", hint: "Faculty and instructors" },
 ] as const;
+
+// Matches the Input component's height, border, and focus ring.
+const selectClass =
+  "h-11 w-full rounded-[2px] border border-input bg-white px-3 text-base text-ink outline-none transition-[border-color,box-shadow] focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-gold aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive";
 
 function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -78,6 +82,7 @@ export function SignUpForm({
       universityOpeId: "",
       program: "",
       graduationDate: "",
+      studyYear: "",
       // Faculty defaults
       institution: "",
       institutionOpeId: "",
@@ -91,6 +96,7 @@ export function SignUpForm({
   // Watchers to trigger UI updates
   const role = form.watch("role");
   const countryCode = form.watch("countryCode");
+  const stage = form.watch("stage");
 
   // Reset university selection if Country or Role changes
   useEffect(() => {
@@ -293,6 +299,54 @@ export function SignUpForm({
           {/* DYNAMIC FIELDS: STUDENT */}
           {role === "STUDENT" && (
             <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='stage' className='caption text-ink-2'>
+                  Stage
+                </Label>
+                <select
+                  id='stage'
+                  {...form.register("stage", {
+                    setValueAs: (v: string) => v || undefined,
+                  })}
+                  className={selectClass}
+                  aria-invalid={invalid("stage")}
+                  aria-describedby={describedBy("stage")}
+                >
+                  <option value=''>Choose…</option>
+                  <option value='ug'>Undergraduate</option>
+                  <option value='masters'>Master&apos;s</option>
+                  <option value='phd'>PhD</option>
+                </select>
+                {errors.stage && (
+                  <FieldError id='stage-error'>Choose your stage.</FieldError>
+                )}
+              </div>
+              {stage && stage !== "phd" && (
+                <div className='grid gap-2'>
+                  <Label htmlFor='studyYear' className='caption text-ink-2'>
+                    Year in school
+                  </Label>
+                  <select
+                    id='studyYear'
+                    {...form.register("studyYear")}
+                    className={selectClass}
+                    aria-invalid={invalid("studyYear")}
+                    aria-describedby={describedBy("studyYear")}
+                  >
+                    <option value=''>Choose…</option>
+                    {Array.from({ length: SIGNUP_YEARS[stage] }, (_, i) => (
+                      <option key={i + 1} value={String(i + 1)}>
+                        Year {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.studyYear && (
+                    <FieldError id='studyYear-error'>
+                      Choose your year in school. It sets your prices and goes up by one each year.
+                    </FieldError>
+                  )}
+                </div>
+              )}
               <div className='grid gap-2'>
                 <Label htmlFor='program' className='caption text-ink-2'>
                   Program / major

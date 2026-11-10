@@ -12,6 +12,9 @@ export const contactFormSchema = z.object({
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
+/** The highest year a student can pick at signup: the BRD membership years. */
+export const SIGNUP_YEARS = { ug: 5, masters: 2 } as const;
+
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -25,12 +28,26 @@ export const registerSchema = z.object({
   universityOpeId: z.string().optional(),
   program: z.string().optional(),
   graduationDate: z.string().optional(),
+  // High school waits for the parental consent step (plan Phase 4).
+  stage: z.enum(["ug", "masters", "phd"]).optional(),
+  // A select value ("1".."5"); PhD has no year.
+  studyYear: z.string().optional(),
 
   // Faculty Fields
   institution: z.string().optional(),
   institutionOpeId: z.string().optional(),
   title: z.string().optional(),
   department: z.string().optional(),
+}).superRefine((v, ctx) => {
+  if (v.role !== "STUDENT") return;
+  if (!v.stage) {
+    ctx.addIssue({ code: "custom", path: ["stage"], message: "Choose your stage." });
+  } else if (v.stage !== "phd") {
+    const year = Number(v.studyYear);
+    if (!Number.isInteger(year) || year < 1 || year > SIGNUP_YEARS[v.stage]) {
+      ctx.addIssue({ code: "custom", path: ["studyYear"], message: "Choose your year in school." });
+    }
+  }
 });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;

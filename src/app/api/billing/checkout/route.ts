@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { adminDb } from "@/lib/admin";
-import { checkPurchase, chooseCurrency, priceFor } from "@/lib/billing";
+import { LIVE_STATUSES, checkPurchase, chooseCurrency, priceFor } from "@/lib/billing";
 import { CATALOG_COLUMNS, type CatalogRow } from "@/lib/catalog";
 import { studentYear, type StudentRow } from "@/lib/credit-wallet";
 import { stripe } from "@/lib/stripe";
@@ -26,9 +26,6 @@ const bodySchema = z.object({
   quantity: z.number().int().optional(),
   autoRenewConsent: z.boolean().optional(),
 });
-
-// Subscription statuses that still count as having a membership.
-const LIVE_STATUSES = ["active", "trialing", "past_due", "unpaid"];
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();

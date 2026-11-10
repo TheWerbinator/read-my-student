@@ -182,6 +182,8 @@ interface RequestExpiredProps {
   studentFirstName: string;
   professorEmail: string;
   dashboardUrl: string;
+  /** The request's credit went back to the student's balance. */
+  creditReturned?: boolean;
 }
 
 export function RequestExpiredEmail(p: RequestExpiredProps): string {
@@ -192,6 +194,7 @@ export function RequestExpiredEmail(p: RequestExpiredProps): string {
       ${esc(p.professorEmail)} did not answer your letter request within 7 days, so the request closed.
       You can send a new request to the same professor or to someone else.
     </p>
+    ${p.creditReturned ? `<p style="${P}">${CREDIT_BACK}</p>` : ""}
     ${ctaButton(p.dashboardUrl, "Go to your dashboard")}`;
 
   return wrap(body);
@@ -253,7 +256,11 @@ interface RequestRejectionProps {
   facultyName: string;
   reason?: string;
   supportUrl: string;
+  /** The request's credit went back to the student's balance. */
+  creditReturned?: boolean;
 }
+
+const CREDIT_BACK = "The credit you used for this request is back in your balance.";
 
 export function RequestRejectionEmail(p: RequestRejectionProps): string {
   const body = `
@@ -263,6 +270,7 @@ export function RequestRejectionEmail(p: RequestRejectionProps): string {
       <strong>${esc(p.facultyName)}</strong> has declined your request for a letter of recommendation.
     </p>
     ${p.reason ? noteBlock("Their message", p.reason) : ""}
+    ${p.creditReturned ? `<p style="${P}">${CREDIT_BACK}</p>` : ""}
     <p style="${P}">
       We recommend reaching out to another professor or contacting your institution's advising office for assistance.
     </p>

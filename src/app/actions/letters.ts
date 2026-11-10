@@ -21,6 +21,7 @@ import {
 } from "@/lib/request-access";
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { sanitizeLetterHtml, validateLexicalJson } from "@/lib/sanitize";
+import { ensureFreeGrants, refundCredit, spendCredit, type StudentRow } from "@/lib/credit-wallet";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -289,7 +290,7 @@ export async function sendLetterRequest(
   // Get student row for university info (use admin client to bypass any RLS gaps)
   const { data: studentRow } = await supabaseAdmin
     .from("students")
-    .select("id, university")
+    .select("id, university, stage, study_year, year_started_on")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -301,6 +302,14 @@ export async function sendLetterRequest(
       error: "Your student profile could not be found. Please contact support.",
     };
   }
+  if (!studentRow?.stage) {
+    return {
+      status: "error",
+      error: "Requests need your year in school, which is not set on your account. Contact support.",
+    };
+  }
+  // A student who just started a new year gets that year's free credits before spending.
+  await ensureFreeGrants(supabaseAdmin, studentRow as StudentRow, new Date());
 
   // ── Look up a registered professor via auth.users ────────────────────────
   // Registered faculty rows have no email or name columns; those live in
@@ -358,6 +367,28 @@ export async function sendLetterRequest(
     return { status: "error", error: insertError.message };
   }
 
+  // One credit per request, spent before the email goes out (plan Phase 1).
+  // consume_credit needs the request row, so the spend comes after the insert.
+  let spent: "consumed" | "already" | "no_credits" | "failed";
+  try {
+    spent = await spendCredit(supabaseAdmin, studentId, requestId, new Date());
+  } catch (e) {
+    console.error("[sendLetterRequest] spend failed:", requestId, e);
+    spent = "failed";
+  }
+  if (spent === "no_credits" || spent === "failed") {
+    // A spend that threw may still have written its consume row.
+    if (spent === "failed") await refundCredit(supabaseAdmin, requestId);
+    await supabaseAdmin.from("letter_requests").delete().eq("id", requestId);
+    return {
+      status: "error",
+      error:
+        spent === "no_credits"
+          ? "You have no credits left. Buy credits to send a request."
+          : "The request could not be sent. Try again.",
+    };
+  }
+
   const requestUrl = requestLinkUrl(requestId);
   const { error: emailError } = await resend.emails.send({
     from: "ReadMyStudent <notification@readmystudent.com>",
@@ -383,6 +414,8 @@ export async function sendLetterRequest(
 
   if (emailError) {
     // The professor never got the link, so the request must not exist.
+    // Refund first: the delete clears request_id on the ledger rows.
+    await refundCredit(supabaseAdmin, requestId);
     await supabaseAdmin.from("letter_requests").delete().eq("id", requestId);
     return { status: "error", error: `Email failed: ${emailError.message}` };
   }
@@ -575,7 +608,7 @@ export async function markRequestOpened(token: string): Promise<void> {
 
 /**
  * Faculty declines to write a recommendation for a student.
- * Updates the request status to 'rejected' and emails the student.
+ * Returns the student's credit, sets the status to 'rejected', and emails the student.
  */
 export async function rejectLetterRequest(
   requestId: string,
@@ -586,6 +619,10 @@ export async function rejectLetterRequest(
   if (!access) return { error: "Request not found or access denied." };
   if (access.status !== "requested")
     return { error: "Request is no longer in a rejectable state." };
+
+  // Refund before closing: if the close fails, a retry finds the refund done
+  // ("already"). The other order would lose the credit on a failed refund.
+  const refund = await refundCredit(supabaseAdmin, requestId);
 
   const { error: updateError } = await supabaseAdmin
     .from("letter_requests")
@@ -635,6 +672,7 @@ export async function rejectLetterRequest(
           facultyName,
           reason: reason?.trim() || undefined,
           supportUrl: `${siteUrl}/contact`,
+          creditReturned: refund !== "not_spent",
         }),
       });
     }
