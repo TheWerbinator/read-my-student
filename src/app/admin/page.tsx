@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { adminDb, listCatalog, requireAdmin } from "@/lib/admin";
+import { adminDb, adminSession, listCatalog } from "@/lib/admin";
 import { STAGES, formatMoney, type CatalogRow } from "@/lib/catalog";
 import { CatalogItemDialog } from "./CatalogItemDialog";
 
@@ -96,7 +96,10 @@ function StageSheet({ stage, rows }: { stage: CatalogRow["stage"]; rows: Catalog
 }
 
 export default async function AdminCatalogPage() {
-  if (!(await requireAdmin())) notFound();
+  const session = await adminSession();
+  if (!session) notFound();
+  // Before the code step the layout shows MfaGate instead of this page, so render nothing.
+  if (!session.mfa) return null;
   const rows = await listCatalog(adminDb());
 
   return (

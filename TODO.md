@@ -33,7 +33,7 @@ Items that need the owner, not code. Updated 2026-11-09.
    ```sql
    insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';
    ```
-2. Require MFA (an authenticator app) for the admin screen before anyone uses it with production data. BRD v2.0 §12.1 asks for "enhanced MFA for sensitive signing and administrative operations". The owner chose to ship the catalog screen with password login first (2026-11-09). Supabase marks an MFA session as `aal2` (https://supabase.com/docs/reference/javascript/auth-mfa-getauthenticatorassurancelevel).
+2. The admin screen requires an authenticator-app code on every login since 2026-11-10 (BRD v2.0 §12.1). The first visit to `/admin` shows a QR code to scan. Supabase says authenticator-app MFA "is enabled on all Supabase projects by default" (https://supabase.com/docs/guides/auth/auth-mfa/totp). If the QR code step shows "MFA enroll is disabled for TOTP", turn it on in the Supabase Dashboard under Authentication, Multi-Factor. If an admin loses the phone, delete their factor in the Supabase Dashboard (Authentication, Users, the user, MFA factors) and they scan a new QR code on the next visit.
 
 ## Stripe and tax
 

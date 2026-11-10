@@ -12,6 +12,13 @@ file_size_limit = "1MiB"
 public = false
 file_size_limit = "1MiB"
 
+# Authenticator-app MFA for the admin screen. Hosted projects have it on by
+# default (https://supabase.com/docs/guides/auth/auth-mfa/totp); the local
+# stack refused enrollment until this was set.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
 [auth.email.template.confirmation]
 subject = "Confirm your signup"
 content_path = "./supabase/templates/confirmation.html"

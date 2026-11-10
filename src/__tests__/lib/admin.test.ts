@@ -20,7 +20,7 @@ jest.mock("@supabase/supabase-js", () => ({
 jest.mock("next/cache", () => ({ revalidatePath: jest.fn() }));
 jest.mock("@/lib/stripe", () => ({ stripe: {} }));
 
-import { requireAdmin } from "@/lib/admin";
+import { adminSession, requireAdmin } from "@/lib/admin";
 import { formFromRow } from "@/lib/catalog";
 
 jest.mock("@/lib/admin", () => ({
@@ -28,8 +28,8 @@ jest.mock("@/lib/admin", () => ({
   saveCatalogItem: (...args: unknown[]) => mockSave(...args),
 }));
 
-const signedIn = (sub: string | null) =>
-  mockGetClaims.mockResolvedValue({ data: sub ? { claims: { sub } } : null });
+const signedIn = (sub: string | null, aal = "aal2") =>
+  mockGetClaims.mockResolvedValue({ data: sub ? { claims: { sub, aal } } : null });
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -46,10 +46,17 @@ describe("requireAdmin", () => {
     expect(await requireAdmin()).toBeNull();
   });
 
-  it("returns the user id for an admin", async () => {
+  it("returns the user id for an admin who passed the code step", async () => {
     signedIn("admin-1");
     mockAdminRow.mockResolvedValue({ data: { user_id: "admin-1" }, error: null });
     expect(await requireAdmin()).toBe("admin-1");
+  });
+
+  it("refuses an admin who logged in with only a password, but still knows they are an admin", async () => {
+    signedIn("admin-1", "aal1");
+    mockAdminRow.mockResolvedValue({ data: { user_id: "admin-1" }, error: null });
+    expect(await requireAdmin()).toBeNull();
+    expect(await adminSession()).toEqual({ userId: "admin-1", mfa: false });
   });
 
   it("throws when the lookup fails, instead of treating the user as a non-admin", async () => {
@@ -70,6 +77,14 @@ describe("saveCatalogItemAction", () => {
       ok: false,
       errors: { form: "You do not have access to the catalog." },
     });
+    expect(mockSave).not.toHaveBeenCalled();
+  });
+
+  it("refuses an admin before the code step and writes nothing", async () => {
+    signedIn("admin-1", "aal1");
+    mockAdminRow.mockResolvedValue({ data: { user_id: "admin-1" }, error: null });
+    const save = await action();
+    expect((await save(null, { ...formFromRow(null), priceUsd: "1.00" })).ok).toBe(false);
     expect(mockSave).not.toHaveBeenCalled();
   });
 

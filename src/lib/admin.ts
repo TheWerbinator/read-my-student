@@ -14,8 +14,12 @@ export function adminDb(): SupabaseClient {
   });
 }
 
-/** The signed-in user's id if they are an admin, otherwise null. */
-export async function requireAdmin(): Promise<string | null> {
+/**
+ * The signed-in admin, and whether this login passed the authenticator-app step
+ * (`aal2` in the token, https://supabase.com/docs/guides/auth/jwt-fields).
+ * Null when the user is not an admin.
+ */
+export async function adminSession(): Promise<{ userId: string; mfa: boolean } | null> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
@@ -27,7 +31,13 @@ export async function requireAdmin(): Promise<string | null> {
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  return row ? userId : null;
+  return row ? { userId, mfa: data?.claims?.aal === "aal2" } : null;
+}
+
+/** The signed-in user's id if they are an admin who passed MFA this login (BRD §12.1), otherwise null. */
+export async function requireAdmin(): Promise<string | null> {
+  const session = await adminSession();
+  return session?.mfa ? session.userId : null;
 }
 
 const COLUMNS = CATALOG_COLUMNS;
