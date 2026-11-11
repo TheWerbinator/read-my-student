@@ -92,7 +92,7 @@ export function App() {
       <main>
         <h1>ReadMyStudent</h1>
         <p>Connect your professor account to see your requests and letters here.</p>
-        <button className='primary' onClick={() => openTab(`${SITE}/extension/connect?id=${browser.runtime.id}`)}>
+        <button className='primary' onClick={() => openTab(`${SITE}/extension/connect`)}>
           Connect
         </button>
         <p className='muted'>

@@ -5,25 +5,13 @@ import { ConnectButton } from "./ConnectButton";
 
 export const metadata: Metadata = { title: "Connect the extension", robots: { index: false } };
 
-// Only our own extensions get a token. The Chrome and Edge stores give one extension different ids.
-function knownExtension(id: string | undefined): id is string {
-  const ids = (process.env.EXTENSION_IDS ?? "").split(",").map((s) => s.trim());
-  return !!id && ids.includes(id);
-}
-
-export default async function ExtensionConnectPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ id?: string }>;
-}) {
-  const { id } = await searchParams;
-  const role = knownExtension(id) ? await getUserRole() : null;
+// The token goes to the extension's content script on this page (extension/entrypoints/connect.content.ts).
+export default async function ExtensionConnectPage() {
+  const role = await getUserRole();
 
   let body: React.ReactNode;
-  if (!knownExtension(id)) {
-    body = <p className='mt-3 text-ink'>Open this page with the Connect button in the ReadMyStudent extension.</p>;
-  } else if (role === "FACULTY") {
-    body = <ConnectButton extensionId={id} />;
+  if (role === "FACULTY") {
+    body = <ConnectButton />;
   } else if (role === "STUDENT") {
     body = <p className='mt-3 text-ink'>The extension is for professors. This account is a student account.</p>;
   } else {
