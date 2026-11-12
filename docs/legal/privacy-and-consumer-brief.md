@@ -20,7 +20,7 @@ ReadMyStudent is owned and operated by YS2PC Research Group LLC, a US company (`
 
 Students pay for credits. One credit pays for one request to one professor, and it comes back if the professor declines or does not answer within 7 days. Students buy a yearly membership that renews automatically (card, or UPI AutoPay in India), or one-time credit packs. Prices show in INR for visitors whose IP is in India and in USD elsewhere. Sending a letter to schools is free. The owner's chosen refund policy is "no refunds; cancel any time to stop the next renewal; you keep your credits until they expire". The current draft of the refunds page is `src/app/(marketing)/refunds/page.tsx`.
 
-Signup offers undergraduate, Master's, and PhD students. A high-school stage (under 18) exists in the database but is not offered at signup. It waits for a parental consent flow. There is no age or date-of-birth field and no age gate (`src/components/auth/sign-up-form.tsx`, `src/lib/schemas.ts`).
+Signup offers high school, undergraduate, Master's, and "PhD or working professional". Since 2026-11-11, high school students (mostly under 18) can sign up with no parental consent step, by the owner's decision. There is no age or date-of-birth field and no age gate (`src/components/auth/sign-up-form.tsx`, `src/lib/schemas.ts`). Also since 2026-11-11, an admin can invite a professor's child or dependent by name and email (`public.dependent_invites`), so the site keeps that data about a person who did not give it.
 
 ### 1.2 Where data is stored, and who receives it
 
