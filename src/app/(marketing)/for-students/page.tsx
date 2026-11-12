@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export const metadata = {
   title: "For Students",
   description:
-    "Ask a professor once. They answer from one emailed link with no account, so letters come back faster. Track every request and send the sealed letter to schools in any country.",
+    "Ask a professor once. They answer from one emailed link with no account, so letters come back faster. Send the sealed letter to schools in any country for free. High school students get free credits every year.",
 };
 
 // Illustrative rows: invented names and times, labelled "Sample board" on the page.

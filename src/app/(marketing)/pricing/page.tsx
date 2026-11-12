@@ -4,11 +4,12 @@ import { LinkButton } from "@/components/ui/LinkButton";
 import { adminDb } from "@/lib/admin";
 import { pricingRows } from "@/lib/billing";
 import { CATALOG_COLUMNS, type CatalogRow } from "@/lib/catalog";
+import { DEPENDENT_FREE_YEARS } from "@/lib/dependents";
 
 export const metadata = {
-  title: "Pricing",
+  title: "Pricing and Free Letter Credits",
   description:
-    "One credit pays for one request to one professor, and it comes back if they decline or do not answer. Sending the letter to your schools is free. Professors never pay.",
+    "Recommendation letter requests with free credits for high school students every year, and free requests for professors' children for 3 years. Sending letters to schools is always free. Pay as you go or save with a yearly membership.",
 };
 
 const fares = [
@@ -37,11 +38,11 @@ const buys = [
   },
 ];
 
-// High school waits for the parental consent step (plan Phase 4).
 const STAGES = [
+  { key: "hs", label: "High school" },
   { key: "ug", label: "Undergraduate" },
   { key: "masters", label: "Master's" },
-  { key: "phd", label: "PhD" },
+  { key: "phd", label: "PhD or working professional" },
 ] as const;
 
 const ORDER: Record<CatalogRow["kind"], number> = { free_allocation: 0, membership: 1, credits: 2, bundle: 3 };
@@ -57,14 +58,61 @@ async function priceSheets() {
   const rows = ((data ?? []) as CatalogRow[]).sort(
     (a, b) => ORDER[a.kind] - ORDER[b.kind] || (a.study_year ?? 0) - (b.study_year ?? 0),
   );
-  return STAGES.map((s) => ({
+  const sheets = STAGES.map((s) => ({
     ...s,
     rows: pricingRows(rows.filter((r) => r.stage === s.key), country),
-  })).filter((s) => s.rows.some((r) => !r.free));
+  })).filter((s) => s.rows.length > 0);
+  return { sheets, freebies: freebies(rows) };
+}
+
+type Freebie = { who: string; title: string; body: string };
+
+/** The free offers, with counts from the live catalog so the page never promises a number the catalog does not give. */
+function freebies(rows: CatalogRow[]): Freebie[] {
+  const hs = rows.find((r) => r.stage === "hs" && r.kind === "free_allocation" && r.study_year === null);
+  const ugYears = rows
+    .filter((r) => r.stage === "ug" && r.kind === "membership" && r.free_credits > 0)
+    .map((r) => r.study_year as number);
+  return [
+    ...(hs
+      ? [{
+          who: "High school students",
+          title: `${hs.credits} free letter requests every year`,
+          body: `Sign up in high school and get ${hs.credits} free credits each year you are with us. One credit asks one teacher or counselor for a letter. You do not need a card or a membership.`,
+        }]
+      : []),
+    {
+      who: "Faculty families",
+      title: `Free for ${DEPENDENT_FREE_YEARS} years`,
+      body: `Children and dependents of professors send every letter request free for ${DEPENDENT_FREE_YEARS} years. The professor sends us a message, and we email the invite.`,
+    },
+    ...(ugYears.length
+      ? [{
+          who: "Undergraduates",
+          title: "Free credits every year",
+          body: `Free credits each year in Years ${Math.min(...ugYears)} to ${Math.max(...ugYears)}, with or without a membership. The number for your year is on your line below.`,
+        }]
+      : []),
+    {
+      who: "Every student",
+      title: "Free to send, to every school",
+      body: "Once your letter is sealed, send it to as many schools as you apply to. Each one costs nothing.",
+    },
+    {
+      who: "Every student",
+      title: "Your credit comes back",
+      body: "If a professor declines or does not answer in 7 days, the credit returns to your balance. You only pay for letters that happen.",
+    },
+    {
+      who: "Professors and schools",
+      title: "Always free",
+      body: "Professors write and seal letters without paying or making an account. Schools open and download them for free.",
+    },
+  ];
 }
 
 export default async function PricingPage() {
-  const sheets = await priceSheets();
+  const { sheets, freebies } = await priceSheets();
 
   return (
     <>
@@ -76,7 +124,8 @@ export default async function PricingPage() {
           <p className='mt-6 max-w-2xl text-lg leading-relaxed text-flap-ink/90 md:text-xl'>
             A credit pays for one letter request. If the professor says no or
             never answers, you get it back. Sending the finished letter to your
-            schools is free, and professors never pay.
+            schools is free, professors never pay, and high school students get
+            free credits every year.
           </p>
 
           <figure className='board-frame mt-10 lg:max-w-4xl'>
@@ -119,18 +168,48 @@ export default async function PricingPage() {
         </div>
       </section>
 
+      <section aria-labelledby='free-heading' className='px-5 py-12 md:px-8 md:py-20'>
+        <div className='mx-auto max-w-6xl'>
+          <h2
+            id='free-heading'
+            className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
+          >
+            What is <span className='text-mint'>free.</span>
+          </h2>
+          <p className='mt-4 max-w-2xl text-base leading-relaxed text-flap-dim'>
+            Free recommendation letter requests for high school students and
+            professors&apos; families, and free sending for every student. Some
+            students never pay at all.
+          </p>
+          <div className='mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+            {freebies.map((f) => (
+              <section key={f.title} className='sheet px-6 py-5'>
+                <p className='caption text-ink-2'>{f.who}</p>
+                <h3 className='mt-2 font-display text-2xl font-bold uppercase leading-tight tracking-[0.04em] text-forest-ink'>
+                  {f.title}
+                </h3>
+                <p className='mt-2 text-base leading-relaxed text-ink-2'>{f.body}</p>
+              </section>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section aria-labelledby='plans-heading' className='px-5 py-12 md:px-8 md:py-20'>
         <div className='mx-auto max-w-6xl'>
           <h2
             id='plans-heading'
             className='font-display text-4xl font-extrabold uppercase leading-[0.95] tracking-[0.02em] md:text-6xl'
           >
-            Credits by year in school.
+            Pay as you go, or save by the year.
           </h2>
           <p className='mt-4 max-w-2xl text-base leading-relaxed text-flap-dim'>
-            You pick your stage and year when you sign up, and your year goes up
-            each year on the date you joined. Memberships renew each year at the
-            price for your next year until you cancel.{" "}
+            Need a letter or two? Buy single credits as you go, with no
+            membership. Asking several professors this year? A yearly membership
+            costs less per credit. You pick your stage and year when you sign
+            up, and your year goes up each year on the date you joined.
+            Memberships renew each year at the price for your next year until
+            you cancel.{" "}
             <Link href='/refunds' className='font-semibold text-flap-ink underline'>
               Refunds and cancellation
             </Link>
@@ -144,7 +223,7 @@ export default async function PricingPage() {
               </p>
             </div>
           ) : (
-            <div className='mt-8 grid gap-6 lg:grid-cols-3'>
+            <div className='mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4'>
               {sheets.map((s) => (
                 <section key={s.key} aria-label={`${s.label} prices`} className='sheet px-6 py-3'>
                   <h3 className='pt-3 font-display text-2xl font-bold uppercase tracking-[0.04em] text-forest-ink'>
