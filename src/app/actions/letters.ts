@@ -22,7 +22,7 @@ import {
 } from "@/lib/request-access";
 import type { RecommenderForm } from "@/lib/faculty-profile";
 import { sanitizeLetterHtml, validateLexicalJson } from "@/lib/sanitize";
-import { ensureFreeGrants, refundCredit, spendCredit, type StudentRow } from "@/lib/credit-wallet";
+import { ensureFreeGrants, hasFreeRequests, refundCredit, spendCredit, type StudentRow } from "@/lib/credit-wallet";
 import {
   listFacultyFinalizedLetters,
   listFacultyRequests,
@@ -297,7 +297,7 @@ export async function sendLetterRequest(
   // Get student row for university info (use admin client to bypass any RLS gaps)
   const { data: studentRow } = await supabaseAdmin
     .from("students")
-    .select("id, university, stage, study_year, year_started_on")
+    .select("id, university, stage, study_year, year_started_on, free_requests_until")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -376,9 +376,12 @@ export async function sendLetterRequest(
 
   // One credit per request, spent before the email goes out (plan Phase 1).
   // consume_credit needs the request row, so the spend comes after the insert.
-  let spent: "consumed" | "already" | "no_credits" | "failed";
+  let spent: "consumed" | "already" | "no_credits" | "failed" | "free";
   try {
-    spent = await spendCredit(supabaseAdmin, studentId, requestId, new Date());
+    // A faculty dependent spends nothing. Refunds then find no consume row and do nothing.
+    spent = hasFreeRequests(studentRow as StudentRow, new Date())
+      ? "free"
+      : await spendCredit(supabaseAdmin, studentId, requestId, new Date());
   } catch (e) {
     console.error("[sendLetterRequest] spend failed:", requestId, e);
     spent = "failed";

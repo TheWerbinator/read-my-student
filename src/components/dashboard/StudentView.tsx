@@ -138,7 +138,8 @@ export function StudentView() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const hasItems = items.length > 0;
-  const noCredits = wallet?.status === "no_stage" || (wallet?.status === "ok" && wallet.balance < 1);
+  const noCredits =
+    wallet?.status === "no_stage" || (wallet?.status === "ok" && wallet.balance < 1 && !wallet.freeUntil);
   // With no requests yet the form is the next step, so it stays open.
   const showForm = !dataLoading && (!hasItems || formOpen);
 

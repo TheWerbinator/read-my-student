@@ -20,7 +20,7 @@ export type PriceSync = {
   archive(priceIds: string[]): Promise<void>;
 };
 
-const STAGE = { hs: "High school", ug: "Undergraduate", masters: "Master's", phd: "PhD" } as const;
+const STAGE = { hs: "High school", ug: "Undergraduate", masters: "Master's", phd: "PhD or working professional" } as const;
 const KIND = { membership: "membership", credits: "credit", bundle: "credit bundle", free_allocation: "free credits" } as const;
 
 export function productName(row: CatalogRow): string {

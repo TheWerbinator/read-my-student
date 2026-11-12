@@ -20,6 +20,8 @@ export type CatalogRow = {
   expiry_year: number | null;
   /** Free credits for that year, membership or not. Membership rows with a year only. */
   free_credits: number;
+  /** Extra credits that need a live membership. Unmarked "credits" rows are pay-as-you-go (owner, 2026-11-11). */
+  members_only: boolean;
   active: boolean;
   // Set by the Stripe sync on save (src/lib/stripe-catalog.ts), never by the form.
   stripe_product_id?: string | null;
@@ -28,7 +30,7 @@ export type CatalogRow = {
 };
 
 export const CATALOG_COLUMNS =
-  "id, stage, study_year, kind, credits, price_usd_cents, price_inr_paise, expiry, expiry_year, free_credits, active, stripe_product_id, stripe_price_usd, stripe_price_inr";
+  "id, stage, study_year, kind, credits, price_usd_cents, price_inr_paise, expiry, expiry_year, free_credits, members_only, active, stripe_product_id, stripe_price_usd, stripe_price_inr";
 
 export type CatalogInput = Omit<CatalogRow, "id" | "stripe_product_id" | "stripe_price_usd" | "stripe_price_inr">;
 
@@ -68,6 +70,7 @@ export const catalogFormSchema = z
     expiry: z.enum(EXPIRIES),
     expiryYear: z.union([z.literal(""), year]),
     freeCredits: z.coerce.number().int().min(0, "Free credits cannot be negative."),
+    membersOnly: z.boolean(),
     active: z.boolean(),
   })
   .superRefine((form, ctx) => {
@@ -88,9 +91,10 @@ export const catalogFormSchema = z
 
     if (form.expiry === "end_of_year_n" && form.expiryYear === "")
       ctx.addIssue({ code: "custom", path: ["expiryYear"], message: "Choose the year the credits end." });
-    // HS and PhD students have no year in school, so a year-based expiry cannot be computed.
-    if ((form.stage === "hs" || form.stage === "phd") && form.expiry !== "never")
-      ctx.addIssue({ code: "custom", path: ["expiry"], message: "HS and PhD credits must use Never." });
+    // PhD students have no year in school, so a year-based expiry cannot be computed.
+    // HS students count years from signup, so their credits can end each year.
+    if (form.stage === "phd" && form.expiry !== "never")
+      ctx.addIssue({ code: "custom", path: ["expiry"], message: "PhD credits must use Never." });
   });
 
 export type CatalogForm = z.input<typeof catalogFormSchema>;
@@ -120,6 +124,7 @@ export function parseCatalogForm(
       expiry_year: f.expiry === "end_of_year_n" && f.expiryYear !== "" ? f.expiryYear : null,
       // The field is hidden for other kinds, so a value left over from switching kind is dropped.
       free_credits: f.kind === "membership" ? f.freeCredits : 0,
+      members_only: f.kind === "credits" && f.membersOnly,
       active: f.active,
     },
   };
@@ -137,6 +142,7 @@ export function formFromRow(row: CatalogRow | null): CatalogForm {
     expiry: row?.expiry ?? "never",
     expiryYear: row?.expiry_year ?? "",
     freeCredits: row?.free_credits ?? 0,
+    membersOnly: row?.members_only ?? false,
     active: row?.active ?? true,
   };
 }

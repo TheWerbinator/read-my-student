@@ -3,13 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { adminDb, adminSession, listCatalog } from "@/lib/admin";
 import { STAGES, formatMoney, type CatalogRow } from "@/lib/catalog";
+import { formatDate } from "@/lib/format-date";
 import { CatalogItemDialog } from "./CatalogItemDialog";
+import { DependentInviteForm } from "./DependentInviteForm";
 
 const STAGE_NAMES: Record<CatalogRow["stage"], string> = {
   hs: "High school",
   ug: "Undergraduate",
   masters: "Master's",
-  phd: "PhD",
+  phd: "PhD or working professional",
 };
 
 const KIND_NAMES: Record<CatalogRow["kind"], string> = {
@@ -19,9 +21,15 @@ const KIND_NAMES: Record<CatalogRow["kind"], string> = {
   free_allocation: "Free credits",
 };
 
+function itemName(row: CatalogRow): string {
+  if (row.kind !== "credits") return KIND_NAMES[row.kind];
+  return row.members_only ? "Extra credit (members)" : "Pay as you go";
+}
+
 function yearText(row: CatalogRow): string {
   if (row.study_year !== null) return `Year ${row.study_year}`;
-  return row.kind === "free_allocation" ? "Once" : "Any year";
+  if (row.kind !== "free_allocation") return "Any year";
+  return row.stage === "hs" ? "Every year" : "Once";
 }
 
 function expiryText(row: CatalogRow): string {
@@ -66,7 +74,7 @@ function StageSheet({ stage, rows }: { stage: CatalogRow["stage"]; rows: Catalog
               const free = row.kind === "free_allocation";
               return (
                 <TableRow key={row.id} className={row.active ? undefined : "text-ink-2"}>
-                  <TableCell className='font-semibold'>{KIND_NAMES[row.kind]}</TableCell>
+                  <TableCell className='font-semibold'>{itemName(row)}</TableCell>
                   <TableCell>{yearText(row)}</TableCell>
                   <TableCell className='text-right'>
                     {row.credits}
@@ -83,7 +91,7 @@ function StageSheet({ stage, rows }: { stage: CatalogRow["stage"]; rows: Catalog
                     {row.active ? <Badge>On sale</Badge> : <Badge variant='outline'>Off</Badge>}
                   </TableCell>
                   <TableCell className='text-right'>
-                    <CatalogItemDialog row={row} label={`Edit ${STAGE_NAMES[stage]} ${KIND_NAMES[row.kind]}, ${yearText(row)}`} />
+                    <CatalogItemDialog row={row} label={`Edit ${STAGE_NAMES[stage]} ${itemName(row)}, ${yearText(row)}`} />
                   </TableCell>
                 </TableRow>
               );
@@ -100,7 +108,13 @@ export default async function AdminCatalogPage() {
   if (!session) notFound();
   // Before the code step the layout shows MfaGate instead of this page, so render nothing.
   if (!session.mfa) return null;
-  const rows = await listCatalog(adminDb());
+  const db = adminDb();
+  const rows = await listCatalog(db);
+  const { data: invites, error: invitesError } = await db
+    .from("dependent_invites")
+    .select("id, email, dependent_name, created_at, used_at")
+    .order("created_at", { ascending: false });
+  if (invitesError) throw invitesError;
 
   return (
     <div className='p-6 md:p-10'>
@@ -124,6 +138,43 @@ export default async function AdminCatalogPage() {
             rows={rows.filter((r) => r.stage === stage && !(r.kind === "free_allocation" && r.study_year !== null && !r.active))}
           />
         ))}
+
+        <section aria-labelledby='dependents' className='sheet p-6'>
+          <h2
+            id='dependents'
+            className='font-display text-2xl font-extrabold uppercase leading-none tracking-[0.04em] text-forest-ink'
+          >
+            Faculty dependents
+          </h2>
+          <p className='mt-2 max-w-prose text-ink-2'>
+            When a professor emails us a dependent&apos;s name and email, send the invite here. The professor must have an account. The dependent&apos;s requests are free for 3 years from the first time they open the dashboard with a confirmed email.
+          </p>
+          <DependentInviteForm />
+          {(invites ?? []).length > 0 && (
+            <Table className='mt-6'>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Dependent</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Invited</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(invites ?? []).map((i) => (
+                  <TableRow key={i.id as string}>
+                    <TableCell className='font-semibold'>{i.dependent_name as string}</TableCell>
+                    <TableCell>{i.email as string}</TableCell>
+                    <TableCell>{formatDate(i.created_at as string)}</TableCell>
+                    <TableCell>
+                      {i.used_at ? <Badge>Claimed {formatDate(i.used_at as string)}</Badge> : <Badge variant='outline'>Waiting</Badge>}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </section>
       </div>
     </div>
   );

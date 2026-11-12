@@ -40,11 +40,12 @@ const SOURCE_LABEL: Record<string, string> = {
   adjustment: "Adjustment",
 };
 
-const STAGE_LABEL = { hs: "High school", ug: "Undergraduate", masters: "Master's", phd: "PhD" };
+const STAGE_LABEL = { hs: "High school", ug: "Undergraduate", masters: "Master's", phd: "PhD or working professional" };
 
 function itemTitle(item: ForSale): string {
   if (item.kind === "membership") return `Year ${item.studyYear}${item.orLater ? "+" : ""} membership: ${item.credits} credits`;
   if (item.kind === "bundle") return `Pack of ${item.credits} credits`;
+  if (!item.membersOnly) return item.credits === 1 ? "Pay-as-you-go credit" : `${item.credits} pay-as-you-go credits`;
   return item.credits === 1 ? "Extra credit" : `${item.credits} extra credits`;
 }
 
@@ -68,7 +69,10 @@ export function CreditsPanel({ wallet }: { wallet: Wallet | null | undefined }) 
       title='Credits'
       description={
         wallet
-          ? `${STAGE_LABEL[wallet.stage]}${wallet.year ? `, Year ${wallet.year}` : ""}. Each request to a professor uses one credit. A declined or unanswered request gives it back.`
+          ? wallet.freeUntil
+            ? `${STAGE_LABEL[wallet.stage]}. As a faculty family member, every request is free until ${formatDate(wallet.freeUntil)}. No credits needed.`
+            : // HS has a year count only for its yearly free credits, so it is not shown as a year in school.
+              `${STAGE_LABEL[wallet.stage]}${wallet.year && wallet.stage !== "hs" ? `, Year ${wallet.year}` : ""}. Each request to a professor uses one credit. A declined or unanswered request gives it back.`
           : undefined
       }
       counts={
@@ -90,7 +94,11 @@ export function CreditsPanel({ wallet }: { wallet: Wallet | null | undefined }) 
             <BoardColumns cols={COLS} labels={["Added", "From", "Left", "Expires"]} />
             <div role='rowgroup' className='space-y-1'>
               {wallet.grants.length === 0 ? (
-                <BoardEmpty title='No credits yet'>Buy credits below to send your first request.</BoardEmpty>
+                <BoardEmpty title='No credits yet'>
+                  {wallet.freeUntil
+                    ? "Your requests are free, so you do not need credits."
+                    : "Buy credits below to send your first request."}
+                </BoardEmpty>
               ) : (
                 wallet.grants.map((g) => (
                   <BoardRow key={g.id} cols={COLS}>

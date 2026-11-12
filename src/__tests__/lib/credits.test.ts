@@ -70,7 +70,9 @@ describe("credit wallet", () => {
 
 const d = (iso: string) => new Date(`${iso}T00:00:00Z`);
 const ug2: StudentYear = { stage: "ug", studyYear: 2, yearStartedOn: d("2026-09-01") };
-const hs: StudentYear = { stage: "hs", studyYear: null, yearStartedOn: null };
+// HS starts at Year 1 on signup and counts years from there (owner, 2026-11-11).
+const hs: StudentYear = { stage: "hs", studyYear: 1, yearStartedOn: d("2026-09-01") };
+const phd: StudentYear = { stage: "phd", studyYear: null, yearStartedOn: null };
 
 const item = (over: Partial<CatalogItem>): CatalogItem => ({
   id: "row",
@@ -101,9 +103,9 @@ describe("year in school", () => {
     expect(endOfYear(ug2, 5)).toEqual(d("2030-09-01"));
   });
 
-  it("has no year for HS and PhD students", () => {
-    expect(currentYear(hs, now)).toBeNull();
-    expect(endOfYear(hs, 1)).toBeNull();
+  it("has no year for PhD students", () => {
+    expect(currentYear(phd, now)).toBeNull();
+    expect(endOfYear(phd, 1)).toBeNull();
   });
 
   it("rolls a Feb 29 start to Mar 1 in later years", () => {
@@ -132,7 +134,7 @@ describe("catalog rules", () => {
   });
 
   it("refuses a year-based rule for a student with no year", () => {
-    expect(() => grantExpiry(ugFree(1), hs, now)).toThrow("needs a year in school");
+    expect(() => grantExpiry(ugFree(1), phd, now)).toThrow("needs a year in school");
   });
 
   it("finds the free allocations due for the stage and current year", () => {
@@ -142,8 +144,11 @@ describe("catalog rules", () => {
     expect(dueFreeAllocations(catalog, hs, now).map((i) => i.id)).toEqual(["hs-free"]);
   });
 
-  it("keys free grants by stage and year, so HS gets one key and UG one per year", () => {
-    expect(freeGrantRef(hsFree, "s1")).toBe("free:hs:y0:s1");
+  it("keys free grants by stage and year, so HS and UG each get one key per year", () => {
+    const hsDue = (at: string) => dueFreeAllocations([hsFree], hs, d(at)).map((i) => freeGrantRef(i, "s1"));
+    expect(hsDue("2026-10-01")).toEqual(["free:hs:y1:s1"]);
+    expect(hsDue("2027-10-01")).toEqual(["free:hs:y2:s1"]);
+    expect(freeGrantRef(hsFree, "s1")).toBe("free:hs:y0:s1"); // a row with no year, keyed directly
     expect(freeGrantRef(ugFree(2), "s1")).toBe("free:ug:y2:s1");
     expect(freeGrantRef({ ...ugFree(2), id: "replacement-row" }, "s1")).toBe("free:ug:y2:s1");
   });
@@ -158,11 +163,11 @@ describe("BRD acceptance scenarios", () => {
     expiresAt: grantExpiry(catalogItem, s, at),
   });
 
-  it("UAT-01: an HS account is due 20 free credits under one key", () => {
+  it("UAT-01: an HS account is due 20 free credits each year", () => {
     const due = dueFreeAllocations([hsFree], hs, now);
     expect(due).toHaveLength(1);
     expect(due[0].credits).toBe(20);
-    // The unique source_ref makes the grant once per account (integration test).
+    // The unique source_ref makes the grant once per year (integration test).
   });
 
   it("UAT-02: free Year-1 UG credits do not roll into Year 2", () => {

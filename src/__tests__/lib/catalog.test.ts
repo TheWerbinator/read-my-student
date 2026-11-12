@@ -16,6 +16,7 @@ const form = (over: Partial<CatalogForm> = {}): CatalogForm => ({
   expiry: "end_of_year_n",
   expiryYear: 5,
   freeCredits: 0,
+  membersOnly: false,
   active: true,
   ...over,
 });
@@ -63,6 +64,7 @@ describe("catalog form", () => {
         expiry: "end_of_year_n",
         expiry_year: 5,
         free_credits: 0,
+        members_only: false,
         active: true,
       },
     });
@@ -112,12 +114,25 @@ describe("catalog form", () => {
     expect(result.ok && result.row.expiry_year).toBeNull();
   });
 
-  it("only allows Never for HS and PhD, which have no year in school", () => {
+  it("only allows Never for PhD, which has no year in school", () => {
     expect(parseCatalogForm(form({ stage: "phd", expiry: "end_of_year_n" }))).toMatchObject({
       ok: false,
-      errors: { expiry: "HS and PhD credits must use Never." },
+      errors: { expiry: "PhD credits must use Never." },
     });
     expect(parseCatalogForm(form({ stage: "phd", studyYear: "", expiry: "never", expiryYear: "" })).ok).toBe(true);
+  });
+
+  it("lets HS credits end each year, because HS counts years from signup", () => {
+    const hsFree = { stage: "hs", kind: "free_allocation", studyYear: "", credits: 20, priceUsd: "", expiry: "end_of_year", expiryYear: "" } as const;
+    expect(parseCatalogForm(form(hsFree)).ok).toBe(true);
+  });
+
+  it("keeps members only on single credits and drops it elsewhere", () => {
+    const credits = { kind: "credits", studyYear: "", expiry: "never", expiryYear: "", membersOnly: true } as const;
+    const result = parseCatalogForm(form(credits));
+    expect(result.ok && result.row.members_only).toBe(true);
+    const membership = parseCatalogForm(form({ membersOnly: true }));
+    expect(membership.ok && membership.row.members_only).toBe(false);
   });
 
   it("rejects zero credits and unknown values", () => {

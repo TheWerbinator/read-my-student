@@ -271,6 +271,8 @@ export function SignUpForm({
               )}
             </div>
 
+            {/* The list has only universities, so a high school student skips it. */}
+            {!(role === "STUDENT" && stage === "hs") && (
             <div className='grid gap-2'>
               <UniversityCombobox
                 label={role === "STUDENT" ? "University" : "Institution"}
@@ -294,6 +296,7 @@ export function SignUpForm({
                 </FieldError>
               )}
             </div>
+            )}
           </div>
 
           {/* DYNAMIC FIELDS: STUDENT */}
@@ -313,15 +316,16 @@ export function SignUpForm({
                   aria-describedby={describedBy("stage")}
                 >
                   <option value=''>Choose…</option>
+                  <option value='hs'>High school</option>
                   <option value='ug'>Undergraduate</option>
                   <option value='masters'>Master&apos;s</option>
-                  <option value='phd'>PhD</option>
+                  <option value='phd'>PhD or working professional</option>
                 </select>
                 {errors.stage && (
                   <FieldError id='stage-error'>Choose your stage.</FieldError>
                 )}
               </div>
-              {stage && stage !== "phd" && (
+              {(stage === "ug" || stage === "masters") && (
                 <div className='grid gap-2'>
                   <Label htmlFor='studyYear' className='caption text-ink-2'>
                     Year in school

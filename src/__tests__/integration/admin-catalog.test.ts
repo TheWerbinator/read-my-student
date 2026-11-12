@@ -47,6 +47,7 @@ const item: CatalogInput = {
   expiry: "never",
   expiry_year: null,
   free_credits: 0,
+  members_only: false,
   active: false,
 };
 
