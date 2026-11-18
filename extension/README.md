@@ -13,6 +13,34 @@ Built with WXT (https://wxt.dev) and React. This folder has its own `package.jso
 
 ## Test it on your computer
 
+Use Node.js 22 or later. The repository includes `.nvmrc` for nvm users.
+Run `nvm install` and `nvm use` from the repository root if you use nvm.
+
+Before starting, install the root dependencies with `npm ci`.
+Copy `.env.example` to `.env.local` and configure:
+
+- `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` with the local Publishable key.
+- `SUPABASE_SECRET_KEY` with the local Secret key.
+- `NEXT_PUBLIC_SITE_URL=http://localhost:3100`
+- `PDF_SIGNING_SECRET` with a random string of at least 32 characters.
+
+Get the local Supabase keys after starting the stack with `npx supabase status`.
+Never commit `.env.local`.
+
+The seed creates test accounts and catalog entries; it does not create requests
+or letters.
+
+For local request and delivery emails, add `EMAIL_TRANSPORT=local` to `.env.local`.
+Start Supabase with the SMTP port configured in `supabase/config.toml`, then
+restart the website after changing the environment variable.
+
+View captured emails at http://127.0.0.1:54324. Local emails are not sent to real
+recipients. Other email flows may still use Resend directly.
+
+Without `EMAIL_TRANSPORT=local`, request and delivery emails use Resend and
+require a valid `RESEND_API_KEY`. Do not enable local email mode in production.
+
 The test build talks to the site on `http://localhost:3100`, with the local Supabase stack.
 
 1. In the repo root, run `npx supabase start`, then `npx supabase migration up` (local by default), then `npm run seed:local` if the stack is new.

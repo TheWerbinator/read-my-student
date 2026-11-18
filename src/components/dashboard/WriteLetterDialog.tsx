@@ -28,7 +28,7 @@ import {
   setStudentPreviewEnabled as setPreviewEnabledAction,
 } from "@/app/actions/letters";
 import { uploadFacultyAsset, getSignedAssetUrl } from "@/app/actions/faculty";
-import { Check, Ellipsis, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 export function WriteLetterDialog({
   studentName,
@@ -168,6 +168,7 @@ export function WriteLetterDialog({
   const handleLogoSelect = async (file: File | null) => {
     setIsDirty(true);
     setLogoFile(file);
+    setLogoPreviewUrl(file ? URL.createObjectURL(file) : null);
     setLogoUploadError(null);
     if (!file) {
       setLogoStoragePath(null);
@@ -189,6 +190,10 @@ export function WriteLetterDialog({
   const handleSignatureSelect = (file: File | null) => {
     setIsDirty(true);
     setSignatureFile(file);
+    setSignaturePreviewUrl(file ? URL.createObjectURL(file) : null);
+    setSignatureHasTransparency(null);
+    setSignatureError(null);
+    setIsUploadingSignature(false);
     setSignatureUploadError(null);
     // Upload is triggered from the transparency-check effect once the PNG passes
     if (!file) setSignatureStoragePath(null);
@@ -233,7 +238,9 @@ export function WriteLetterDialog({
   };
 
   // Keep ref current so the autosave timer always calls the latest version
-  handleSaveDraftRef.current = handleSaveDraft;
+  useEffect(() => {
+    handleSaveDraftRef.current = handleSaveDraft;
+  });
 
   const handleFinalize = async () => {
     if (!requestId || !letterDbId) return;
@@ -265,15 +272,13 @@ export function WriteLetterDialog({
     onFinalized?.();
   };
 
-  // Load draft from localStorage — only used as fallback when there is no requestId.
-  // When requestId is present, loading happens in onOpenChange via the DB action.
   useEffect(() => {
     if (showFinalizeConfirm)
       finalizeConfirmRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [showFinalizeConfirm]);
 
-  useEffect(() => {
-    if (requestId) return;
+  // Restore the local fallback when opening, just like the database draft.
+  const restoreLocalDraft = () => {
     const storedDraft = localStorage.getItem(draftStorageKey);
     if (!storedDraft) return;
     try {
@@ -290,7 +295,7 @@ export function WriteLetterDialog({
     } catch {
       localStorage.removeItem(draftStorageKey);
     }
-  }, [draftStorageKey, requestId]);
+  };
 
   // Debounced autosave — 30 s after the last content change while the dialog is open.
   // Only activates when there are unsaved changes to avoid spurious saves on draft load.
@@ -316,32 +321,23 @@ export function WriteLetterDialog({
 
   // Logo object URL lifecycle
   useEffect(() => {
-    if (!logoFile) {
-      setLogoPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(logoFile);
-    setLogoPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [logoFile]);
+    if (!logoPreviewUrl) return;
+    return () => URL.revokeObjectURL(logoPreviewUrl);
+  }, [logoPreviewUrl]);
+
+  useEffect(() => {
+    if (!signaturePreviewUrl) return;
+    return () => URL.revokeObjectURL(signaturePreviewUrl);
+  }, [signaturePreviewUrl]);
 
   // Signature object URL lifecycle + transparency check
   useEffect(() => {
-    const previewSource = signatureFile
-      ? URL.createObjectURL(signatureFile)
-      : null;
-
-    if (!previewSource) {
-      setSignaturePreviewUrl(null);
-      setSignatureHasTransparency(null);
-      setSignatureError(null);
-      return;
-    }
-
-    setSignaturePreviewUrl(previewSource);
+    if (!signaturePreviewUrl || !signatureFile) return;
+    let cancelled = false;
 
     const image = new Image();
     image.onload = () => {
+      if (cancelled) return;
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d");
       if (!context) {
@@ -371,6 +367,7 @@ export function WriteLetterDialog({
         const fd = new FormData();
         fd.append("file", signatureFile);
         void uploadFacultyAsset(fd, "signature", accessToken).then((res) => {
+          if (cancelled) return;
           setIsUploadingSignature(false);
           if (res.success && res.storagePath) {
             setSignatureStoragePath(res.storagePath);
@@ -382,15 +379,18 @@ export function WriteLetterDialog({
       }
     };
     image.onerror = () => {
+      if (cancelled) return;
       setSignatureHasTransparency(null);
       setSignatureError("Unable to read the signature image.");
     };
-    image.src = previewSource;
+    image.src = signaturePreviewUrl;
 
     return () => {
-      if (signatureFile) URL.revokeObjectURL(previewSource);
+      cancelled = true;
+      image.onload = null;
+      image.onerror = null;
     };
-  }, [signatureFile]);
+  }, [signatureFile, signaturePreviewUrl, accessToken]);
 
   // Only what the letterhead and signature need. The PDF skips blank address lines.
   const requiredDetailsFields: Array<keyof RecommenderForm> = [
@@ -497,6 +497,8 @@ export function WriteLetterDialog({
                 setStudentPreviewEnabled(draft.student_preview_enabled);
                 setDraftSaved(true);
               }
+            } else {
+              restoreLocalDraft();
             }
           } else {
             setStep("details");

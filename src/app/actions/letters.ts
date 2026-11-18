@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
+import { sendEmail } from "@/lib/email";
 import {
   RequestNotificationEmail,
   FacultyInvitationEmail,
@@ -30,7 +30,6 @@ import {
   type FacultyLetterRequest,
 } from "@/lib/faculty-data";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -397,7 +396,7 @@ export async function sendLetterRequest(
   }
 
   const requestUrl = requestLinkUrl(requestId);
-  const { error: emailError } = await resend.emails.send({
+  const { error: emailError } = await sendEmail({
     from: "ReadMyStudent <notification@readmystudent.com>",
     to: professorEmail,
     subject: `${studentFullName} asked you for a letter of recommendation`,
@@ -672,7 +671,7 @@ export async function rejectLetterRequest(
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
 
-      await resend.emails.send({
+      await sendEmail({
         from: "ReadMyStudent <notification@readmystudent.com>",
         to: studentUser.email,
         subject: `${facultyName} has declined your recommendation request`,
@@ -882,7 +881,7 @@ export async function requestDelivery(
   const studentFullName =
     [user.user_metadata?.firstName, user.user_metadata?.lastName].filter(Boolean).join(" ") ||
     "Your student";
-  const { error: emailError } = await resend.emails.send({
+  const { error: emailError } = await sendEmail({
     from: "ReadMyStudent <notification@readmystudent.com>",
     to: request.professor_email as string,
     subject: `Action required: approve delivery of your letter for ${studentFullName}`,
@@ -1007,7 +1006,7 @@ export async function approveDelivery(
       [meta.firstName, meta.lastName].filter(Boolean).join(" ") || "Applicant";
   }
 
-  const { error: emailError } = await resend.emails.send({
+  const { error: emailError } = await sendEmail({
     from: "ReadMyStudent <notification@readmystudent.com>",
     to: fullLink.recipient_email,
     subject: `Recommendation letter available for ${studentFullName}`,
@@ -1075,7 +1074,7 @@ export async function rejectDelivery(
     if (studentEmail) {
       const siteUrl =
         process.env.NEXT_PUBLIC_SITE_URL ?? "https://readmystudent.com";
-      await resend.emails.send({
+      await sendEmail({
         from: "ReadMyStudent <notification@readmystudent.com>",
         to: studentEmail,
         subject: `Your delivery request to ${rejLink.school_name ?? "the institution"} was declined`,
