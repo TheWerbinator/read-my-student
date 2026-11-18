@@ -37,6 +37,7 @@ const row = (over: Partial<CatalogRow> = {}): CatalogRow => ({
   expiry: "end_of_year_n",
   expiry_year: 5,
   free_credits: 0,
+  members_only: false,
   active: true,
   stripe_product_id: "prod_1",
   stripe_price_usd: "price_usd",
@@ -93,6 +94,13 @@ describe("checkPurchase", () => {
     expect(checkPurchase(row({ study_year: 4 }), ug7, now, last)).toMatchObject({ ok: false });
     expect(checkPurchase(row({ study_year: 5 }), ug7, now, ok)).toMatchObject({ ok: false });
     expect(checkPurchase(row({ study_year: 5 }), ug2, now, last)).toMatchObject({ ok: false });
+  });
+
+  it("sells extra credits to members only, and pay-as-you-go credits to anyone", () => {
+    const extra = row({ kind: "credits", study_year: null, credits: 1, members_only: true });
+    expect(checkPurchase(extra, ug2, now, ok)).toMatchObject({ ok: false, error: expect.stringContaining("for members") });
+    expect(checkPurchase(extra, ug2, now, { ...ok, hasActiveMembership: true })).toEqual({ ok: true });
+    expect(checkPurchase({ ...extra, members_only: false }, ug2, now, ok)).toEqual({ ok: true });
   });
 
   it("refuses a second membership", () => {
@@ -199,10 +207,18 @@ describe("pricingRow", () => {
     expect(
       pricingRow(row({ kind: "free_allocation", credits: 3, price_usd_cents: null, expiry: "end_of_year", expiry_year: null, stripe_price_usd: null }), "US"),
     ).toMatchObject({ label: "Year 2, free", price: "Free", free: true, detail: "3 credits. Credits last until the end of that school year." });
-    expect(pricingRow(row({ kind: "credits", study_year: null, credits: 1, price_usd_cents: 147 }), "US")).toMatchObject({
-      label: "Extra credit",
+    expect(pricingRow(row({ kind: "credits", study_year: null, credits: 1, price_usd_cents: 147, members_only: true }), "US")).toMatchObject({
+      label: "Extra credit for members",
       price: "$1.47 each",
     });
+    expect(pricingRow(row({ kind: "credits", study_year: null, credits: 1, price_usd_cents: 499, expiry: "never" }), "US")).toMatchObject({
+      label: "Pay as you go",
+      price: "$4.99 each",
+      detail: "No membership needed. Buy only the credits you use. Credits never expire.",
+    });
+    expect(
+      pricingRow(row({ kind: "free_allocation", stage: "hs", study_year: null, credits: 20, price_usd_cents: null, expiry: "never", stripe_price_usd: null }), "US"),
+    ).toMatchObject({ label: "Free every year", price: "Free" });
     expect(pricingRow(row({ kind: "bundle", stage: "phd", study_year: null, credits: 100, price_usd_cents: 25900, expiry: "never" }), "US")).toMatchObject({
       label: "Pack of 100",
       price: "$259.00",

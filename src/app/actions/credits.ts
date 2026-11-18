@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { adminDb } from "@/lib/admin";
 import { LIVE_STATUSES, checkPurchase, chooseCurrency, lastMembershipYear } from "@/lib/billing";
 import { CATALOG_COLUMNS, formatMoney, type CatalogRow } from "@/lib/catalog";
-import { ensureFreeGrants, loadWallet, studentYear, type StudentRow } from "@/lib/credit-wallet";
+import { ensureFreeGrants, hasFreeRequests, loadWallet, studentYear, type StudentRow } from "@/lib/credit-wallet";
 import { balance, currentYear, remaining, type Stage } from "@/lib/credits";
+import { claimDependentInvite } from "@/lib/dependents";
 import { createClient } from "@/lib/supabase/server";
 
 export type WalletGrant = {
@@ -21,6 +22,7 @@ export type WalletGrant = {
 export type ForSale = {
   id: string;
   kind: CatalogRow["kind"];
+  membersOnly: boolean;
   credits: number;
   studyYear: number | null;
   /** The last membership year, which also covers every later year ("Year 5+"). */
@@ -38,6 +40,8 @@ export type Wallet =
       grants: WalletGrant[];
       forSale: ForSale[];
       hasMembership: boolean;
+      /** Faculty dependents: requests are free until this date. Null otherwise. */
+      freeUntil: string | null;
     };
 
 /**
@@ -52,7 +56,7 @@ export async function getWallet(): Promise<Wallet | null> {
   const db = adminDb();
   const { data: student, error } = await db
     .from("students")
-    .select("id, stage, study_year, year_started_on")
+    .select("id, stage, study_year, year_started_on, free_requests_until")
     .eq("user_id", auth.user.id)
     .maybeSingle();
   if (error) throw error;
@@ -64,6 +68,7 @@ export async function getWallet(): Promise<Wallet | null> {
   const year = studentYear(row);
   const now = new Date();
   await ensureFreeGrants(db, row, now);
+  if (!row.free_requests_until) row.free_requests_until = await claimDependentInvite(db, row.id, auth.user, now);
 
   const [wallet, grantRows, catalogRows, subs] = await Promise.all([
     loadWallet(db, row.id),
@@ -113,6 +118,7 @@ export async function getWallet(): Promise<Wallet | null> {
       return {
         id: r.id,
         kind: r.kind,
+        membersOnly: r.members_only,
         credits: r.credits,
         studyYear: r.study_year,
         orLater: r.kind === "membership" && r.study_year !== null && r.study_year === lastYear,
@@ -128,5 +134,6 @@ export async function getWallet(): Promise<Wallet | null> {
     grants,
     forSale,
     hasMembership,
+    freeUntil: hasFreeRequests(row, now) ? (row.free_requests_until as string) : null,
   };
 }

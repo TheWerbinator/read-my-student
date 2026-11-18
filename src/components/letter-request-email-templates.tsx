@@ -375,3 +375,25 @@ export function SendApprovalEmail(raw: SendApprovalProps): string {
 
   return wrap(body);
 }
+
+// Faculty dependent invite, sent from the admin screen (owner, 2026-11-11)
+
+interface DependentInviteProps {
+  dependentName: string;
+  facultyName: string;
+  signupUrl: string;
+}
+
+export function DependentInviteEmail(p: DependentInviteProps): string {
+  const body = `
+    ${heading("Your letter requests are free for 3 years")}
+    <p style="${P}">Hi ${esc(p.dependentName)},</p>
+    <p style="${P}">
+      ${esc(p.facultyName)} asked us to set up a faculty family account for you. Every letter request you send through ReadMyStudent is free for 3 years. You do not need credits or a membership.
+    </p>
+    <p style="${P}">Sign up with this email address. If you already have a student account with it, log in instead. The 3 years start the first time you open your dashboard after you confirm your email.</p>
+    ${ctaButton(p.signupUrl, "Create your account")}
+    <p style="${SMALL}">If you did not expect this email, you can ignore it.</p>`;
+
+  return wrap(body);
+}

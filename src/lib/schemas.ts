@@ -28,9 +28,10 @@ export const registerSchema = z.object({
   universityOpeId: z.string().optional(),
   program: z.string().optional(),
   graduationDate: z.string().optional(),
-  // High school waits for the parental consent step (plan Phase 4).
-  stage: z.enum(["ug", "masters", "phd"]).optional(),
-  // A select value ("1".."5"); PhD has no year.
+  // High school opens with no consent step (owner, 2026-11-11; the lawyer review is in TODO.md).
+  // "phd" also covers working professionals, who pay the same.
+  stage: z.enum(["hs", "ug", "masters", "phd"]).optional(),
+  // A select value ("1".."5"); HS and PhD pick no year.
   studyYear: z.string().optional(),
 
   // Faculty Fields
@@ -42,7 +43,7 @@ export const registerSchema = z.object({
   if (v.role !== "STUDENT") return;
   if (!v.stage) {
     ctx.addIssue({ code: "custom", path: ["stage"], message: "Choose your stage." });
-  } else if (v.stage !== "phd") {
+  } else if (v.stage === "ug" || v.stage === "masters") {
     const year = Number(v.studyYear);
     if (!Number.isInteger(year) || year < 1 || year > SIGNUP_YEARS[v.stage]) {
       ctx.addIssue({ code: "custom", path: ["studyYear"], message: "Choose your year in school." });
