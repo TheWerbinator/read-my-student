@@ -110,7 +110,7 @@ export function CatalogItemDialog({ row, label }: { row: CatalogRow | null; labe
                 <option value='hs'>High school</option>
                 <option value='ug'>Undergraduate</option>
                 <option value='masters'>Master&apos;s</option>
-                <option value='phd'>PhD</option>
+                <option value='phd'>PhD or working professional</option>
               </select>
             </Field>
             <Field id={id("kind")} label='Item' error={errors.kind}>
@@ -121,7 +121,7 @@ export function CatalogItemDialog({ row, label }: { row: CatalogRow | null; labe
                 onChange={(e) => set("kind", e.target.value as CatalogForm["kind"])}
               >
                 <option value='membership'>Membership</option>
-                <option value='credits'>Extra credit</option>
+                <option value='credits'>Single credit (extra or pay as you go)</option>
                 <option value='bundle'>Bundle</option>
                 <option value='free_allocation'>Free credits</option>
               </select>
@@ -133,7 +133,7 @@ export function CatalogItemDialog({ row, label }: { row: CatalogRow | null; labe
                 value={String(form.studyYear)}
                 onChange={(e) => set("studyYear", e.target.value === "" ? "" : Number(e.target.value))}
               >
-                <option value=''>Any year (free credits: once)</option>
+                <option value=''>Any year (free credits: once, or each year for HS)</option>
                 {YEARS.map((y) => (
                   <option key={y} value={y}>
                     Year {y}
@@ -213,6 +213,18 @@ export function CatalogItemDialog({ row, label }: { row: CatalogRow | null; labe
               </Field>
             )}
           </div>
+
+          {form.kind === "credits" && (
+            <label className='flex items-center gap-3 text-ink'>
+              <input
+                type='checkbox'
+                className='size-5 accent-forest'
+                checked={form.membersOnly}
+                onChange={(e) => set("membersOnly", e.target.checked)}
+              />
+              Members only (an extra credit). Leave it off for pay as you go.
+            </label>
+          )}
 
           <label className='flex items-center gap-3 text-ink'>
             <input

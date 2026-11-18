@@ -22,7 +22,14 @@ export type StudentRow = {
   stage: Stage | null;
   study_year: number | null;
   year_started_on: string | null;
+  /** Faculty dependents: requests cost no credit until then (owner, 2026-11-11). */
+  free_requests_until?: string | null;
 };
+
+/** True while a faculty dependent's free requests last. */
+export function hasFreeRequests(row: StudentRow, now: Date): boolean {
+  return !!row.free_requests_until && new Date(row.free_requests_until) > now;
+}
 
 export function studentYear(row: StudentRow): StudentYear {
   return {
@@ -64,7 +71,7 @@ export async function loadWallet(
 }
 
 /**
- * Adds the free credits the student is due now (HS once, UG each year), if not
+ * Adds the free credits the student is due now (HS and UG each year), if not
  * already granted. Safe to call on every dashboard load or request: the unique
  * source_ref turns a repeat into a no-op. Free credits stack on paid ones (DEC-04).
  */

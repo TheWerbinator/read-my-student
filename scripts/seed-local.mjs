@@ -102,7 +102,9 @@ if (catalogCount) {
     // BRD DEC-09: $259 for 100 costs more than 100 single credits. Owner to fix in admin.
     { stage: "phd", study_year: null, kind: "bundle", credits: 100, price_usd_cents: 25900, ...never },
   ];
-  const { error: catalogError } = await admin.from("plan_catalog").insert(rows);
+  const { error: catalogError } = await admin
+    .from("plan_catalog")
+    .insert(rows.map((row) => ({ free_credits: 0, ...row })));
   if (catalogError) throw new Error(`plan_catalog insert failed: ${catalogError.message}`);
   console.log(`created ${rows.length} catalog rows`);
 }
