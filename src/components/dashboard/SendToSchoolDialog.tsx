@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { School } from "lucide-react";
 import { requestDelivery } from "@/app/actions/letters";
 import { Button } from "@/components/ui/button";
@@ -55,12 +55,9 @@ export function SendToSchoolDialog({ letterId }: { letterId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [recentSchools, setRecentSchools] = useState<RecentSchool[]>([]);
 
-  useEffect(() => {
-    if (isOpen) setRecentSchools(loadRecentSchools());
-  }, [isOpen]);
-
   const handleClose = (open: boolean) => {
     setIsOpen(open);
+    if (open) setRecentSchools(loadRecentSchools());
     if (!open) {
       setSchoolName("");
       setSchoolEmail("");

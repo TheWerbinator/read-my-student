@@ -68,12 +68,9 @@ export function UniversityCombobox({
     if (disabled) return;
 
     const q = query.trim();
-    if (q.length < 3) {
-      setResults([]);
-      setError("");
-      return;
-    }
+    if (q.length < 3) return;
 
+    let cancelled = false;
     const t = window.setTimeout(async () => {
       setLoading(true);
       setError("");
@@ -82,20 +79,25 @@ export function UniversityCombobox({
           `/api/universities?countryCode=${encodeURIComponent(countryCode)}&q=${encodeURIComponent(q)}`,
         );
         const data = await res.json();
+        if (cancelled) return;
         if (!res.ok)
           throw new Error(data?.error ?? "Failed to load universities");
         setResults(data.results ?? []);
         setActiveIndex(0);
         // eslint-disable-next-line
       } catch (e: any) {
+        if (cancelled) return;
         setResults([]);
         setError(e?.message ?? "Failed to load universities");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }, 750);
 
-    return () => window.clearTimeout(t);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
   }, [query, countryCode, open, disabled]);
 
   // keep the active option in view during arrow-key navigation
@@ -110,6 +112,7 @@ export function UniversityCombobox({
   function openAndFocus() {
     if (disabled) return;
     setOpen(true);
+    setLoading(false);
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
@@ -117,6 +120,9 @@ export function UniversityCombobox({
     onChange(u);
     setOpen(false);
     setQuery("");
+    setResults([]);
+    setError("");
+    setLoading(false);
     document.getElementById(triggerId)?.focus();
   }
 
@@ -188,7 +194,15 @@ export function UniversityCombobox({
                 }
                 aria-label={`Search ${label.toLowerCase()}`}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  const nextQuery = e.target.value;
+                  setQuery(nextQuery);
+                  if (nextQuery.trim().length < 3) {
+                    setResults([]);
+                    setError("");
+                    setLoading(false);
+                  }
+                }}
                 onKeyDown={onKeyDown}
                 placeholder='Type at least 3 letters...'
                 className='h-11 w-full rounded-[2px] border border-input bg-white px-3 text-base text-ink placeholder:text-ink-2/80 focus-visible:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold'

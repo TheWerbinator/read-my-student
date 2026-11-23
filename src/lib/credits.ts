@@ -66,7 +66,7 @@ function addYears(date: Date, years: number): Date {
   return d;
 }
 
-/** The student's year in school at `now`, or null when they have no year (HS, PhD). */
+/** The student's year in school at `now`, or null when they have no year (PhD). For HS it counts years since signup. */
 export function currentYear(s: StudentYear, now: Date): number | null {
   if (s.studyYear === null || s.yearStartedOn === null) return null;
   let elapsed = now.getUTCFullYear() - s.yearStartedOn.getUTCFullYear();
@@ -95,7 +95,7 @@ export type CatalogItem = {
 /**
  * When a grant made now from `item` expires (null = never). Throws when the rule
  * needs a year in school and the student has none, because that is a catalog
- * mistake (HS and PhD rows must use "never").
+ * mistake (PhD rows must use "never").
  */
 export function grantExpiry(item: CatalogItem, s: StudentYear, now: Date): Date | null {
   if (item.expiry === "never") return null;
@@ -113,18 +113,24 @@ export function grantExpiry(item: CatalogItem, s: StudentYear, now: Date): Date 
 /** Free allocations the student is due now: their stage, and their current year if the row has one. */
 export function dueFreeAllocations(catalog: CatalogItem[], s: StudentYear, now: Date): CatalogItem[] {
   const year = currentYear(s, now);
-  return catalog.filter(
-    (item) =>
-      item.kind === "free_allocation" &&
-      item.stage === s.stage &&
-      (item.studyYear === null || item.studyYear === year),
-  );
+  return catalog
+    .filter(
+      (item) =>
+        item.kind === "free_allocation" &&
+        item.stage === s.stage &&
+        (item.studyYear === null || item.studyYear === year),
+    )
+    .map((item) =>
+      // HS free credits renew each year from signup (owner, 2026-11-11). The year
+      // in the item puts it in the grant key, so each year grants once.
+      item.stage === "hs" && item.studyYear === null && year !== null ? { ...item, studyYear: year } : item,
+    );
 }
 
 /**
  * Idempotency key for a free grant. It names the stage and year, not the catalog
- * row, so an admin who replaces a row cannot cause a second grant. HS rows have
- * no year, so the key (y0) makes the HS allocation once per account.
+ * row, so an admin who replaces a row cannot cause a second grant. A row with no
+ * year keys as y0, once per account (dueFreeAllocations gives HS rows a year).
  */
 export function freeGrantRef(item: CatalogItem, studentId: string): string {
   return `free:${item.stage}:y${item.studyYear ?? 0}:${studentId}`;

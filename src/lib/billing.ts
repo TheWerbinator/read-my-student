@@ -37,7 +37,8 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
   if (row.kind === "free_allocation") {
     return {
       id: row.id,
-      label: row.study_year ? `Year ${row.study_year}, free` : "Free on signup",
+      // HS free credits renew each year from signup (owner, 2026-11-11).
+      label: row.study_year ? `Year ${row.study_year}, free` : row.stage === "hs" ? "Free every year" : "Free on signup",
       detail: `${credits}. ${expiryNote(row)}`,
       price: "Free",
       free: true,
@@ -54,7 +55,10 @@ export function pricingRow(row: CatalogRow, country: string | null): PricingRow 
   if (row.kind === "bundle") {
     return { id: row.id, label: `Pack of ${row.credits}`, detail: expiryNote(row), price: amount, free: false };
   }
-  return { id: row.id, label: "Extra credit", detail: expiryNote(row), price: `${amount} each`, free: false };
+  if (row.members_only) {
+    return { id: row.id, label: "Extra credit for members", detail: `For students with a membership. ${expiryNote(row)}`, price: `${amount} each`, free: false };
+  }
+  return { id: row.id, label: "Pay as you go", detail: `No membership needed. Buy only the credits you use. ${expiryNote(row)}`, price: `${amount} each`, free: false };
 }
 
 /**
@@ -103,6 +107,9 @@ export function checkPurchase(
     return { ok: false, error: "This item is not for sale." };
   }
   if (row.stage !== student.stage) return { ok: false, error: "This item is for a different stage." };
+  if (row.members_only && !opts.hasActiveMembership) {
+    return { ok: false, error: "Extra credits are for members. Pay-as-you-go credits need no membership." };
+  }
 
   const year = currentYear(student, now);
   const lastYear = row.kind === "membership" ? (opts.lastMembershipYear ?? null) : null;

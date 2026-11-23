@@ -95,8 +95,9 @@ export async function signUpAction(data: RegisterFormValues) {
           program: program,
           graduation_date: graduationDate, // Supabase handles ISO strings for dates automatically
           // The year advances on each anniversary of signup (owner, 2026-11-09). PhD has no year.
+          // HS starts at 1 and counts years since signup, for its yearly free credits.
           stage,
-          study_year: stage === "phd" ? null : Number(studyYear),
+          study_year: stage === "phd" ? null : stage === "hs" ? 1 : Number(studyYear),
           year_started_on: stage === "phd" ? null : new Date().toISOString().slice(0, 10),
         });
 

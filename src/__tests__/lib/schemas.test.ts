@@ -116,8 +116,9 @@ describe("registerSchema", () => {
     expect(result.error?.issues[0].path).toEqual(["stage"]);
   });
 
-  it("refuses high school until the consent step exists", () => {
-    expect(registerSchema.safeParse({ ...validStudent, stage: "hs" }).success).toBe(false);
+  it("accepts high school with no year in school, like PhD", () => {
+    expect(registerSchema.safeParse({ ...validStudent, stage: "hs", studyYear: "" }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...validStudent, stage: "phd", studyYear: "" }).success).toBe(true);
   });
 
   it("requires a year within the stage's membership years", () => {

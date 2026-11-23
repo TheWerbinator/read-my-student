@@ -38,8 +38,8 @@ const sections = [
       <>
         <p>
           <span className='font-semibold'>Students.</span> Your name, email
-          address, password (stored only as a secure hash), university,
-          program, graduation date, stage and year in school, and the date
+          address, password (stored only as a secure hash), university (not
+          asked of high school students), program, graduation date, stage and year in school, and the date
           your current year started. We keep the professor emails you enter,
           the course and personal note you write, and the names and admissions
           email addresses of the schools you send a letter to. If you pay, we
@@ -55,6 +55,13 @@ const sections = [
           the recommender details you entered for it, including the email
           address and phone number you gave. Those two are not printed on the
           letter.
+        </p>
+        <p>
+          <span className='font-semibold'>Faculty families.</span> When a
+          professor asks us to invite a child or dependent, we keep that
+          person&apos;s name and email address, the professor who asked, and
+          when the invite was sent and used. We use them only to send the
+          invite and give that person free requests.
         </p>
         <p>
           <span className='font-semibold'>School readers.</span> The
@@ -226,6 +233,14 @@ const sections = [
             Browser storage on your own device that remembers the last five
             schools you sent a letter to, so you can pick them again.
           </li>
+          <li>
+            For professors who install the ReadMyStudent browser extension: a
+            sign-in token in the extension&apos;s storage on your device. It
+            lasts 30 days, or until you click Disconnect. The extension reads
+            only your own requests, letters, and profile details from
+            ReadMyStudent. It does not read the pages you visit or your
+            browsing history, and it sends data only to ReadMyStudent.
+          </li>
         </ul>
         <p>
           The student dashboard loads Stripe&apos;s payment script, which may
@@ -240,11 +255,10 @@ const sections = [
     title: "9. Children and young people",
     body: (
       <p>
-        ReadMyStudent is for university students and is not directed at
-        children. Do not sign up if you are under 13, or under the age at
-        which you can consent for yourself where you live (14 in Quebec and
-        16 in Germany, for example). Accounts for high school students, which
-        will need a parent&apos;s consent, are not open yet.
+        ReadMyStudent is for students from high school through graduate
+        school and is not directed at children. Do not sign up if you are
+        under 13, or under the age at which you can consent for yourself
+        where you live (14 in Quebec and 16 in Germany, for example).
       </p>
     ),
   },

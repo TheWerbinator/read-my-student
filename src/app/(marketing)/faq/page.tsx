@@ -4,7 +4,7 @@ import { LinkButton } from "@/components/ui/LinkButton";
 export const metadata = {
   title: "FAQ",
   description:
-    "Short answers for students, professors, and schools: what a letter request costs, how a professor answers, and how a school opens a sealed letter.",
+    "What a recommendation letter request costs, which students get free credits, how a professor answers, and how a school opens a sealed letter. High school students and professors' families get free letter requests.",
 };
 
 type FAQItem = { q: string; a: React.ReactNode };
@@ -19,13 +19,33 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
         q: "What does it cost?",
         a: (
           <>
-            Each request to a professor uses one credit from your membership or a credit pack. You get the credit back if the professor declines or does not answer. Sending the letter to your schools is free.{" "}
+            Each request to a professor uses one credit. Buy credits one at a time as you go, or get a year of them with a membership. You get the credit back if the professor declines or does not answer. Sending the letter to your schools is free.{" "}
             <Link href='/pricing' className='text-forest underline'>
               See pricing
             </Link>
             .
           </>
         ),
+      },
+      {
+        q: "Can I use ReadMyStudent for free?",
+        a: (
+          <>
+            Often, yes. High school students get 20 free credits every year. Children and dependents of professors send every request free for 3 years. Undergraduates get free credits in their first years. And every student sends finished letters to schools for free.{" "}
+            <Link href='/pricing' className='text-forest underline'>
+              See what is free
+            </Link>
+            .
+          </>
+        ),
+      },
+      {
+        q: "I am in high school. Can I sign up?",
+        a: "Yes. Choose High school when you sign up. You get 20 free credits each year, and each credit asks one teacher or counselor for a letter.",
+      },
+      {
+        q: "I am a working professional. Which plan is mine?",
+        a: "Choose PhD or working professional when you sign up. You pay the same per-credit price as PhD students, with no year in school to track.",
       },
       {
         q: "How do I ask for a letter?",
@@ -57,6 +77,18 @@ const groups: { id: string; title: string; lead: string; items: FAQItem[] }[] = 
       {
         q: "Does it cost me anything?",
         a: "No. Professors never pay.",
+      },
+      {
+        q: "Can my child use ReadMyStudent for free?",
+        a: (
+          <>
+            Yes. Your children and dependents send every letter request free for 3 years. Create a free professor account first, then{" "}
+            <Link href='/contact' className='text-forest underline'>
+              send us a message
+            </Link>{" "}
+            with your account email and your child&apos;s name and email. We email them an invite.
+          </>
+        ),
       },
       {
         q: "Can I stop and come back?",

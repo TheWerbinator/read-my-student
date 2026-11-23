@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { FlapText } from "@/components/board/FlapText";
+import { DEPENDENT_FREE_YEARS } from "@/lib/dependents";
 import { PhotoPrint } from "@/components/marketing/PhotoPrint";
 import { PHOTOS } from "@/components/marketing/photos";
 
 export const metadata = {
   title: "For Professors",
   description:
-    "Answer a student's letter request from one emailed link. No account, no password, free for professors. Write, sign, and seal the letter, or decline.",
+    "Answer a student's letter request from one emailed link. No account, no password, free for professors. Your children and dependents get free letter requests for 3 years.",
 };
 
 const steps = [
@@ -166,6 +167,25 @@ export default function ForFacultyPage() {
                 FERPA and US schools
               </Link>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Faculty family perk (owner, 2026-11-11) */}
+      <section aria-labelledby='family-heading' className='px-5 pt-8 md:px-8'>
+        <div className='mx-auto grid max-w-6xl gap-8 border-t border-flap pt-12 lg:grid-cols-12'>
+          <h2 id='family-heading' className={`${h2} lg:col-span-5`}>
+            Free for your family.
+          </h2>
+          <div className='lg:col-span-7'>
+            <p className='max-w-xl text-lg leading-relaxed text-flap-ink/90'>
+              You write letters for other people&apos;s kids. When your own apply, their letter requests are on us for {DEPENDENT_FREE_YEARS} years. Make a free professor account, then send us your account email with your child&apos;s or dependent&apos;s name and email. We email them an invite.
+            </p>
+            <div className='mt-8'>
+              <LinkButton href='/contact' variant='board' size='lg'>
+                Ask for a family invite
+              </LinkButton>
+            </div>
           </div>
         </div>
       </section>

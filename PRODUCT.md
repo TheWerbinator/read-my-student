@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Students are the customers. They pay, they start every request, and they send finished letters to schools. They range from high school through PhD (stages HS, UG, Master's, PhD). India is the largest market, and Indian students mostly send letters to schools abroad (the US and other countries). The product serves students everywhere, not only in India.
+Students are the customers. They pay, they start every request, and they send finished letters to schools. They range from high school through PhD (stages HS, UG, Master's, PhD), plus working professionals, who sign up and pay under the PhD stage. High school students get free credits every year, and professors' children and dependents get free requests for 3 years (owner, 2026-11-11). India is the largest market, and Indian students mostly send letters to schools abroad (the US and other countries). The product serves students everywhere, not only in India.
 
 Professors and other recommenders write the letters. They get an emailed link from a student's request and can write, sign, and finalize the letter, or decline, without an account. They pay nothing and owe the student nothing, so their time is the scarce resource.
 
@@ -45,7 +45,7 @@ Interfolio is the reference competitor ("Send 50 applications anywhere for $59.9
 
 - Stack: Next.js 16 (App Router), Tailwind CSS, Supabase (auth, Postgres, storage), Stripe, Resend for email, Vercel hosting.
 - Built: student requests, the no-account professor link with reminder and expiry, the letter editor, signed PDF letters, the student dashboard, the faculty dashboard and settings, and the school view.
-- Planned, not built: a yearly membership with letter credits (one credit per request, returned on decline or expiry), INR prices shown to visitors detected in India by IP with USD elsewhere, a free Send to School, the rest of the admin dashboard, high-school parental consent, and a browser extension for professors.
+- Planned, not built: a yearly membership with letter credits (one credit per request, returned on decline or expiry), INR prices shown to visitors detected in India by IP with USD elsewhere, a free Send to School, the rest of the admin dashboard, and a browser extension for professors. High school signup opened on 2026-11-11 with no parental consent step, pending the lawyer review in TODO.md.
 - Live today: students pay $5 USD per school delivery (`DELIVERY_PRICE_CENTS` in `src/lib/stripe.ts`); professors and schools pay nothing. The site may state this.
 - Decided on 2026-11-09, not yet built: USD prices from BRD v2.0, the expiry and stacking rules (DEC-01 to DEC-04), and the year in school advancing on each 12-month anniversary (the rules are in `TODO.md` under "Decided"). Undecided: INR price points, the PhD bulk price (DEC-09), and enrollment interruptions and repeat degrees (DEC-05). Do not show yearly plan prices or plan rules on the site until the plans are live.
 - Terminology: "request" (a student asks one professor), "letter" (the professor's document), "finalize" or "seal" (the professor locks and signs it), "send to school" (the student shares it with one receiver).
