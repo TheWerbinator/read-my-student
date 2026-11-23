@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
+import { PhotoPrint } from "@/components/marketing/PhotoPrint";
+import { PHOTOS } from "@/components/marketing/photos";
 
 export const metadata = {
   title: "About",
@@ -30,6 +32,7 @@ export default function AboutPage() {
             <p>
               The student is the customer. Professors pay nothing and owe the student nothing, because a professor who finds it easy answers sooner.
             </p>
+            {PHOTOS.about && <PhotoPrint photo={PHOTOS.about} sizes='(min-width: 1024px) 36rem, 100vw' className='mt-5' />}
           </div>
 
           <aside aria-label='Who runs ReadMyStudent' className='lg:col-span-5 lg:col-start-8'>

@@ -62,7 +62,7 @@ Interfolio is the reference competitor ("Send 50 applications anywhere for $59.9
 - Real product screens: the professor request page `/r/<token>`, the student dashboard, the faculty dashboard and settings, the write dialog, and the school view `/view/<token>`.
 - A sample letter template: `private/template_letter.md`.
 - No testimonials, user counts, university partners, or press exist. The placeholder reviews and counts were removed on 2026-11-08. Do not invent quotes, people, logos, or numbers.
-- The AI-generated illustrations in `src/assets/hero/` and the marketing pages are flagged for replacement because they contain garbled text.
+- The AI-generated illustrations were removed in the departures-board redesign. Five photo slots (home, for students, two on for professors, about) stay hidden until approved photos exist; `docs/photos.md` has the shot list, the license notes, and the steps. The About slot takes a real photo only.
 
 ## Product Principles
 

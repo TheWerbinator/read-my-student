@@ -2,6 +2,8 @@ import Link from "next/link";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { FlapText } from "@/components/board/FlapText";
 import { DEPENDENT_FREE_YEARS } from "@/lib/dependents";
+import { PhotoPrint } from "@/components/marketing/PhotoPrint";
+import { PHOTOS } from "@/components/marketing/photos";
 
 export const metadata = {
   title: "For Professors",
@@ -96,7 +98,7 @@ export default function ForFacultyPage() {
           <h2 id='do-heading' className={`${h2} lg:col-span-5`}>
             Four things you can do.
           </h2>
-          <dl className='divide-y divide-flap lg:col-span-7'>
+          <dl className={`divide-y divide-flap lg:col-span-7 ${PHOTOS.facultyDesk ? "lg:row-span-2" : ""}`}>
             {steps.map((s) => (
               <div key={s.title} className='grid gap-1 py-4 first:pt-0 sm:grid-cols-[10rem_1fr] sm:gap-6'>
                 <dt className='font-display text-xl font-bold uppercase tracking-[0.04em] text-flap-ink'>{s.title}</dt>
@@ -104,6 +106,9 @@ export default function ForFacultyPage() {
               </div>
             ))}
           </dl>
+          {PHOTOS.facultyDesk && (
+            <PhotoPrint photo={PHOTOS.facultyDesk} sizes='(min-width: 1024px) 30rem, 100vw' className='lg:col-span-5 lg:row-start-2' />
+          )}
         </div>
       </section>
 
