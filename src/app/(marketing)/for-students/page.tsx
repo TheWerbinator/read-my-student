@@ -3,6 +3,8 @@ import { LinkButton } from "@/components/ui/LinkButton";
 import { FlapText } from "@/components/board/FlapText";
 import { DepartureBoard, type DepartureRow } from "@/components/board/DepartureBoard";
 import { lampOnPaper, type Lamp } from "@/components/board/status";
+import { PhotoPrint } from "@/components/marketing/PhotoPrint";
+import { PHOTOS } from "@/components/marketing/photos";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -153,7 +155,7 @@ export default function ForStudentsPage() {
           <h2 id='hidden-heading' className={cn(h2, "lg:col-span-5")}>
             You may not read it.
           </h2>
-          <div className='max-w-xl space-y-4 text-lg leading-relaxed text-flap-ink/90 lg:col-span-7'>
+          <div className={cn("max-w-xl space-y-4 text-lg leading-relaxed text-flap-ink/90 lg:col-span-7", PHOTOS.students && "lg:row-span-2")}>
             <p>
               Letters are confidential by default. You see the text only if your professor turns on a preview for you. Many programs weigh a letter more when the student has not seen it.
             </p>
@@ -161,6 +163,9 @@ export default function ForStudentsPage() {
               You still see the status of every request: requested, in progress, complete, declined, or expired. Then you decide which schools get it.
             </p>
           </div>
+          {PHOTOS.students && (
+            <PhotoPrint photo={PHOTOS.students} sizes='(min-width: 1024px) 30rem, 100vw' className='lg:col-span-5 lg:row-start-2' />
+          )}
         </div>
       </section>
 

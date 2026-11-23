@@ -325,6 +325,9 @@ A framed table of rows: time in flap dim, student over an arrow and professor na
 ### Social Flaps
 Footer social links are 44px flap cells with an icon. On hover or focus the flap turns once (300ms) from the white icon card to the gold one: the white top half falls to the hinge and reveals the gold top, the white bottom holds, and the gold bottom lands over it, so the icon is never doubled or blank. No flip under reduced motion.
 
+### Photo Print
+A photograph is a print laid on the board, like the letter: a sheet with 12px padding (16px from md), the photo cropped 3:2 with a 1px corner on a paper-2 ground, then a perforation that runs edge to edge so its notches punch the sheet's sides, then a stub with two caption fields, SCENE (Public Sans semibold, ink) on the left and PHOTO (the credit, small, ink-2) on the right. The photo stays in full color with no tint, overlay, or filter. A slot with no approved photo renders nothing, and its section falls back to the layout it had before photos (`src/components/marketing/photos.ts`). Prints sit in a five-column cell under a section heading, or seven columns beside it on home. They never replace a product sample, because the samples are the proof.
+
 ### Email
 Transactional email keeps the world in inline styles: a board header with the wordmark in condensed caps, a 600px white sheet with a rule border, ink text, gold for the action. Body falls back to Arial, the email norm.
 
